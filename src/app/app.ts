@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { AppRoutingModule } from "./app.routes";
+import { RouterModule } from "@angular/router";
 
 @Component({
   standalone: true,
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
-  imports: [AppRoutingModule],
+  imports: [RouterModule],
 })
 export class AppComponent {
   title = 'UPTC Restaurant Music';

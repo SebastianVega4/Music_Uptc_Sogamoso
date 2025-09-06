@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home';
 import { AdminLoginComponent } from './components/admin-login/admin-login';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel';
@@ -11,9 +10,3 @@ export const routes: Routes = [
   { path: 'admin-panel', component: AdminPanelComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '' }
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }

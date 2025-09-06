@@ -13,11 +13,11 @@ export class VotingService {
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   getRankedSongs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/votes`);
+    return this.http.get<any[]>(`${this.apiUrl}/votes`);
   }
 
   voteForSong(trackId: string, trackInfo: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/votes`, { trackId, trackInfo });
+    return this.http.post(`${this.apiUrl}/votes`, { trackId, trackInfo });
   }
 
   deleteSong(trackId: string): Observable<any> {
@@ -26,6 +26,6 @@ export class VotingService {
       Authorization: `Bearer ${token}`,
     });
 
-    return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, { headers });
+    return this.http.delete(`${this.apiUrl}/votes?trackId=${trackId}`, { headers });
   }
 }
