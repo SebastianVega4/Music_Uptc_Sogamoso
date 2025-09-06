@@ -1,0 +1,31 @@
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <!-- Canción actual -->
+    <div class="card mb-4" *ngIf="currentSong">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Reproduciendo ahora</h5>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-3">
+            <img [src]="currentSong.image" class="img-fluid rounded" [alt]="currentSong.name">
+          </div>
+          <div class="col-9">
+            <h4>{{ currentSong.name }}</h4>
+            <p class="text-muted mb-1">{{ currentSong.artists.join(', ') }}</p>
+            <audio controls class="w-100 mt-2">
+              <source [src]="currentSong.preview_url" type="audio/mpeg">
+              Tu navegador no soporta el elemento de audio.
+            </audio>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <app-search></app-search>
+
+    <!-- Lista de votación -->
+    <app-voting-list></app-voting-list>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Buscar canciones en Spotify</h5>
+  </div>
+  <div class="card-body">
+    <div class="input-group mb-3">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Nombre de canción o artista..." 
+        [(ngModel)]="query"
+        (keyup.enter)="search()"
+      >
+      <button class="btn btn-primary" (click)="search()" [disabled]="isLoading">
+        <i class="fas fa-search me-1" *ngIf="!isLoading"></i>
+        <i class="fas fa-spinner fa-spin me-1" *ngIf="isLoading"></i>
+        Buscar
+      </button>
+    </div>
+
+    <!-- Resultados -->
+    <div *ngIf="searchPerformed">
+      <div *ngIf="results.length === 0 && !isLoading" class="alert alert-info">
+        No se encontraron resultados. Intenta con otras palabras.
+      </div>
+
+      <div *ngFor="let track of results" class="card mb-2">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-2">
+              <img [src]="track.image" class="img-fluid rounded" [alt]="track.name">
+            </div>
+            <div class="col-7">
+              <h6 class="mb-1">{{ track.name }}</h6>
+              <p class="text-muted mb-1 small">{{ track.artists.join(', ') }}</p>
+              <p class="text-muted mb-0 small">{{ track.album }} • {{ formatDuration(track.duration_ms) }}</p>
+            </div>
+            <div class="col-3 text-end">
+              <button class="btn btn-success btn-sm" (click)="vote(track)">
+                <i class="fas fa-thumbs-up me-1"></i>Votar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

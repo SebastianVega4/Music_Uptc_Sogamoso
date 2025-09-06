@@ -1,0 +1,44 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Canciones más votadas</h5>
+    <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
+      <i class="fas fa-sync-alt"></i>
+    </button>
+  </div>
+  <div class="card-body">
+    <div *ngIf="isLoading" class="text-center py-3">
+      <i class="fas fa-spinner fa-spin fa-2x"></i>
+      <p class="mt-2">Cargando canciones...</p>
+    </div>
+
+    <div *ngIf="!isLoading && songs.length === 0" class="alert alert-info">
+      No hay canciones votadas todavía. ¡Sé el primero en votar!
+    </div>
+
+    <div *ngFor="let song of songs; let i = index" class="card mb-2">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-1 text-center">
+            <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
+          </div>
+          <div class="col-2">
+            <img [src]="song.image" class="img-fluid rounded" [alt]="song.name">
+          </div>
+          <div class="col-7">
+            <h6 class="mb-1">{{ song.name }}</h6>
+            <p class="text-muted mb-1 small">{{ song.artists.join(', ') }}</p>
+            <span class="badge bg-success">
+              <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }} votos
+            </span>
+          </div>
+          <div class="col-2 text-end">
+            <audio controls *ngIf="song.preview_url" class="w-100">
+              <source [src]="song.preview_url" type="audio/mpeg">
+            </audio>
+            <p *ngIf="!song.preview_url" class="text-muted small mb-0">Sin preview</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
