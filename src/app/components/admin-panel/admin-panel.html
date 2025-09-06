@@ -7,9 +7,9 @@
 
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Canciones votadas</h5>
+    <h5 class="mb-0">Canciones más votadas</h5>
     <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
-      <i class="fas fa-sync-alt"></i>
+      <i class="fas fa-sync-alt"></i> Actualizar
     </button>
   </div>
   <div class="card-body">
@@ -19,7 +19,7 @@
     </div>
 
     <div *ngIf="!isLoading && songs.length === 0" class="alert alert-info">
-      No hay canciones votadas.
+      No hay canciones votadas todavía.
     </div>
 
     <div *ngFor="let song of songs; let i = index" class="card mb-2">

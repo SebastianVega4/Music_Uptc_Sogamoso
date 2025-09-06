@@ -5,7 +5,7 @@ import { AdminLoginComponent } from './components/admin-login/admin-login';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel';
 import { AuthGuard } from './guards/auth.guard';
 
-const routes: Routes = [
+export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'admin-login', component: AdminLoginComponent },
   { path: 'admin-panel', component: AdminPanelComponent, canActivate: [AuthGuard] },

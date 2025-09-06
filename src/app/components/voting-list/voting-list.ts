@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 
 @Component({
   selector: 'app-voting-list',
   templateUrl: './voting-list.html',
   styleUrls: ['./voting-list.scss'],
+  imports: [CommonModule] 
 })
 export class VotingListComponent implements OnInit {
   songs: any[] = [];
   isLoading: boolean = true;
 
-  constructor(private votingService: VotingService) {}
+  constructor(private votingService: VotingService) { }
 
   ngOnInit(): void {
     this.loadSongs();

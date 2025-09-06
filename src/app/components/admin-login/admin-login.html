@@ -7,13 +7,13 @@
       <div class="card-body">
         <form (ngSubmit)="login()" *ngIf="!authService.isLoggedIn()">
           <div class="mb-3">
-            <label for="username" class="form-label">Usuario</label>
+            <label for="email" class="form-label">Email</label>
             <input 
-              type="text" 
+              type="email" 
               class="form-control" 
-              id="username" 
-              [ngModel]="username"
-              name="username"
+              id="email" 
+              [(ngModel)]="email" 
+              name="email"
               required
             >
           </div>

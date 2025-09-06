@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SpotifyService } from '../../services/spotify';
 import { VotingService } from '../../services/voting';
 
@@ -6,6 +8,7 @@ import { VotingService } from '../../services/voting';
   selector: 'app-search',
   templateUrl: './search.html',
   styleUrls: ['./search.scss'],
+  imports: [CommonModule, FormsModule]
 })
 export class SearchComponent {
   query: string = '';
@@ -13,7 +16,10 @@ export class SearchComponent {
   isLoading: boolean = false;
   searchPerformed: boolean = false;
 
-  constructor(private spotifyService: SpotifyService, private votingService: VotingService) {}
+  constructor(
+    private spotifyService: SpotifyService, 
+    private votingService: VotingService
+  ) {}
 
   search(): void {
     if (!this.query.trim()) return;

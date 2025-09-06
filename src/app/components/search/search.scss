@@ -1,0 +1,15 @@
+.card {
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  transform: scale(1.05);
+}

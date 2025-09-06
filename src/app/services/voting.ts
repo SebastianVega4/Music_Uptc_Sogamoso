@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,7 @@ import { environment } from '../../environments/environment';
 export class VotingService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   getRankedSongs(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/api/votes`);
@@ -19,9 +20,12 @@ export class VotingService {
     return this.http.post(`${this.apiUrl}/api/votes`, { trackId, trackInfo });
   }
 
-  deleteSong(trackId: string, adminSecret: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, {
-      headers: { Authorization: `Bearer ${adminSecret}` },
+  deleteSong(trackId: string): Observable<any> {
+    const token = this.authService.getAuthToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
     });
+
+    return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, { headers });
   }
 }

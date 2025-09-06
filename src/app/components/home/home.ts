@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VotingService } from '../../services/voting';
 import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
 
@@ -6,14 +8,27 @@ import { VotingListComponent } from "../voting-list/voting-list";
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
-  imports: [SearchComponent, VotingListComponent],
+  imports: [CommonModule, SearchComponent, VotingListComponent]
 })
 export class HomeComponent implements OnInit {
   currentSong: any = null;
 
-  constructor() {}
+  constructor(private votingService: VotingService) {}
 
   ngOnInit(): void {
-    // Aquí podrías implementar la lógica para obtener la canción actual
+    this.loadCurrentSong();
+  }
+
+  loadCurrentSong(): void {
+    this.votingService.getRankedSongs().subscribe({
+      next: (songs) => {
+        if (songs.length > 0) {
+          this.currentSong = songs[0];
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar la canción actual:', error);
+      },
+    });
   }
 }

@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { AuthService } from '../../services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
-  styleUrls: ['./admin-panel.scss']
+  styleUrls: ['./admin-panel.scss'],
+  imports: [CommonModule]
 })
 export class AdminPanelComponent implements OnInit {
   songs: any[] = [];
@@ -13,8 +16,9 @@ export class AdminPanelComponent implements OnInit {
 
   constructor(
     private votingService: VotingService,
-    private authService: AuthService
-  ) { }
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadSongs();
@@ -31,7 +35,7 @@ export class AdminPanelComponent implements OnInit {
         console.error('Error al cargar canciones:', error);
         this.isLoading = false;
         alert('Error al cargar la lista de canciones.');
-      }
+      },
     });
   }
 
@@ -40,25 +44,27 @@ export class AdminPanelComponent implements OnInit {
       return;
     }
 
-    const adminSecret = this.authService.getAuthToken();
-    if (!adminSecret) {
-      alert('Error de autenticación. Vuelve a iniciar sesión.');
-      return;
-    }
-
-    this.votingService.deleteSong(trackId, adminSecret).subscribe({
+    this.votingService.deleteSong(trackId).subscribe({
       next: () => {
         alert('Canción eliminada correctamente.');
         this.loadSongs(); // Recargar la lista
       },
       error: (error) => {
         console.error('Error al eliminar canción:', error);
-        alert('Error al eliminar la canción.');
-      }
+
+        if (error.status === 401) {
+          alert('Error de autenticación. Vuelve a iniciar sesión.');
+          this.authService.logout();
+          this.router.navigate(['/admin-login']);
+        } else {
+          alert('Error al eliminar la canción.');
+        }
+      },
     });
   }
 
   logout(): void {
     this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

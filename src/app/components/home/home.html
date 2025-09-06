@@ -13,10 +13,13 @@
           <div class="col-9">
             <h4>{{ currentSong.name }}</h4>
             <p class="text-muted mb-1">{{ currentSong.artists.join(', ') }}</p>
-            <audio controls class="w-100 mt-2">
+            <audio controls class="w-100 mt-2" *ngIf="currentSong.preview_url">
               <source [src]="currentSong.preview_url" type="audio/mpeg">
               Tu navegador no soporta el elemento de audio.
             </audio>
+            <p class="text-muted mt-2" *ngIf="!currentSong.preview_url">
+              No hay preview disponible para esta canción
+            </p>
           </div>
         </div>
       </div>
