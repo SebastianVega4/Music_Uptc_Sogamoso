@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 
 @Component({
+  standalone: true,
   selector: 'app-voting-list',
   templateUrl: './voting-list.html',
   styleUrls: ['./voting-list.scss'],

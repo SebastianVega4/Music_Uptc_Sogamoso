@@ -5,6 +5,7 @@ import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
 
 @Component({
+  standalone: true,
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],

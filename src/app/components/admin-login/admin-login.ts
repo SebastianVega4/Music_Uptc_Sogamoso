@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 
 @Component({
+  standalone: true,
   selector: 'app-admin-login',
   templateUrl: './admin-login.html',
   styleUrls: ['./admin-login.scss'],

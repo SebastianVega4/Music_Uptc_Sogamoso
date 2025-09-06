@@ -26,7 +26,6 @@
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/styles.scss"
             ],
             "scripts": [
@@ -62,17 +61,23 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "uptc-music:build"
+          },
           "configurations": {
             "production": {
-              "buildTarget": "uptc-music:build:production"
+              "browserTarget": "uptc-music:build:production"
             },
             "development": {
-              "buildTarget": "uptc-music:build:development"
+              "browserTarget": "uptc-music:build:development"
             }
           },
           "defaultConfiguration": "development"
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

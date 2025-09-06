@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 
 @Component({
+  standalone: true,
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],

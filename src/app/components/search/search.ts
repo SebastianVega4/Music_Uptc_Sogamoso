@@ -5,6 +5,7 @@ import { SpotifyService } from '../../services/spotify';
 import { VotingService } from '../../services/voting';
 
 @Component({
+  standalone: true,
   selector: 'app-search',
   templateUrl: './search.html',
   styleUrls: ['./search.scss'],
