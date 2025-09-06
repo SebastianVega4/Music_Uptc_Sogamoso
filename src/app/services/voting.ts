@@ -13,7 +13,7 @@ export class VotingService {
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   getRankedSongs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/votes`);
+    return this.http.get<any[]>(`${this.apiUrl}/api/votes`);
   }
 
   voteForSong(trackId: string, trackInfo: any): Observable<any> {
