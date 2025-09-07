@@ -5,6 +5,48 @@
   </button>
 </div>
 
+<!-- Sección de Spotify Admin -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Configuración de Spotify</h5>
+  </div>
+  <div class="card-body">
+    <div *ngIf="spotifyStatus">
+      <div *ngIf="spotifyStatus.authenticated && spotifyStatus.token_valid" class="alert alert-success">
+        <i class="fab fa-spotify me-2"></i> Spotify conectado correctamente
+        <button class="btn btn-sm btn-outline-danger ms-3" (click)="disconnectSpotify()">
+          Desconectar
+        </button>
+      </div>
+      
+      <div *ngIf="!spotifyStatus.authenticated || !spotifyStatus.token_valid" class="alert alert-warning">
+        <i class="fab fa-spotify me-2"></i> Spotify no conectado
+        <button class="btn btn-sm btn-success ms-3" (click)="connectSpotify()">
+          Conectar Spotify
+        </button>
+      </div>
+    </div>
+
+    <!-- Mostrar lo que se está reproduciendo actualmente en el admin -->
+    <div *ngIf="adminCurrentlyPlaying && adminCurrentlyPlaying.is_playing" class="mt-3">
+      <h6>Reproduciendo ahora (visible para todos):</h6>
+      <div class="d-flex align-items-center">
+        <img [src]="adminCurrentlyPlaying.image" class="img-thumbnail me-3" style="width: 60px; height: 60px;" [alt]="adminCurrentlyPlaying.name">
+        <div>
+          <strong>{{ adminCurrentlyPlaying.name }}</strong><br>
+          <small class="text-muted">{{ adminCurrentlyPlaying.artists.join(', ') }}</small>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="adminCurrentlyPlaying && !adminCurrentlyPlaying.is_playing" class="mt-3">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> No se está reproduciendo nada en Spotify
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Canciones más votadas</h5>

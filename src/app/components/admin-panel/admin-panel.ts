@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
+import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 
 @Component({
   standalone: true,
@@ -14,15 +15,19 @@ import { Router } from '@angular/router';
 export class AdminPanelComponent implements OnInit {
   songs: any[] = [];
   isLoading: boolean = true;
+  spotifyStatus: any = null;
+  adminCurrentlyPlaying: any = null;
 
   constructor(
     private votingService: VotingService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private spotifyService: SpotifyNowPlayingService
   ) {}
 
   ngOnInit(): void {
     this.loadSongs();
+    this.checkSpotifyStatus();
   }
 
   loadSongs(): void {
@@ -37,6 +42,64 @@ export class AdminPanelComponent implements OnInit {
         this.isLoading = false;
         alert('Error al cargar la lista de canciones.');
       },
+    });
+  }
+
+  checkSpotifyStatus(): void {
+    this.spotifyService.getAdminSpotifyStatus().subscribe({
+      next: (status) => {
+        this.spotifyStatus = status;
+        
+        // Si está autenticado, obtener la canción actual
+        if (status.authenticated && status.token_valid) {
+          this.getAdminCurrentlyPlaying();
+        }
+      },
+      error: (error) => {
+        console.error('Error al verificar estado de Spotify:', error);
+      }
+    });
+  }
+
+  getAdminCurrentlyPlaying(): void {
+    this.spotifyService.getAdminCurrentlyPlaying().subscribe({
+      next: (data) => {
+        this.adminCurrentlyPlaying = data;
+      },
+      error: (error) => {
+        console.error('Error al obtener reproducción actual:', error);
+      }
+    });
+  }
+
+  connectSpotify(): void {
+    this.spotifyService.startAdminSpotifyAuth().subscribe({
+      next: (response) => {
+        // Redirigir a la URL de autenticación de Spotify
+        window.location.href = response.authUrl;
+      },
+      error: (error) => {
+        console.error('Error al iniciar autenticación de Spotify:', error);
+        alert('Error al conectar con Spotify');
+      }
+    });
+  }
+
+  disconnectSpotify(): void {
+    if (!confirm('¿Estás seguro de que quieres desconectar Spotify?')) {
+      return;
+    }
+
+    this.spotifyService.disconnectAdminSpotify().subscribe({
+      next: () => {
+        alert('Spotify desconectado correctamente');
+        this.spotifyStatus = { authenticated: false };
+        this.adminCurrentlyPlaying = null;
+      },
+      error: (error) => {
+        console.error('Error al desconectar Spotify:', error);
+        alert('Error al desconectar Spotify');
+      }
     });
   }
 
@@ -76,7 +139,7 @@ export class AdminPanelComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al eliminar todos los votos:', error);
-  
+
         if (error.status === 401) {
           alert('Error de autenticación. Vuelve a iniciar sesión.');
           this.authService.logout();

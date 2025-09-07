@@ -12,17 +12,43 @@ export class SpotifyNowPlayingService {
 
   constructor(private http: HttpClient) { }
 
-  // Iniciar autenticación con Spotify
+  // Obtener la canción actual del admin (para todos los usuarios)
+  getAdminCurrentlyPlaying(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/spotify/admin/currently-playing`);
+  }
+
+  // Polling para obtener la canción actual del admin cada 5 segundos
+  getAdminCurrentlyPlayingPolling(): Observable<any> {
+    return interval(5000).pipe(
+      startWith(0),
+      switchMap(() => this.getAdminCurrentlyPlaying())
+    );
+  }
+
+  // Verificar estado de autenticación de Spotify del admin
+  getAdminSpotifyStatus(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/spotify/admin/status`);
+  }
+
+  // Iniciar autenticación de Spotify para el admin
+  startAdminSpotifyAuth(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/spotify/admin/auth`);
+  }
+
+  // Desconectar Spotify del admin
+  disconnectAdminSpotify(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/spotify/admin/disconnect`, {});
+  }
+
+  // Métodos existentes para usuarios individuales
   startSpotifyAuth(): Observable<any> {
     return this.http.get(`${this.apiUrl}/api/spotify/auth`);
   }
 
-  // Obtener la canción actualmente en reproducción
   getCurrentlyPlaying(): Observable<any> {
     return this.http.get(`${this.apiUrl}/api/spotify/currently-playing`);
   }
 
-  // Polling para obtener la canción actual cada 5 segundos
   getCurrentlyPlayingPolling(): Observable<any> {
     return interval(5000).pipe(
       startWith(0),

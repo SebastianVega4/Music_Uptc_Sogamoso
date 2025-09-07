@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   currentSong: any = null;
-  spotifyNowPlaying: any = null;
+  adminCurrentlyPlaying: any = null;
   private pollingSubscription: Subscription | null = null;
 
   constructor(
@@ -25,7 +25,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentSong();
-    this.startSpotifyPolling();
+    this.startAdminSpotifyPolling();
   }
 
   ngOnDestroy(): void {
@@ -47,32 +47,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  startSpotifyPolling(): void {
-    this.pollingSubscription = this.spotifyService.getCurrentlyPlayingPolling().subscribe({
+  startAdminSpotifyPolling(): void {
+    this.pollingSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe({
       next: (data) => {
         if (data.is_playing) {
-          this.spotifyNowPlaying = data;
+          this.adminCurrentlyPlaying = data;
         } else {
-          this.spotifyNowPlaying = null;
+          this.adminCurrentlyPlaying = null;
         }
       },
       error: (error) => {
-        console.error('Error al obtener reproducción actual de Spotify:', error);
-        this.spotifyNowPlaying = null;
-      }
-    });
-  }
-
-  // Método para iniciar autenticación manualmente si es necesario
-  connectSpotify(): void {
-    this.spotifyService.startSpotifyAuth().subscribe({
-      next: (response) => {
-        // Redirigir a la URL de autenticación de Spotify
-        window.location.href = response.authUrl;
-      },
-      error: (error) => {
-        console.error('Error al iniciar autenticación de Spotify:', error);
-        alert('Error al conectar con Spotify');
+        console.error('Error al obtener reproducción actual del admin:', error);
+        this.adminCurrentlyPlaying = null;
       }
     });
   }
