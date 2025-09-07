@@ -48,10 +48,11 @@ export class SearchComponent {
       image: track.image,
       preview_url: track.preview_url,
     };
-
+  
     this.votingService.voteForSong(track.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
+        // Opcional: recargar la lista de canciones votadas si está visible
       },
       error: (error) => {
         if (error.status === 409) {

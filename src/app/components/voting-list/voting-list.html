@@ -24,15 +24,18 @@
           <div class="col-2">
             <img [src]="song.image" class="img-fluid rounded" [alt]="song.name">
           </div>
-          <div class="col-7">
+          <div class="col-6">
             <h6 class="mb-1">{{ song.name }}</h6>
             <p class="text-muted mb-1 small">{{ song.artists.join(', ') }}</p>
             <span class="badge bg-success">
               <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }} votos
             </span>
           </div>
-          <div class="col-2 text-end">
-            <audio controls *ngIf="song.preview_url" class="w-100">
+          <div class="col-3 text-end">
+            <button class="btn btn-success btn-sm mb-2" (click)="vote(song)">
+              <i class="fas fa-thumbs-up me-1"></i>Votar
+            </button>
+            <audio controls *ngIf="song.preview_url" class="w-100 audio-controls">
               <source [src]="song.preview_url" type="audio/mpeg">
             </audio>
             <p *ngIf="!song.preview_url" class="text-muted small mb-0">Sin preview</p>

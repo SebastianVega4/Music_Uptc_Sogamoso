@@ -33,4 +33,28 @@ export class VotingListComponent implements OnInit {
       },
     });
   }
+
+  // Nueva función para votar desde la lista
+  vote(song: any): void {
+    const trackInfo = {
+      name: song.name,
+      artists: song.artists,
+      image: song.image,
+      preview_url: song.preview_url,
+    };
+
+    this.votingService.voteForSong(song.id, trackInfo).subscribe({
+      next: () => {
+        alert('¡Tu voto ha sido registrado!');
+        this.loadSongs(); // Recargar la lista para mostrar el voto actualizado
+      },
+      error: (error) => {
+        if (error.status === 409) {
+          alert('Ya has votado por esta canción.');
+        } else {
+          alert('Error al registrar tu voto. Intenta nuevamente.');
+        }
+      },
+    });
+  }
 }

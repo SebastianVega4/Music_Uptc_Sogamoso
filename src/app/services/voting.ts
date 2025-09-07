@@ -17,7 +17,7 @@ export class VotingService {
   }
 
   voteForSong(trackId: string, trackInfo: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/votes`, { trackId, trackInfo }); 
+    return this.http.post(`${this.apiUrl}/api/vote`, { trackId, trackInfo }); 
   }
 
   deleteSong(trackId: string): Observable<any> {
