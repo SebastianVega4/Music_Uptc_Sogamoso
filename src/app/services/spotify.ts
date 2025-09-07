@@ -14,4 +14,12 @@ export class SpotifyService {
   searchTracks(query: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/api/search?q=${encodeURIComponent(query)}`);
   }
+  
+  getAuthUrl(): Observable<{ authUrl: string }> {
+    return this.http.get<{ authUrl: string }>(`${this.apiUrl}/api/spotify/auth`);
+  }
+  
+  getCurrentlyPlaying(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/api/spotify/currently-playing`);
+  }
 }

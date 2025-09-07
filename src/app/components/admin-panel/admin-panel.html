@@ -8,9 +8,14 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Canciones más votadas</h5>
-    <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
-      <i class="fas fa-sync-alt"></i> Actualizar
-    </button>
+    <div>
+      <button class="btn btn-sm btn-outline-danger me-2" (click)="deleteAllVotes()">
+        <i class="fas fa-trash me-1"></i>Eliminar Todos los Votos
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
+        <i class="fas fa-sync-alt"></i> Actualizar
+      </button>
+    </div>
   </div>
   <div class="card-body">
     <div *ngIf="isLoading" class="text-center py-3">

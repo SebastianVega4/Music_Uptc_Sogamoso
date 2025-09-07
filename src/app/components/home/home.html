@@ -1,9 +1,35 @@
 <div class="row">
   <div class="col-md-8 mx-auto">
-    <!-- Canción actual -->
-    <div class="card mb-4" *ngIf="currentSong">
+    <!-- Canción actual de Spotify -->
+    <div class="card mb-4" *ngIf="spotifyNowPlaying">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Reproduciendo ahora en Spotify</h5>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-3">
+            <img [src]="spotifyNowPlaying.image" class="img-fluid rounded" [alt]="spotifyNowPlaying.name">
+          </div>
+          <div class="col-9">
+            <h4>{{ spotifyNowPlaying.name }}</h4>
+            <p class="text-muted mb-1">{{ spotifyNowPlaying.artists.join(', ') }}</p>
+            <p class="text-muted mb-1">Álbum: {{ spotifyNowPlaying.album }}</p>
+            <audio controls class="w-100 mt-2" *ngIf="spotifyNowPlaying.preview_url">
+              <source [src]="spotifyNowPlaying.preview_url" type="audio/mpeg">
+              Tu navegador no soporta el elemento de audio.
+            </audio>
+            <p class="text-muted mt-2" *ngIf="!spotifyNowPlaying.preview_url">
+              No hay preview disponible para esta canción
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canción más votada -->
+    <div class="card mb-4" *ngIf="currentSong && !spotifyNowPlaying">
       <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Reproduciendo ahora</h5>
+        <h5 class="mb-0">Próxima canción (más votada)</h5>
       </div>
       <div class="card-body">
         <div class="row align-items-center">
@@ -25,8 +51,18 @@
       </div>
     </div>
 
+    <!-- Botón para conectar Spotify (solo si no hay conexión) -->
+    <div class="card mb-4" *ngIf="!spotifyNowPlaying">
+      <div class="card-body text-center">
+        <p>Conecta tu Spotify para mostrar lo que estás reproduciendo actualmente</p>
+        <button class="btn btn-success" (click)="connectSpotify()">
+          <i class="fab fa-spotify me-2"></i>Conectar Spotify
+        </button>
+      </div>
+    </div>
+
     <!-- Buscador -->
-    <app-search (voteCasted)="onVoteCasted()"></app-search>
+    <app-search></app-search>
 
     <!-- Lista de votación -->
     <app-voting-list></app-voting-list>

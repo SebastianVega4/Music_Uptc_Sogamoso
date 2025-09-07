@@ -64,6 +64,30 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
+  deleteAllVotes(): void {
+    if (!confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.')) {
+      return;
+    }
+  
+    this.votingService.deleteAllVotes().subscribe({
+      next: () => {
+        alert('Todos los votos han sido eliminados correctamente.');
+        this.loadSongs(); // Recargar la lista
+      },
+      error: (error) => {
+        console.error('Error al eliminar todos los votos:', error);
+  
+        if (error.status === 401) {
+          alert('Error de autenticación. Vuelve a iniciar sesión.');
+          this.authService.logout();
+          this.router.navigate(['/admin-login']);
+        } else {
+          alert('Error al eliminar todos los votos.');
+        }
+      },
+    });
+  }
+  
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);

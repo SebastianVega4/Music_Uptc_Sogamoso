@@ -69,4 +69,13 @@ export class VotingService {
 
     return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, { headers });
   }
+
+  deleteAllVotes(): Observable<any> {
+    const token = this.authService.getAuthToken();
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+  
+    return this.http.delete(`${this.apiUrl}/api/votes/all`, { headers });
+  }
 }
