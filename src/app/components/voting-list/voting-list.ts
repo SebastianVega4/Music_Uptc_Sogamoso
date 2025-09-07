@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
+import { forkJoin } from 'rxjs';
 
 @Component({
   standalone: true,
   selector: 'app-voting-list',
   templateUrl: './voting-list.html',
   styleUrls: ['./voting-list.scss'],
-  imports: [CommonModule] 
+  imports: [CommonModule]
 })
 export class VotingListComponent implements OnInit {
   songs: any[] = [];
+  recentlyAddedSongs: any[] = [];
   isLoading: boolean = true;
 
   constructor(private votingService: VotingService) { }
@@ -21,9 +23,13 @@ export class VotingListComponent implements OnInit {
 
   loadSongs(): void {
     this.isLoading = true;
-    this.votingService.getRankedSongs().subscribe({
-      next: (data) => {
-        this.songs = data;
+    const rankedSongs$ = this.votingService.getRankedSongs();
+    const recentlyAddedSongs$ = this.votingService.getRecentlyAddedSongs();
+
+    forkJoin({ranked: rankedSongs$, recent: recentlyAddedSongs$}).subscribe({
+      next: ({ranked, recent}) => {
+        this.songs = ranked;
+        this.recentlyAddedSongs = recent;
         this.isLoading = false;
       },
       error: (error) => {
@@ -34,19 +40,19 @@ export class VotingListComponent implements OnInit {
     });
   }
 
-  // Nueva función para votar desde la lista
   vote(song: any): void {
     const trackInfo = {
       name: song.name,
       artists: song.artists,
       image: song.image,
+      album: song.album,
       preview_url: song.preview_url,
     };
 
     this.votingService.voteForSong(song.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
-        this.loadSongs(); // Recargar la lista para mostrar el voto actualizado
+        this.loadSongs();
       },
       error: (error) => {
         if (error.status === 409) {

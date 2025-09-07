@@ -1,47 +1,63 @@
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Canciones más votadas</h5>
-    <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
-      <i class="fas fa-sync-alt"></i>
+<div class="spotify-container">
+  <div class="header">
+    <h1>Votación de Canciones</h1>
+    <button class="btn-refresh" (click)="loadSongs()">
+      <i class="fas fa-sync-alt"></i> Actualizar
     </button>
   </div>
-  <div class="card-body">
-    <div *ngIf="isLoading" class="text-center py-3">
-      <i class="fas fa-spinner fa-spin fa-2x"></i>
-      <p class="mt-2">Cargando canciones...</p>
-    </div>
 
-    <div *ngIf="!isLoading && songs.length === 0" class="alert alert-info">
-      No hay canciones votadas todavía. ¡Sé el primero en votar!
-    </div>
+  <div class="loader" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Cargando canciones...</p>
+  </div>
 
-    <div *ngFor="let song of songs; let i = index" class="card mb-2">
-      <div class="card-body">
-        <div class="row align-items-center">
-          <div class="col-1 text-center">
-            <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
-          </div>
-          <div class="col-2">
-            <img [src]="song.image" class="img-fluid rounded" [alt]="song.name">
-          </div>
-          <div class="col-6">
-            <h6 class="mb-1">{{ song.name }}</h6>
-            <p class="text-muted mb-1 small">{{ song.artists.join(', ') }}</p>
-            <span class="badge bg-success">
-              <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }} votos
-            </span>
-          </div>
-          <div class="col-3 text-end">
-            <button class="btn btn-success btn-sm mb-2" (click)="vote(song)">
-              <i class="fas fa-thumbs-up me-1"></i>Votar
-            </button>
-            <audio controls *ngIf="song.preview_url" class="w-100 audio-controls">
-              <source [src]="song.preview_url" type="audio/mpeg">
-            </audio>
-            <p *ngIf="!song.preview_url" class="text-muted small mb-0">Sin preview</p>
+  <div class="content" *ngIf="!isLoading">
+    <div class="recently-added" *ngIf="recentlyAddedSongs.length > 0">
+      <h2>Agregadas Recientemente</h2>
+      <div class="song-grid">
+        <div class="song-card" *ngFor="let song of recentlyAddedSongs">
+          <img [src]="song.image" [alt]="song.name">
+          <div class="song-info">
+            <h6>{{ song.name }}</h6>
+            <p>{{ song.artists.join(', ') }}</p>
           </div>
         </div>
       </div>
+    </div>
+
+    <h2>Ranking General</h2>
+    <div class="song-table-container">
+      <table class="song-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Título</th>
+            <th>Artista</th>
+            <th>Álbum</th>
+            <th>Votos</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let song of songs; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>
+              <div class="song-cell">
+                <img [src]="song.image" [alt]="song.name">
+                <span>{{ song.name }}</span>
+              </div>
+            </td>
+            <td>{{ song.artists.join(', ') }}</td>
+            <td>{{ song.album }}</td>
+            <td>
+              <span class="vote-count"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
+            </td>
+            <td>
+              <button class="btn-vote" (click)="vote(song)">Votar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
