@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { SearchComponent } from "../search/search";
@@ -13,6 +13,7 @@ import { VotingListComponent } from "../voting-list/voting-list";
 })
 export class HomeComponent implements OnInit {
   currentSong: any = null;
+  @ViewChild(VotingListComponent) votingList!: VotingListComponent;
 
   constructor(private votingService: VotingService) {}
 
@@ -25,11 +26,20 @@ export class HomeComponent implements OnInit {
       next: (songs) => {
         if (songs.length > 0) {
           this.currentSong = songs[0];
+        } else {
+          this.currentSong = null;
         }
       },
       error: (error) => {
         console.error('Error al cargar la canción actual:', error);
       },
     });
+  }
+
+  onVoteCasted(): void {
+    this.loadCurrentSong();
+    if (this.votingList) {
+      this.votingList.loadSongs();
+    }
   }
 }

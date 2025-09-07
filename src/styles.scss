@@ -1,12 +1,13 @@
 /* Importación de fuentes */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-/* Variables de colores */
+/* Variables de colores de Spotify */
 :root {
-  --primary-color: #3f51b5;
-  --secondary-color: #f50057;
-  --dark-color: #343a40;
-  --light-color: #f8f9fa;
+  --primary-color: #1DB954; /* Verde Spotify */
+  --dark-color: #121212; /* Fondo oscuro Spotify */
+  --light-color: #FFFFFF;
+  --secondary-color: #b3b3b3; /* Color de texto secundario */
+  --card-background: #181818; /* Fondo de tarjetas */
 }
 
 /* Estilos globales */
@@ -17,97 +18,110 @@
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
+  font-family: 'Montserrat', sans-serif;
+  background-color: var(--dark-color);
+  color: var(--light-color);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Utilidades */
-.text-primary { color: var(--primary-color) !important; }
-.bg-primary { background-color: var(--primary-color) !important; }
+/* Barra de navegación */
+.navbar {
+  background-color: #000;
+  border-bottom: 1px solid #282828;
+}
 
+.navbar-brand {
+  color: var(--light-color);
+  font-weight: 700;
+}
+
+/* Tarjetas con estilo Spotify */
+.card {
+  background-color: var(--card-background);
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+.card:hover {
+  background-color: #282828;
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: none;
+  color: var(--light-color);
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+
+/* Botones con estilo Spotify */
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
-  
-  &:hover {
-    background-color: darken(#3f51b5, 10%);
-    border-color: darken(#3f51b5, 10%);
-  }
+  color: var(--light-color);
+  font-weight: 700;
+  border-radius: 500px;
+  padding: 10px 30px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-/* Mejoras visuales para las tarjetas */
-.card {
-  border: none;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
+.btn-primary:hover {
+  transform: scale(1.05);
+  background-color: #1ed760;
+  border-color: #1ed760;
 }
 
-/* Estilos para la barra de navegación */
-.navbar {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* Campos de formulario */
+.form-control {
+  background-color: #333;
+  border-color: #555;
+  color: var(--light-color);
+  border-radius: 500px;
 }
 
-/* Estilos para los botones */
-.btn {
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-1px);
-  }
+.form-control:focus {
+  background-color: #333;
+  border-color: var(--primary-color);
+  color: var(--light-color);
+  box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
 }
 
-/* Responsividad mejorada */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-  
-  .card-body .row {
-    margin-left: -5px;
-    margin-right: -5px;
-    
-    > [class*="col-"] {
-      padding-left: 5px;
-      padding-right: 5px;
-    }
-  }
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
-
-/* Mejoras para los elementos de audio */
+/* Elementos de audio */
 audio {
-  border-radius: 20px;
-  height: 30px;
-  
-  &::-webkit-media-controls-panel {
-    background-color: #f1f3f4;
-  }
+  width: 100%;
+  border-radius: 5px;
+  height: 40px;
 }
 
-/* Estilos para los badges */
+audio::-webkit-media-controls-panel {
+  background-color: #282828;
+}
+
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+  color: var(--light-color);
+}
+
+/* Otros estilos */
+.text-muted {
+  color: var(--secondary-color) !important;
+}
+
+.list-group-item {
+  background-color: transparent;
+  border-color: #333;
+  color: var(--light-color);
+}
+
 .badge {
-  font-size: 0.75rem;
-  padding: 0.35em 0.65em;
+  background-color: var(--primary-color);
+  color: var(--light-color);
 }

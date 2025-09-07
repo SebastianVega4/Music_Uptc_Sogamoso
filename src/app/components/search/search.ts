@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SpotifyService } from '../../services/spotify';
@@ -12,6 +12,8 @@ import { VotingService } from '../../services/voting';
   imports: [CommonModule, FormsModule]
 })
 export class SearchComponent {
+  @Output() voteCasted = new EventEmitter<void>();
+
   query: string = '';
   results: any[] = [];
   isLoading: boolean = false;
@@ -52,7 +54,10 @@ export class SearchComponent {
     this.votingService.voteForSong(track.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
-        // Opcional: recargar la lista de canciones votadas si está visible
+        this.query = '';
+        this.results = [];
+        this.searchPerformed = false;
+        this.voteCasted.emit();
       },
       error: (error) => {
         if (error.status === 409) {
