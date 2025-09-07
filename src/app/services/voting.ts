@@ -17,7 +17,7 @@ export class VotingService {
   }
 
   voteForSong(trackId: string, trackInfo: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/votes`, { trackId, trackInfo });
+    return this.http.post(`${this.apiUrl}/api/votes`, { trackId, trackInfo }); 
   }
 
   deleteSong(trackId: string): Observable<any> {
@@ -26,6 +26,6 @@ export class VotingService {
       Authorization: `Bearer ${token}`,
     });
 
-    return this.http.delete(`${this.apiUrl}/votes?trackId=${trackId}`, { headers });
+    return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, { headers });
   }
 }

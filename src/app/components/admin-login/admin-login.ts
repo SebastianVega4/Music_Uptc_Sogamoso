@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 
 @Component({
@@ -9,15 +9,21 @@ import { AuthService } from '../../services/auth';
   selector: 'app-admin-login',
   templateUrl: './admin-login.html',
   styleUrls: ['./admin-login.scss'],
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, RouterLink]
 })
-export class AdminLoginComponent {
+export class AdminLoginComponent implements OnInit {
   email: string = '';
   password: string = '';
   isLoading: boolean = false;
   errorMessage: string = '';
 
   constructor(public authService: AuthService, private router: Router) { }
+
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/admin-panel']);
+    }
+  }
 
   async login(): Promise<void> {
     this.isLoading = true;
@@ -29,13 +35,25 @@ export class AdminLoginComponent {
       if (success) {
         this.router.navigate(['/admin-panel']);
       } else {
-        this.errorMessage = 'Credenciales incorrectas o no tienes permisos de administrador';
+        this.errorMessage = 'Credenciales incorrectas';
       }
-    } catch (error) {
-      this.errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
+    } catch (error: any) {
+      this.errorMessage = this.getErrorMessage(error.code);
       console.error('Error en login:', error);
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private getErrorMessage(errorCode: string): string {
+    const errorMessages: { [key: string]: string } = {
+      'auth/invalid-email': 'Email inválido',
+      'auth/user-disabled': 'Usuario deshabilitado',
+      'auth/user-not-found': 'Usuario no encontrado',
+      'auth/wrong-password': 'Contraseña incorrecta',
+      'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.'
+    };
+    
+    return errorMessages[errorCode] || 'Error al iniciar sesión. Intenta nuevamente.';
   }
 }

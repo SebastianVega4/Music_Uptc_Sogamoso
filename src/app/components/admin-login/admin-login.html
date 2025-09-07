@@ -44,8 +44,9 @@
         </form>
 
         <div *ngIf="authService.isLoggedIn()" class="text-center">
-          <p>Ya has iniciado sesión.</p>
+          <p>Ya has iniciado sesión como administrador.</p>
           <a routerLink="/admin-panel" class="btn btn-primary">Ir al Panel de Administración</a>
+          <button class="btn btn-secondary ms-2" (click)="authService.logout()">Cerrar Sesión</button>
         </div>
       </div>
     </div>
