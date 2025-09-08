@@ -13,6 +13,7 @@
   </div>
 
   <div class="content" *ngIf="!isLoading">
+    <!-- Recently Added Section - Updated Layout -->
     <div class="recently-added" *ngIf="recentlyAddedSongs.length > 0">
       <h2>Agregadas Recientemente</h2>
       <div class="song-grid">
@@ -22,10 +23,14 @@
             <h6>{{ song.name }}</h6>
             <p>{{ song.artists.join(', ') }}</p>
           </div>
+          <div class="song-actions">
+            <button class="btn-vote-small" (click)="vote(song)">Votar</button>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- General Ranking Table -->
     <h2>Ranking General</h2>
     <div class="song-table-container">
       <table class="song-table">
