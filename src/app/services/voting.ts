@@ -15,7 +15,9 @@ export class VotingService {
 
   // Helper para obtener una URL que evite el caché
   private getCacheBustedUrl(url: string): string {
-    return `${url}?_=${new Date().getTime()}`;
+    // Verificar si la URL ya tiene parámetros de consulta
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}_=${new Date().getTime()}`;
   }
 
   getRankedSongs(): Observable<any[]> {
@@ -79,8 +81,10 @@ export class VotingService {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`,
     });
-
-    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes?trackId=${trackId}`);
+  
+    // Construir la URL correctamente - primero el parámetro trackId, luego el cache busting
+    const baseUrl = `${this.apiUrl}/api/votes?trackId=${trackId}`;
+    const url = this.getCacheBustedUrl(baseUrl);
     return this.http.delete(url, { headers });
   }
 
