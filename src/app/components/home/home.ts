@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VotingService } from '../../services/voting';
 import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -14,114 +13,97 @@ import { Subscription, interval } from 'rxjs';
   imports: [CommonModule, SearchComponent, VotingListComponent]
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  currentSong: any = null;
   adminCurrentlyPlaying: any = null;
-  private pollingSubscription: Subscription | null = null;
-  private songPollingSubscription: Subscription | null = null;
-  progress: number = 0;
-  progressInterval: any = null;
+  progress: number = 0; // Progress percentage (0-100)
+  songDurationMs: number = 0; // Made public for template access
 
-  constructor(
-    private votingService: VotingService,
-    private spotifyService: SpotifyNowPlayingService
-  ) {}
+  private pollingSubscription: Subscription | null = null;
+  private progressInterval: any = null;
+  
+  // Properties for robust progress tracking
+  private songInitialProgressMs: number = 0;
+  private lastSyncTime: number = 0;
+
+  constructor(private spotifyService: SpotifyNowPlayingService) {}
 
   ngOnInit(): void {
-    this.loadCurrentSong();
     this.startAdminSpotifyPolling();
-    this.startSongPolling();
   }
 
   ngOnDestroy(): void {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
     }
-    if (this.songPollingSubscription) {
-      this.songPollingSubscription.unsubscribe();
-    }
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-  }
-
-  loadCurrentSong(): void {
-    this.votingService.getRankedSongs().subscribe({
-      next: (songs) => {
-        if (songs.length > 0) {
-          this.currentSong = songs[0];
-        } else {
-          this.currentSong = null;
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar la canción actual:', error);
-      },
-    });
-  }
-
-  startSongPolling(): void {
-    // Actualizar la canción más votada cada 10 segundos
-    this.songPollingSubscription = interval(10000).subscribe(() => {
-      this.loadCurrentSong();
-    });
+    this.stopProgressBar();
   }
 
   startAdminSpotifyPolling(): void {
+    // The service observable will poll every 3 seconds
     this.pollingSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe({
       next: (data) => {
-        if (data.is_playing) {
-          this.adminCurrentlyPlaying = data;
-          console.log('Reproduciendo:', data.name);
-          
-          // Iniciar barra de progreso si hay una canción en reproducción
-          this.startProgressBar(data.progress_ms, data.duration_ms);
-        } else if (data.error) {
-          console.warn('Error en Spotify:', data.error);
-          this.adminCurrentlyPlaying = null;
-          this.stopProgressBar();
+        if (data && data.is_playing) {
+          // If song changed or wasn't playing before, reset the progress bar
+          if (!this.adminCurrentlyPlaying || this.adminCurrentlyPlaying.id !== data.id) {
+            this.adminCurrentlyPlaying = data;
+            this.startProgressBar(data.progress_ms, data.duration_ms);
+          } else {
+            // If it's the same song, just re-sync the progress to correct any drift
+            this.syncProgressBar(data.progress_ms, data.duration_ms);
+          }
         } else {
+          // Nothing is playing
           this.adminCurrentlyPlaying = null;
           this.stopProgressBar();
-          console.log('No se está reproduciendo nada');
         }
       },
       error: (error) => {
         console.error('Error al obtener reproducción actual del admin:', error);
         this.adminCurrentlyPlaying = null;
         this.stopProgressBar();
-        // Reintentar después de 10 segundos
-        setTimeout(() => this.startAdminSpotifyPolling(), 10000);
       }
     });
   }
 
-  startProgressBar(currentProgress: number, duration: number): void {
-    this.stopProgressBar();
+  private startProgressBar(progressMs: number, durationMs: number): void {
+    this.stopProgressBar(); // Clear any existing interval
+    this.syncProgressBar(progressMs, durationMs);
     
-    // Calcular progreso inicial
-    this.progress = (currentProgress / duration) * 100;
-    
-    // Actualizar progreso cada segundo
+    // Start an interval to update the UI every 500ms
     this.progressInterval = setInterval(() => {
-      if (this.progress < 100) {
-        this.progress += (1000 / duration) * 100;
-      } else {
-        this.stopProgressBar();
-      }
-    }, 1000);
+      this.updateProgress();
+    }, 500);
   }
 
-  stopProgressBar(): void {
+  private syncProgressBar(progressMs: number, durationMs: number): void {
+    this.songInitialProgressMs = progressMs;
+    this.songDurationMs = durationMs;
+    this.lastSyncTime = Date.now();
+    this.updateProgress(); // Update progress immediately on sync
+  }
+  
+  private updateProgress(): void {
+    if (!this.adminCurrentlyPlaying || this.songDurationMs <= 0) {
+      this.progress = 0;
+      return;
+    }
+    
+    const elapsedTimeSinceSync = Date.now() - this.lastSyncTime;
+    const currentProgressMs = this.songInitialProgressMs + elapsedTimeSinceSync;
+    
+    this.progress = Math.min((currentProgressMs / this.songDurationMs) * 100, 100);
+    
+    if (this.progress >= 100) {
+      // Let the polling handle the next state, just stop the local timer
+      this.stopProgressBar();
+    }
+  }
+
+  private stopProgressBar(): void {
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
       this.progressInterval = null;
     }
-    this.progress = 0;
-  }
-
-  // Emitido cuando se vota desde el componente de búsqueda
-  onVoteCasted(): void {
-    this.loadCurrentSong(); // Actualizar la canción más votada
+    // Don't reset progress to 0 here to avoid flicker. Let the next poll handle it.
   }
   
   formatTime(ms: number): string {

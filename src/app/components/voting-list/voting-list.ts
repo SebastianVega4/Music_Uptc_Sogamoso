@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { forkJoin } from 'rxjs';
@@ -10,15 +10,25 @@ import { forkJoin } from 'rxjs';
   styleUrls: ['./voting-list.scss'],
   imports: [CommonModule]
 })
-export class VotingListComponent implements OnInit {
+export class VotingListComponent implements OnInit, OnDestroy {
   songs: any[] = [];
   recentlyAddedSongs: any[] = [];
   isLoading: boolean = true;
+  private pollingInterval: any;
 
   constructor(private votingService: VotingService) { }
 
   ngOnInit(): void {
     this.loadSongs();
+    this.pollingInterval = setInterval(() => {
+      this.loadSongs();
+    }, 5000); // Actualiza cada 5 segundos
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
   }
 
   loadSongs(): void {
@@ -35,7 +45,7 @@ export class VotingListComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar canciones:', error);
         this.isLoading = false;
-        alert('Error al cargar la lista de canciones.');
+        // No se muestra alerta en los errores de sondeo para no molestar al usuario
       },
     });
   }
@@ -52,7 +62,7 @@ export class VotingListComponent implements OnInit {
     this.votingService.voteForSong(song.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
-        this.loadSongs();
+        this.loadSongs(); // Recarga inmediata para feedback instantáneo
       },
       error: (error) => {
         if (error.status === 409) {

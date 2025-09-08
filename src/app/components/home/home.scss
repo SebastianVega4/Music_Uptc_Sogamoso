@@ -1,28 +1,133 @@
-.spotify-header {
-  background: linear-gradient(to right, #222, #111);
-  border-bottom: 1px solid #282828;
+/* Contenedor principal de la página de inicio */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-// Estilos para móviles
-@media (max-width: 768px) {
-  .container-md {
-    padding: 0 0.5rem;
+/* Sección de "Reproduciendo Ahora" */
+.now-playing-section {
+  background-color: var(--card-bg);
+  border: 1px solid var(--hover-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--hover-bg);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 1rem 1.5rem;
+  }
+
+  .album-art {
+    max-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    margin: 0 auto;
+  }
+
+  .song-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 1rem;
+  }
+
+  .song-artist {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Barra de progreso */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+
+  .time-display {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .progress {
+    flex-grow: 1;
+    height: 6px;
+    background-color: #444;
+    border-radius: 3px;
+    overflow: hidden;
+
+    .progress-bar {
+      background-color: var(--primary-color);
+      height: 100%;
+      transition: width 0.25s linear; /* Transición suave para el progreso */
+    }
+  }
+}
+
+/* Mensaje cuando no hay canción en reproducción */
+.no-song-playing {
+  background-color: var(--card-bg);
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  .card-body {
+    padding: 2rem;
   }
   
-  .card-header {
-    padding: 0.75rem 1rem;
-    
-    h5 {
-      font-size: 1rem;
+  .fa-music-slash {
+    color: var(--text-tertiary);
+  }
+  
+  h3 {
+    color: var(--text-primary);
+  }
+  
+  p {
+    color: var(--text-secondary);
+  }
+}
+
+/* Estilos responsivos para móviles */
+@media (max-width: 768px) {
+  .now-playing-section {
+    .album-art {
+      max-width: 150px;
+    }
+
+    .song-title {
+      font-size: 1.2rem;
+    }
+
+    .song-artist {
+      font-size: 0.9rem;
     }
   }
   
-  .card-body {
-    padding: 1rem;
+  .progress-container {
+    max-width: 100%;
   }
 }
 
-// Función para formatear el tiempo (se implementa en el componente)
-.format-time {
-  font-variant-numeric: tabular-nums;
+/* Animación de entrada */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

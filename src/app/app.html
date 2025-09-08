@@ -1,30 +1,21 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" routerLink="/">
-      <i class="fas fa-music me-2"></i>{{ title }}
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active">Inicio</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/admin-login" routerLinkActive="active">Admin</a>
-        </li>
-      </ul>
+<div class="main-container">
+  <header class="main-header">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h1 class="logo">{{ title }}</h1>
+      <nav class="main-nav">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+        <a routerLink="/admin-login" routerLinkActive="active">Admin</a>
+      </nav>
     </div>
-  </div>
-</nav>
+  </header>
 
-<div class="container mt-4">
-  <router-outlet></router-outlet>
+  <main class="content-area">
+    <div class="container">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
 </div>
 
-<footer class="mt-5 py-3 bg-dark text-light text-center">
-  <div class="container">
-    <p>Sistema de votación musical - Restaurante UPTC Sogamoso</p>
-  </div>
+<footer class="now-playing-bar">
+  <!-- Aquí irá el componente de reproducción de música -->
 </footer>
