@@ -9,5 +9,5 @@ import { RouterModule } from "@angular/router";
   imports: [RouterModule],
 })
 export class AppComponent {
-  title = 'UPTC Restaurant Music';
+  title = 'UPTC Music';
 }
