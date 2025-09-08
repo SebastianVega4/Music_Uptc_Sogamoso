@@ -1,15 +1,37 @@
-.card {
-  transition: transform 0.2s;
+.track-card {
+  transition: transform 0.2s, background-color 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    background-color: #282828;
+  }
 }
 
-.card:hover {
-  transform: translateY(-2px);
+.results-container {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.btn-success {
-  transition: all 0.2s;
+// Para móviles
+@media (max-width: 576px) {
+  .track-card {
+    .card-body {
+      padding: 0.75rem;
+    }
+    
+    h6 {
+      font-size: 0.9rem;
+    }
+    
+    .btn-sm {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
 }
 
-.btn-success:hover {
-  transform: scale(1.05);
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

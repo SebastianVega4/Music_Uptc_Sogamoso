@@ -49,6 +49,7 @@ export class SearchComponent {
       artists: track.artists,
       image: track.image,
       preview_url: track.preview_url,
+      album: track.album
     };
   
     this.votingService.voteForSong(track.id, trackInfo).subscribe({
@@ -57,7 +58,7 @@ export class SearchComponent {
         this.query = '';
         this.results = [];
         this.searchPerformed = false;
-        this.voteCasted.emit();
+        this.voteCasted.emit(); // Notificar al componente padre
       },
       error: (error) => {
         if (error.status === 409) {

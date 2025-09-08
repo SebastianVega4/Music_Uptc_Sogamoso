@@ -1,13 +1,16 @@
-/* Importación de fuentes */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+/* Importación de fuentes y iconos */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 /* Variables de colores de Spotify */
 :root {
   --primary-color: #1DB954; /* Verde Spotify */
-  --dark-color: #121212; /* Fondo oscuro Spotify */
-  --light-color: #FFFFFF;
-  --secondary-color: #b3b3b3; /* Color de texto secundario */
-  --card-background: #181818; /* Fondo de tarjetas */
+  --dark-bg: #121212; /* Fondo oscuro Spotify */
+  --card-bg: #181818; /* Fondo de tarjetas */
+  --hover-bg: #282828; /* Fondo al pasar el ratón */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-tertiary: #727272;
 }
 
 /* Estilos globales */
@@ -19,109 +22,287 @@
 
 body {
   font-family: 'Montserrat', sans-serif;
-  background-color: var(--dark-color);
-  color: var(--light-color);
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
   min-height: 100vh;
+  line-height: 1.5;
 }
 
 /* Barra de navegación */
 .navbar {
-  background-color: #000;
+  background-color: #000000;
   border-bottom: 1px solid #282828;
+  padding: 0.8rem 1rem;
 }
 
 .navbar-brand {
-  color: var(--light-color);
+  color: var(--text-primary);
   font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: var(--text-primary);
+}
+
+/* Contenedor principal */
+.container {
+  padding: 1rem;
 }
 
 /* Tarjetas con estilo Spotify */
 .card {
-  background-color: var(--card-background);
+  background-color: var(--card-bg);
   border: none;
   border-radius: 8px;
   overflow: hidden;
   transition: background-color 0.3s ease;
+  margin-bottom: 1rem;
 }
 
 .card:hover {
-  background-color: #282828;
+  background-color: var(--hover-bg);
 }
 
 .card-header {
   background-color: transparent;
-  border-bottom: none;
-  color: var(--light-color);
-  font-size: 1.25rem;
+  border-bottom: 1px solid #282828;
+  color: var(--text-primary);
+  font-size: 1.1rem;
   font-weight: 700;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
 }
 
 .card-body {
   padding: 1.5rem;
 }
 
-
 /* Botones con estilo Spotify */
+.btn {
+  border-radius: 500px;
+  font-weight: 700;
+  padding: 0.5rem 1.5rem;
+  transition: all 0.2s ease;
+  border: none;
+}
+
 .btn-primary {
   background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: var(--light-color);
-  font-weight: 700;
-  border-radius: 500px;
-  padding: 10px 30px;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  color: var(--text-primary);
 }
 
 .btn-primary:hover {
-  transform: scale(1.05);
   background-color: #1ed760;
-  border-color: #1ed760;
+  transform: scale(1.05);
+}
+
+.btn-success {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.btn-success:hover {
+  background-color: #1ed760;
+  transform: scale(1.05);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: #e22134;
+  border: 1px solid #727272;
+}
+
+.btn-danger:hover {
+  background-color: #e22134;
+  color: var(--text-primary);
+}
+
+.btn-outline-danger {
+  color: #e22134;
+  border: 1px solid #e22134;
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  background-color: #e22134;
+  color: var(--text-primary);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
 }
 
 /* Campos de formulario */
 .form-control {
-  background-color: #333;
-  border-color: #555;
-  color: var(--light-color);
+  background-color: #2a2a2a;
+  border: 1px solid #3e3e3e;
+  color: var(--text-primary);
   border-radius: 500px;
+  padding: 0.5rem 1rem;
 }
 
 .form-control:focus {
-  background-color: #333;
+  background-color: #2a2a2a;
   border-color: var(--primary-color);
-  color: var(--light-color);
+  color: var(--text-primary);
   box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
 }
 
-/* Elementos de audio */
-audio {
-  width: 100%;
-  border-radius: 5px;
-  height: 40px;
+.form-control::placeholder {
+  color: var(--text-tertiary);
 }
 
-audio::-webkit-media-controls-panel {
-  background-color: #282828;
+/* Input group */
+.input-group .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
-audio::-webkit-media-controls-play-button,
-audio::-webkit-media-controls-mute-button {
-  color: var(--light-color);
+/* Alertas */
+.alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
 }
 
-/* Otros estilos */
-.text-muted {
-  color: var(--secondary-color) !important;
+.alert-success {
+  background-color: rgba(29, 185, 84, 0.1);
+  color: var(--primary-color);
 }
 
-.list-group-item {
-  background-color: transparent;
-  border-color: #333;
-  color: var(--light-color);
+.alert-info {
+  background-color: rgba(83, 143, 221, 0.1);
+  color: #538fdd;
 }
 
+.alert-warning {
+  background-color: rgba(221, 177, 83, 0.1);
+  color: #ddb153;
+}
+
+.alert-danger {
+  background-color: rgba(226, 33, 52, 0.1);
+  color: #e22134;
+}
+
+/* Badges */
 .badge {
+  border-radius: 500px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+  background-color: var(--primary-color) !important;
+}
+
+/* Imágenes */
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+.rounded {
+  border-radius: 8px;
+}
+
+/* Elementos de audio personalizados */
+.audio-player {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.audio-player::-webkit-media-controls-panel {
+  background-color: var(--card-bg);
+}
+
+.audio-player::-webkit-media-controls-play-button {
   background-color: var(--primary-color);
-  color: var(--light-color);
+  border-radius: 50%;
+}
+
+.audio-player::-webkit-media-controls-current-time-display,
+.audio-player::-webkit-media-controls-time-remaining-display {
+  color: var(--text-primary);
+}
+
+/* Barra de progreso personalizada */
+.progress {
+  height: 4px;
+  background-color: #5a5a5a;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-bar {
+  background-color: var(--primary-color);
+}
+
+/* Utilidades de texto */
+.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5a5a5a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }

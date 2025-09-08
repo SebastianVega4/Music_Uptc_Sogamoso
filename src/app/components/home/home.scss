@@ -1,7 +1,28 @@
-.card {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.spotify-header {
+  background: linear-gradient(to right, #222, #111);
+  border-bottom: 1px solid #282828;
 }
 
-.card-header {
-  font-weight: bold;
+// Estilos para móviles
+@media (max-width: 768px) {
+  .container-md {
+    padding: 0 0.5rem;
+  }
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+    
+    h5 {
+      font-size: 1rem;
+    }
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+// Función para formatear el tiempo (se implementa en el componente)
+.format-time {
+  font-variant-numeric: tabular-nums;
 }

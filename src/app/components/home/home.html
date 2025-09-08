@@ -1,24 +1,42 @@
-<div class="row">
-  <div class="col-md-8 mx-auto">
+<div class="container-fluid p-0">
+  <!-- Header tipo Spotify -->
+  <div class="spotify-header py-3 px-4 d-flex align-items-center">
+    <i class="fab fa-spotify me-2" style="color: #1DB954; font-size: 2rem;"></i>
+    <h2 class="m-0">UPTC Restaurant Music</h2>
+  </div>
+
+  <div class="container-md py-4">
     <!-- Canción actual del admin en Spotify -->
-    <div class="card mb-4" *ngIf="adminCurrentlyPlaying">
-      <div class="card-header bg-success text-white">
+    <div class="card mb-4 fade-in" *ngIf="adminCurrentlyPlaying">
+      <div class="card-header d-flex align-items-center">
+        <i class="fab fa-spotify me-2" style="color: #1DB954;"></i>
         <h5 class="mb-0">Reproduciendo ahora en Spotify</h5>
       </div>
       <div class="card-body">
         <div class="row align-items-center">
-          <div class="col-3">
-            <img [src]="adminCurrentlyPlaying.image" class="img-fluid rounded" [alt]="adminCurrentlyPlaying.name">
+          <div class="col-12 col-md-3 text-center mb-3 mb-md-0">
+            <img [src]="adminCurrentlyPlaying.image" class="img-fluid rounded" [alt]="adminCurrentlyPlaying.name" style="max-height: 200px;">
           </div>
-          <div class="col-9">
+          <div class="col-12 col-md-9">
             <h4>{{ adminCurrentlyPlaying.name }}</h4>
             <p class="text-muted mb-1">{{ adminCurrentlyPlaying.artists.join(', ') }}</p>
-            <p class="text-muted mb-1">Álbum: {{ adminCurrentlyPlaying.album }}</p>
-            <audio controls class="w-100 mt-2" *ngIf="adminCurrentlyPlaying.preview_url">
+            <p class="text-muted mb-3">Álbum: {{ adminCurrentlyPlaying.album }}</p>
+            
+            <!-- Barra de progreso -->
+            <div class="progress mt-3">
+              <div class="progress-bar" [style.width.%]="progress"></div>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-1">
+              <span>{{ formatTime(adminCurrentlyPlaying.progress_ms) }}</span>
+              <span>{{ formatTime(adminCurrentlyPlaying.duration_ms) }}</span>
+            </div>
+            
+            <!-- Preview de audio -->
+            <audio controls class="audio-player mt-3" *ngIf="adminCurrentlyPlaying.preview_url">
               <source [src]="adminCurrentlyPlaying.preview_url" type="audio/mpeg">
               Tu navegador no soporta el elemento de audio.
             </audio>
-            <p class="text-muted mt-2" *ngIf="!adminCurrentlyPlaying.preview_url">
+            <p class="text-muted mt-2 small" *ngIf="!adminCurrentlyPlaying.preview_url">
               No hay preview disponible para esta canción
             </p>
           </div>
@@ -27,23 +45,27 @@
     </div>
 
     <!-- Canción más votada (solo si no hay reproducción del admin) -->
-    <div class="card mb-4" *ngIf="currentSong && !adminCurrentlyPlaying">
-      <div class="card-header bg-primary text-white">
+    <div class="card mb-4 fade-in" *ngIf="currentSong && !adminCurrentlyPlaying">
+      <div class="card-header d-flex align-items-center">
+        <i class="fas fa-fire me-2" style="color: #FF5722;"></i>
         <h5 class="mb-0">Próxima canción (más votada)</h5>
       </div>
       <div class="card-body">
         <div class="row align-items-center">
-          <div class="col-3">
-            <img [src]="currentSong.image" class="img-fluid rounded" [alt]="currentSong.name">
+          <div class="col-12 col-md-3 text-center mb-3 mb-md-0">
+            <img [src]="currentSong.image" class="img-fluid rounded" [alt]="currentSong.name" style="max-height: 200px;">
           </div>
-          <div class="col-9">
+          <div class="col-12 col-md-9">
             <h4>{{ currentSong.name }}</h4>
             <p class="text-muted mb-1">{{ currentSong.artists.join(', ') }}</p>
-            <audio controls class="w-100 mt-2" *ngIf="currentSong.preview_url">
+            <p class="text-muted mb-3">Votos: {{ currentSong.votes || 0 }}</p>
+            
+            <!-- Preview de audio -->
+            <audio controls class="audio-player" *ngIf="currentSong.preview_url">
               <source [src]="currentSong.preview_url" type="audio/mpeg">
               Tu navegador no soporta el elemento de audio.
             </audio>
-            <p class="text-muted mt-2" *ngIf="!currentSong.preview_url">
+            <p class="text-muted mt-2 small" *ngIf="!currentSong.preview_url">
               No hay preview disponible para esta canción
             </p>
           </div>
@@ -52,7 +74,7 @@
     </div>
 
     <!-- Buscador -->
-    <app-search></app-search>
+    <app-search (voteCasted)="onVoteCasted()"></app-search>
 
     <!-- Lista de votación -->
     <app-voting-list></app-voting-list>
