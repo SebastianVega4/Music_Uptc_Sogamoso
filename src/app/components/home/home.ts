@@ -47,6 +47,22 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  startSpotifyPolling(): void {
+    this.pollingSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe({
+      next: (data) => {
+        if (data.is_playing) {
+          this.adminCurrentlyPlaying = data;
+        } else {
+          this.adminCurrentlyPlaying = null;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener reproducción actual de Spotify:', error);
+        this.adminCurrentlyPlaying = null;
+      }
+    });
+  }
+
   startAdminSpotifyPolling(): void {
     this.pollingSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe({
       next: (data) => {
