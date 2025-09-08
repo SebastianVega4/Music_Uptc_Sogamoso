@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
-import { forkJoin } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   standalone: true,
@@ -14,29 +15,25 @@ export class VotingListComponent implements OnInit, OnDestroy {
   songs: any[] = [];
   recentlyAddedSongs: any[] = [];
   isLoading: boolean = true;
-  private pollingInterval: any;
+  isRefreshing: boolean = false;
+  private pollingSubscription: Subscription | null = null;
 
   constructor(private votingService: VotingService) { }
 
   ngOnInit(): void {
-    this.loadSongs();
-    this.pollingInterval = setInterval(() => {
-      this.loadSongs();
-    }, 5000); // Actualiza cada 5 segundos
+    this.startPolling();
   }
 
   ngOnDestroy(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
     }
   }
 
-  loadSongs(): void {
-    this.isLoading = true;
-    const rankedSongs$ = this.votingService.getRankedSongs();
-    const recentlyAddedSongs$ = this.votingService.getRecentlyAddedSongs();
-
-    forkJoin({ranked: rankedSongs$, recent: recentlyAddedSongs$}).subscribe({
+  startPolling(): void {
+    this.pollingSubscription = this.votingService.getRankedSongsPolling().pipe(
+      map(rankedSongs => this.processSongs(rankedSongs))
+    ).subscribe({
       next: ({ranked, recent}) => {
         this.songs = ranked;
         this.recentlyAddedSongs = recent;
@@ -45,9 +42,35 @@ export class VotingListComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error al cargar canciones:', error);
         this.isLoading = false;
-        // No se muestra alerta en los errores de sondeo para no molestar al usuario
       },
     });
+  }
+
+  forceRefresh(): void {
+    if (this.isRefreshing) return;
+
+    this.isRefreshing = true;
+    this.votingService.getRankedSongs().pipe(
+      map(rankedSongs => this.processSongs(rankedSongs))
+    ).subscribe({
+      next: ({ranked, recent}) => {
+        this.songs = ranked;
+        this.recentlyAddedSongs = recent;
+        this.isRefreshing = false;
+      },
+      error: (error) => {
+        console.error('Error al forzar actualización:', error);
+        this.isRefreshing = false;
+      }
+    });
+  }
+
+  private processSongs(rankedSongs: any[]) {
+    const recentSongs = rankedSongs
+      .filter(song => song.votes === 1)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+    return { ranked: rankedSongs, recent: recentSongs };
   }
 
   vote(song: any): void {
@@ -62,7 +85,8 @@ export class VotingListComponent implements OnInit, OnDestroy {
     this.votingService.voteForSong(song.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
-        this.loadSongs(); // Recarga inmediata para feedback instantáneo
+        // Forzar actualización para feedback instantáneo
+        this.forceRefresh();
       },
       error: (error) => {
         if (error.status === 409) {

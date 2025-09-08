@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, interval } from 'rxjs';
+import { map, startWith, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 
@@ -13,8 +13,14 @@ export class VotingService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
+  // Helper para obtener una URL que evite el caché
+  private getCacheBustedUrl(url: string): string {
+    return `${url}?_=${new Date().getTime()}`;
+  }
+
   getRankedSongs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/votes`).pipe(
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
+    return this.http.get<any[]>(url).pipe(
       map(songs => {
         if (!songs) {
           return [];
@@ -26,7 +32,6 @@ export class VotingService {
           if (a.votes < b.votes) {
             return 1;
           }
-          // If votes are equal, and votes are 1, sort by creation date
           if (a.votes === 1) {
             if (a.createdAt > b.createdAt) {
               return -1;
@@ -38,6 +43,14 @@ export class VotingService {
           return 0;
         });
       })
+    );
+  }
+
+  // Sondeo para obtener el ranking de canciones cada 3 segundos
+  getRankedSongsPolling(): Observable<any[]> {
+    return interval(3000).pipe(
+      startWith(0),
+      switchMap(() => this.getRankedSongs())
     );
   }
 
@@ -67,7 +80,8 @@ export class VotingService {
       Authorization: `Bearer ${token}`,
     });
 
-    return this.http.delete(`${this.apiUrl}/api/votes?trackId=${trackId}`, { headers });
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes?trackId=${trackId}`);
+    return this.http.delete(url, { headers });
   }
 
   deleteAllVotes(): Observable<any> {
@@ -76,6 +90,7 @@ export class VotingService {
       Authorization: `Bearer ${token}`,
     });
   
-    return this.http.delete(`${this.apiUrl}/api/votes/all`, { headers });
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes/all`);
+    return this.http.delete(url, { headers });
   }
 }

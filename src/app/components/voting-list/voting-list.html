@@ -1,8 +1,9 @@
 <div class="spotify-container">
   <div class="header">
     <h1>Votación de Canciones</h1>
-    <button class="btn-refresh" (click)="loadSongs()">
-      <i class="fas fa-sync-alt"></i> Actualizar
+    <button class="btn-refresh" (click)="forceRefresh()" [disabled]="isRefreshing">
+      <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+      {{ isRefreshing ? 'Actualizando...' : 'Actualizar' }}
     </button>
   </div>
 
