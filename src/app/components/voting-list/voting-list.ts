@@ -66,10 +66,12 @@ export class VotingListComponent implements OnInit, OnDestroy {
   }
 
   private processSongs(rankedSongs: any[]) {
-    const recentSongs = rankedSongs
-      .filter(song => song.votes === 1)
+    // Crea una nueva lista ordenada por fecha de creación para "Agregadas Recientemente"
+    const recentSongs = [...rankedSongs]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
+      .slice(0, 3); // Limita la lista a 3 canciones
+
+    // Retorna tanto el ranking general (ya ordenado por votos) como la lista de recientes
     return { ranked: rankedSongs, recent: recentSongs };
   }
 
@@ -85,12 +87,11 @@ export class VotingListComponent implements OnInit, OnDestroy {
     this.votingService.voteForSong(song.id, trackInfo).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
-        // Forzar actualización para feedback instantáneo
-        this.forceRefresh();
+        this.forceRefresh(); // Actualización inmediata para feedback instantáneo
       },
       error: (error) => {
         if (error.status === 409) {
-          alert('Ya has votado por esta canción.');
+          alert('Ya has votado por esta canción con esta IP');
         } else {
           alert('Error al registrar tu voto. Intenta nuevamente.');
         }
