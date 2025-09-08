@@ -4,6 +4,7 @@ import { VotingService } from '../../services/voting';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -18,16 +19,29 @@ export class AdminPanelComponent implements OnInit {
   spotifyStatus: any = null;
   adminCurrentlyPlaying: any = null;
 
+
   constructor(
     private votingService: VotingService,
     private authService: AuthService,
     private router: Router,
-    private spotifyService: SpotifyNowPlayingService
-  ) {}
+    private spotifyService: SpotifyNowPlayingService,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
     this.loadSongs();
     this.checkSpotifyStatus();
+    // Verificar si se acaba de conectar Spotify
+    this.route.queryParams.subscribe(params => {
+      if (params['spotify_connected'] === 'true') {
+        alert('Spotify conectado correctamente');
+        // Recargar estado después de conectar
+        setTimeout(() => {
+          this.checkSpotifyStatus();
+          this.getAdminCurrentlyPlaying();
+        }, 2000);
+      }
+    });
   }
 
   loadSongs(): void {
@@ -49,7 +63,7 @@ export class AdminPanelComponent implements OnInit {
     this.spotifyService.getAdminSpotifyStatus().subscribe({
       next: (status) => {
         this.spotifyStatus = status;
-        
+
         // Si está autenticado, obtener la canción actual
         if (status.authenticated && status.token_valid) {
           this.getAdminCurrentlyPlaying();
@@ -80,7 +94,7 @@ export class AdminPanelComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al iniciar autenticación de Spotify:', error);
-        alert('Error al conectar con Spotify');
+        alert('Error al conectar con Spotify. Verifica la configuración.');
       }
     });
   }
@@ -131,7 +145,7 @@ export class AdminPanelComponent implements OnInit {
     if (!confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.')) {
       return;
     }
-  
+
     this.votingService.deleteAllVotes().subscribe({
       next: () => {
         alert('Todos los votos han sido eliminados correctamente.');
@@ -150,7 +164,7 @@ export class AdminPanelComponent implements OnInit {
       },
     });
   }
-  
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);

@@ -68,13 +68,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (data) => {
         if (data.is_playing) {
           this.adminCurrentlyPlaying = data;
+          console.log('Reproduciendo:', data.name);
+        } else if (data.error) {
+          console.warn('Error en Spotify:', data.error);
+          this.adminCurrentlyPlaying = null;
         } else {
           this.adminCurrentlyPlaying = null;
+          console.log('No se está reproduciendo nada');
         }
       },
       error: (error) => {
         console.error('Error al obtener reproducción actual del admin:', error);
         this.adminCurrentlyPlaying = null;
+        // Reintentar después de 10 segundos
+        setTimeout(() => this.startAdminSpotifyPolling(), 10000);
       }
     });
   }
