@@ -12,14 +12,20 @@ export class SpotifyNowPlayingService {
 
   constructor(private http: HttpClient) { }
 
-  // Obtener la canción actual del admin (para todos los usuarios)
-  getAdminCurrentlyPlaying(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/spotify/admin/currently-playing`);
+  // Helper to get a cache-busting URL
+  private getCacheBustedUrl(url: string): string {
+    return `${url}?_=${new Date().getTime()}`;
   }
 
-  // Polling para obtener la canción actual del admin cada 5 segundos
+  // Obtener la canción actual del admin (para todos los usuarios)
+  getAdminCurrentlyPlaying(): Observable<any> {
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/admin/currently-playing`);
+    return this.http.get(url);
+  }
+
+  // Polling para obtener la canción actual del admin cada 3 segundos
   getAdminCurrentlyPlayingPolling(): Observable<any> {
-    return interval(5000).pipe(
+    return interval(3000).pipe(
       startWith(0),
       switchMap(() => this.getAdminCurrentlyPlaying())
     );
@@ -27,12 +33,14 @@ export class SpotifyNowPlayingService {
 
   // Verificar estado de autenticación de Spotify del admin
   getAdminSpotifyStatus(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/spotify/admin/status`);
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/admin/status`);
+    return this.http.get(url);
   }
 
   // Iniciar autenticación de Spotify para el admin
   startAdminSpotifyAuth(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/spotify/admin/auth`);
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/admin/auth`);
+    return this.http.get(url);
   }
 
   // Desconectar Spotify del admin
@@ -42,15 +50,17 @@ export class SpotifyNowPlayingService {
 
   // Métodos existentes para usuarios individuales
   startSpotifyAuth(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/spotify/auth`);
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/auth`);
+    return this.http.get(url);
   }
 
   getCurrentlyPlaying(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/spotify/currently-playing`);
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/currently-playing`);
+    return this.http.get(url);
   }
 
   getCurrentlyPlayingPolling(): Observable<any> {
-    return interval(5000).pipe(
+    return interval(3000).pipe(
       startWith(0),
       switchMap(() => this.getCurrentlyPlaying())
     );

@@ -15,6 +15,12 @@
         </div>
         <span class="time-display">{{ formatTime(songDurationMs) }}</span>
       </div>
+
+      <!-- Botón de Actualización Manual -->
+      <button class="btn btn-secondary mt-3" (click)="forceUpdate()" [disabled]="isUpdating">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isUpdating"></i>
+        {{ isUpdating ? 'Actualizando...' : 'Actualizar' }}
+      </button>
     </div>
   </div>
 

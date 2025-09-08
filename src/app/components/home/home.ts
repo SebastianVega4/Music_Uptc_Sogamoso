@@ -16,6 +16,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   adminCurrentlyPlaying: any = null;
   progress: number = 0; // Progress percentage (0-100)
   songDurationMs: number = 0; // Made public for template access
+  isUpdating: boolean = false;
 
   private pollingSubscription: Subscription | null = null;
   private progressInterval: any = null;
@@ -60,6 +61,34 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.error('Error al obtener reproducción actual del admin:', error);
         this.adminCurrentlyPlaying = null;
         this.stopProgressBar();
+      }
+    });
+  }
+
+  forceUpdate(): void {
+    if (this.isUpdating) return;
+
+    this.isUpdating = true;
+    this.spotifyService.getAdminCurrentlyPlaying().subscribe({
+      next: (data) => {
+        if (data && data.is_playing) {
+          if (!this.adminCurrentlyPlaying || this.adminCurrentlyPlaying.id !== data.id) {
+            this.adminCurrentlyPlaying = data;
+            this.startProgressBar(data.progress_ms, data.duration_ms);
+          } else {
+            this.syncProgressBar(data.progress_ms, data.duration_ms);
+          }
+        } else {
+          this.adminCurrentlyPlaying = null;
+          this.stopProgressBar();
+        }
+        this.isUpdating = false;
+      },
+      error: (error) => {
+        console.error('Error al forzar la actualización:', error);
+        this.adminCurrentlyPlaying = null;
+        this.stopProgressBar();
+        this.isUpdating = false;
       }
     });
   }
