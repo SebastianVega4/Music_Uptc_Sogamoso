@@ -66,11 +66,12 @@ export class VotingListComponent implements OnInit, OnDestroy {
   }
 
   private processSongs(rankedSongs: any[]) {
-    // Crea una nueva lista ordenada por fecha de creación para "Agregadas Recientemente"
-    const recentSongs = [...rankedSongs]
+    // Filtrar solo las canciones con exactamente 1 voto (recién agregadas)
+    const recentSongs = rankedSongs
+      .filter(song => song.votes === 1)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3); // Limita la lista a 3 canciones
-
+      .slice(0, 4); // Limita la lista a 3 canciones
+  
     // Retorna tanto el ranking general (ya ordenado por votos) como la lista de recientes
     return { ranked: rankedSongs, recent: recentSongs };
   }

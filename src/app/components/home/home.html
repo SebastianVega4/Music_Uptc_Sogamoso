@@ -3,7 +3,8 @@
   <div class="now-playing-section card fade-in" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
     <h2 class="card-header">Reproduciendo Ahora</h2>
     <div class="card-body text-center">
-      <img [src]="adminCurrentlyPlaying.image" alt="Carátula de {{ adminCurrentlyPlaying.name }}" class="album-art mb-3">
+      <img [src]="adminCurrentlyPlaying.image" alt="Carátula de {{ adminCurrentlyPlaying.name }}"
+        class="album-art mb-3">
       <h3 class="song-title">{{ adminCurrentlyPlaying.name }}</h3>
       <p class="song-artist">{{ adminCurrentlyPlaying.artists }}</p>
 
@@ -32,17 +33,16 @@
         <h3 class="text-light">Aún no hay música sonando</h3>
         <p class="text-muted">¡Busca y añade canciones a la lista para empezar la fiesta!</p>
         <!-- Botón de Actualización Manual -->
-      <button class="btn btn-secondary mt-3" (click)="forceUpdate()">
-        <i class="fas fa-sync-alt"></i>
-        {{ isUpdating ? 'Actualizando...' : 'Actualizar' }}
-      </button>
+        <button class="btn btn-secondary mt-3" (click)="forceUpdate()">
+          <i class="fas fa-sync-alt"></i>
+          {{ isUpdating ? 'Actualizando...' : 'Actualizar' }}
+        </button>
       </div>
     </div>
   </ng-template>
 
   <!-- Componente de búsqueda -->
-  <app-search></app-search>
-
-  <!-- Componente de la lista de votación -->
+  <app-search (voteCasted)="onVoteCasted()"></app-search>
   <app-voting-list></app-voting-list>
+
 </div>

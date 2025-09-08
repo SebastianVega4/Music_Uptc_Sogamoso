@@ -58,7 +58,7 @@ export class SearchComponent {
         this.query = '';
         this.results = [];
         this.searchPerformed = false;
-        this.voteCasted.emit(); // Notificar al componente padre
+        this.voteCasted.emit(); // Emitir evento para notificar
       },
       error: (error) => {
         if (error.status === 409) {

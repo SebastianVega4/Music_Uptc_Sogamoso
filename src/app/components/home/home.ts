@@ -134,6 +134,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     // Don't reset progress to 0 here to avoid flicker. Let the next poll handle it.
   }
+  onVoteCasted(): void {
+    // Forzar actualización de la lista de votación
+    const votingList = document.querySelector('app-voting-list');
+    if (votingList && (votingList as any).forceRefresh) {
+      (votingList as any).forceRefresh();
+    }
+  }
   
   formatTime(ms: number): string {
     if (!ms) return '0:00';
