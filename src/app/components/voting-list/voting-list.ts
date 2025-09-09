@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -18,6 +18,10 @@ export class VotingListComponent implements OnInit, OnDestroy {
   isRefreshing: boolean = false;
   private pollingSubscription: Subscription | null = null;
 
+  refreshCooldown = 30; // seconds
+  countdown = 0;
+  private timerSubscription: Subscription | null = null;
+
   constructor(private votingService: VotingService) { }
 
   ngOnInit(): void {
@@ -27,6 +31,9 @@ export class VotingListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
+    }
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
     }
   }
 
@@ -47,7 +54,7 @@ export class VotingListComponent implements OnInit, OnDestroy {
   }
 
   forceRefresh(): void {
-    if (this.isRefreshing) return;
+    if (this.isRefreshing || this.countdown > 0) return;
 
     this.isRefreshing = true;
     this.votingService.getRankedSongs().pipe(
@@ -57,11 +64,31 @@ export class VotingListComponent implements OnInit, OnDestroy {
         this.songs = ranked;
         this.recentlyAddedSongs = recent;
         this.isRefreshing = false;
+        this.startCooldown();
       },
       error: (error) => {
         console.error('Error al forzar actualización:', error);
         this.isRefreshing = false;
+        this.startCooldown();
       }
+    });
+  }
+
+  startCooldown(): void {
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+    }
+    this.countdown = this.refreshCooldown;
+    this.timerSubscription = timer(0, 1000)
+      .subscribe(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          if (this.timerSubscription) {
+            this.timerSubscription.unsubscribe();
+            this.timerSubscription = null;
+          }
+        }
     });
   }
 
