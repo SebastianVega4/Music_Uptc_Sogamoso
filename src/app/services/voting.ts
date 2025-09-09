@@ -14,7 +14,7 @@ export class VotingService {
   private lastFetchTime: number = 0;
   private readonly CACHE_DURATION = 30000;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   // Helper para obtener una URL que evite el caché
   private getCacheBustedUrl(url: string): string {
@@ -55,22 +55,22 @@ export class VotingService {
 
   getRankedSongs(): Observable<any[]> {
     const now = Date.now();
-    
+
     // Usar caché si está disponible y no ha expirado
     if (this.cachedSongs.length > 0 && (now - this.lastFetchTime) < this.CACHE_DURATION) {
       return of([...this.cachedSongs]); // Devolver copia para evitar mutaciones
     }
 
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
-    
+
     return this.http.get<any[]>(url).pipe(
       map(songs => {
         const processedSongs = this.processSongs(songs || []);
-        
+
         // Actualizar caché
         this.cachedSongs = processedSongs;
         this.lastFetchTime = now;
-        
+
         return processedSongs;
       })
     );
@@ -101,7 +101,7 @@ export class VotingService {
       trackInfo,
       createdAt: new Date().toISOString(),
     };
-    
+
     return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
       tap(() => {
         // Invalidar caché después de votar
@@ -113,10 +113,10 @@ export class VotingService {
   deleteSong(trackid: string): Observable<any> {
     // Usar autenticación básica en lugar de Bearer token
     const headers = this.authService.getBasicAuthHeaders();
-  
+
     const baseUrl = `${this.apiUrl}/api/votes?trackid=${trackid}`;
     const url = this.getCacheBustedUrl(baseUrl);
-    
+
     return this.http.delete(url, { headers }).pipe(
       tap(() => {
         this.invalidateCache();
@@ -127,9 +127,9 @@ export class VotingService {
   deleteAllVotes(): Observable<any> {
     // Usar autenticación básica en lugar de Bearer token
     const headers = this.authService.getBasicAuthHeaders();
-  
+
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes/all`);
-    
+
     return this.http.delete(url, { headers }).pipe(
       tap(() => {
         this.invalidateCache();
