@@ -52,7 +52,7 @@
 .now-playing-bar {
   grid-row: 3;
   background-color: #282828;
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 1rem;
   border-top: 1px solid #121212;
   color: var(--text-primary);
   display: flex;
@@ -82,4 +82,29 @@
   .content-area {
     padding: 0.8rem;
   }
+}
+
+.footer-content {
+  width: 100%;
+}
+
+.footer-text {
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.social-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin: 0 0.5rem;
+  font-size: 0.8rem;
+  transition: color 0.2s ease;
+}
+
+.social-links a:hover {
+  color: var(--text-primary);
+}
+
+.social-links i {
+  margin-right: 0.2rem;
 }
