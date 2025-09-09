@@ -25,7 +25,7 @@ export class SpotifyNowPlayingService {
 
   // Polling para obtener la canción actual del admin cada 3 segundos
   getAdminCurrentlyPlayingPolling(): Observable<any> {
-    return interval(3000).pipe(
+    return interval(30000).pipe(  // 30 segundos en lugar de 3
       startWith(0),
       switchMap(() => this.getAdminCurrentlyPlaying())
     );

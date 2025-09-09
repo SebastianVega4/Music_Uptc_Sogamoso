@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, interval } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
+import { Observable, interval, of } from 'rxjs'; // Añadir 'of'
+import { map, startWith, switchMap, tap } from 'rxjs/operators'; // Añadir 'tap'
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 
@@ -10,47 +10,75 @@ import { AuthService } from './auth';
 })
 export class VotingService {
   private apiUrl = environment.apiUrl;
+  private cachedSongs: any[] = [];
+  private lastFetchTime: number = 0;
+  private readonly CACHE_DURATION = 30000; // 30 segundos de caché
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   // Helper para obtener una URL que evite el caché
   private getCacheBustedUrl(url: string): string {
-    // Verificar si la URL ya tiene parámetros de consulta
     const separator = url.includes('?') ? '&' : '?';
     return `${url}${separator}_=${new Date().getTime()}`;
   }
 
+  // Limpiar caché cuando se realizan operaciones que modifican los datos
+  private invalidateCache(): void {
+    this.cachedSongs = [];
+    this.lastFetchTime = 0;
+  }
+
+  // Procesar y ordenar las canciones (método reusable)
+  private processSongs(songs: any[]): any[] {
+    if (!songs || songs.length === 0) {
+      return [];
+    }
+
+    return songs.sort((a, b) => {
+      if (a.votes > b.votes) {
+        return -1;
+      }
+      if (a.votes < b.votes) {
+        return 1;
+      }
+      if (a.votes === 1) {
+        if (a.createdAt > b.createdAt) {
+          return -1;
+        }
+        if (a.createdAt < b.createdAt) {
+          return 1;
+        }
+      }
+      return 0;
+    });
+  }
+
   getRankedSongs(): Observable<any[]> {
+    const now = Date.now();
+    
+    // Usar caché si está disponible y no ha expirado
+    if (this.cachedSongs.length > 0 && (now - this.lastFetchTime) < this.CACHE_DURATION) {
+      return of([...this.cachedSongs]); // Devolver copia para evitar mutaciones
+    }
+
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
+    
     return this.http.get<any[]>(url).pipe(
       map(songs => {
-        if (!songs) {
-          return [];
-        }
-        return songs.sort((a, b) => {
-          if (a.votes > b.votes) {
-            return -1;
-          }
-          if (a.votes < b.votes) {
-            return 1;
-          }
-          if (a.votes === 1) {
-            if (a.createdAt > b.createdAt) {
-              return -1;
-            }
-            if (a.createdAt < b.createdAt) {
-              return 1;
-            }
-          }
-          return 0;
-        });
+        const processedSongs = this.processSongs(songs || []);
+        
+        // Actualizar caché
+        this.cachedSongs = processedSongs;
+        this.lastFetchTime = now;
+        
+        return processedSongs;
       })
     );
   }
 
-  // Sondeo para obtener el ranking de canciones cada 3 segundos
+  // Sondeo para obtener el ranking de canciones cada 60 segundos
   getRankedSongsPolling(): Observable<any[]> {
-    return interval(3000).pipe(
+    return interval(60000).pipe(
       startWith(0),
       switchMap(() => this.getRankedSongs())
     );
@@ -67,25 +95,36 @@ export class VotingService {
     );
   }
 
-  voteForSong(trackId: string, trackInfo: any): Observable<any> {
+  voteForSong(trackid: string, trackInfo: any): Observable<any> {
     const songData = {
-      trackId,
+      trackid,
       trackInfo,
       createdAt: new Date().toISOString(),
     };
-    return this.http.post(`${this.apiUrl}/api/vote`, songData);
+    
+    return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
+      tap(() => {
+        // Invalidar caché después de votar
+        this.invalidateCache();
+      })
+    );
   }
 
-  deleteSong(trackId: string): Observable<any> {
+  deleteSong(trackid: string): Observable<any> {
     const token = this.authService.getAuthToken();
     const headers = new HttpHeaders({
       Authorization: `Bearer ${token}`,
     });
   
-    // Construir la URL correctamente - primero el parámetro trackId, luego el cache busting
-    const baseUrl = `${this.apiUrl}/api/votes?trackId=${trackId}`;
+    const baseUrl = `${this.apiUrl}/api/votes?trackid=${trackid}`;
     const url = this.getCacheBustedUrl(baseUrl);
-    return this.http.delete(url, { headers });
+    
+    return this.http.delete(url, { headers }).pipe(
+      tap(() => {
+        // Invalidar caché después de eliminar
+        this.invalidateCache();
+      })
+    );
   }
 
   deleteAllVotes(): Observable<any> {
@@ -95,6 +134,18 @@ export class VotingService {
     });
   
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes/all`);
-    return this.http.delete(url, { headers });
+    
+    return this.http.delete(url, { headers }).pipe(
+      tap(() => {
+        // Invalidar caché después de eliminar todo
+        this.invalidateCache();
+      })
+    );
+  }
+
+  // Método para forzar la actualización del caché
+  forceRefresh(): Observable<any[]> {
+    this.invalidateCache();
+    return this.getRankedSongs();
   }
 }
