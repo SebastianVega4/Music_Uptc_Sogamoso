@@ -38,9 +38,9 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
   }
 
   generateParticle() {
-    const size = Math.random() * 50 + 20; // 20px to 70px
-    const duration = Math.random() * 10 + 15; // 15s to 25s
-    const delay = Math.random() * 10; // 0s to 10s
+    const size = Math.random() * 20 + 20; // 20px to 70px
+    const duration = Math.random() * 90 + 15; // 15s to 25s
+    const delay = Math.random() * 7; // 0s to 10s
     const left = Math.random() * 100;
 
     return {

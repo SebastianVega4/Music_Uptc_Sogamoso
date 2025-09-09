@@ -1,14 +1,33 @@
 .announcement-container {
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--hover-bg);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(29, 185, 84, 0.15);
+      border-color: rgba(29, 185, 84, 0.2);
+    }
     
     .card-header {
-      background-color: rgba(29, 185, 84, 0.08);
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
       color: var(--text-primary);
-      font-weight: 600;
-      font-size: 0.95rem;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--hover-bg);
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      i {
+        color: var(--primary-color);
+      }
     }
     
     .btn-close {
@@ -19,44 +38,53 @@
       padding: 0.25rem;
       border-radius: 50%;
       transition: all 0.2s ease;
-      font-size: 0.8rem;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
       
       &:hover {
         color: var(--text-primary);
-        background-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(90deg);
+      }
+      
+      i {
+        font-size: 0.9rem;
       }
     }
     
     .card-body {
-      padding: 1rem;
+      padding: 1.5rem;
     }
     
     .alert {
-      border-left: 3px solid rgba(83, 143, 221, 0.3);
-      background-color: rgba(83, 143, 221, 0.05);
-      padding: 1rem;
-      margin-bottom: 0;
+      border: none;
+      border-radius: 12px;
+      padding: 1.5rem;
+      background: rgba(83, 143, 221, 0.1);
+      border-left: 4px solid rgba(83, 143, 221, 0.5);
       
       h4 {
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
         color: var(--text-primary);
+        display: flex;
+        align-items: center;
         
         i {
           color: #538fdd;
+          margin-right: 0.5rem;
+          font-size: 1.2rem;
         }
       }
       
       p {
-        font-size: 0.9rem;
-        line-height: 1.5;
+        font-size: 0.95rem;
+        line-height: 1.6;
         color: var(--text-secondary);
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
         
         &:last-child {
           margin-bottom: 0;
@@ -70,46 +98,54 @@
     }
     
     .developer-info {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--hover-bg);
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      
+      .d-flex {
+        align-items: flex-start;
+      }
       
       p {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
       }
       
       h6 {
-        font-size: 0.85rem;
+        font-size: 0.95rem;
         color: var(--text-primary);
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
         font-weight: 600;
       }
       
       .social-links {
+        display: flex;
+        gap: 1.2rem;
+        
         a {
           text-decoration: none;
-          transition: color 0.2s ease;
-          font-size: 0.8rem;
-          color: var(--text-secondary) !important;
-          margin-right: 1rem;
+          transition: all 0.3s ease;
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
           
           &:hover {
-            color: var(--primary-color) !important;
+            color: var(--primary-color);
+            transform: translateY(-2px);
           }
           
           i {
-            margin-right: 0.25rem;
-            font-size: 0.9rem;
+            margin-right: 0.4rem;
+            font-size: 1rem;
           }
         }
       }
     }
   }
   
-  /* Efecto de hover más sutil */
+  /* Efecto de hover más pronunciado */
   .announcement-container:hover {
     border-color: var(--primary-color);
-    transition: border-color 0.3s ease;
   }
