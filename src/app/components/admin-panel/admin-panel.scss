@@ -335,3 +335,91 @@ h6 {
     background: rgba(29, 185, 84, 0.05);
   }
 }
+
+// Añadir estas reglas para mejorar la responsividad
+@media (max-width: 768px) {
+  .admin-panel-container {
+    padding: 1rem;
+  }
+  
+  // Ajustar el layout de las tarjetas de canciones
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .row {
+    flex-direction: column;
+    
+    .col-1, .col-2, .col-7, .col-2 {
+      width: 100%;
+      max-width: 100%;
+      flex: 0 0 100%;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    
+    // Reducir el tamaño de las imágenes en móviles
+    .col-2 {
+      img {
+        max-width: 80px;
+        height: auto;
+        margin: 0 auto;
+        display: block;
+      }
+    }
+    
+    .text-end {
+      text-align: center !important;
+      
+      .btn-group {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+    }
+  }
+  
+  // Ajustar botones para móviles
+  .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  // Ajustar badges para móviles
+  .badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.7rem;
+  }
+}
+
+// Estilos específicos para imágenes responsivas
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+  
+  @media (max-width: 768px) {
+    max-width: 80px;
+  }
+}
+
+// Ajustar el layout de la cola de reproducción en móviles
+.queue-item {
+  .row {
+    @media (max-width: 768px) {
+      .col-1, .col-2, .col-9 {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+        text-align: center;
+        margin-bottom: 0.5rem;
+      }
+      
+      .col-2 {
+        img {
+          max-width: 60px;
+        }
+      }
+    }
+  }
+}

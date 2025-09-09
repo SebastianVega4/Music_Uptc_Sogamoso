@@ -8,14 +8,18 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  private readonly ADMIN_CREDENTIALS = {
+    email: "sebastian.vegar2015@gmail.com",
+    password: "Sebas.01"
+  };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   async login(email: string, password: string): Promise<boolean> {
     try {
       // Crear credenciales en base64 para autenticación básica
       const credentials = btoa(`${email}:${password}`);
-      
+
       // Configurar headers con autenticación básica
       const headers = new HttpHeaders({
         'Authorization': `Basic ${credentials}`
@@ -23,7 +27,7 @@ export class AuthService {
 
       // Verificar credenciales con el backend
       const response: any = await this.http.post(
-        `${this.apiUrl}/api/auth`, 
+        `${this.apiUrl}/api/auth`,
         { email, password },
         { headers }
       ).toPromise();
@@ -62,11 +66,22 @@ export class AuthService {
   // Método para obtener headers de autenticación básica
   getBasicAuthHeaders(): HttpHeaders {
     const token = this.getAuthToken();
+    const email = this.getAdminEmail();
+
+    // Si no hay token pero hay email, usar las credenciales fijas
+    if (!token && email === this.ADMIN_CREDENTIALS.email) {
+      const credentials = btoa(`${this.ADMIN_CREDENTIALS.email}:${this.ADMIN_CREDENTIALS.password}`);
+      return new HttpHeaders({
+        'Authorization': `Basic ${credentials}`
+      });
+    }
+
     if (token) {
       return new HttpHeaders({
         'Authorization': `Basic ${token}`
       });
     }
+
     return new HttpHeaders();
   }
 }
