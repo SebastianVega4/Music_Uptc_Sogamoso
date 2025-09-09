@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, interval } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { switchMap, startWith } from 'rxjs/operators';
+import { AuthService } from './auth';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ import { switchMap, startWith } from 'rxjs/operators';
 export class SpotifyNowPlayingService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   // Helper to get a cache-busting URL
   private getCacheBustedUrl(url: string): string {
@@ -45,7 +46,8 @@ export class SpotifyNowPlayingService {
 
   // Desconectar Spotify del admin
   disconnectAdminSpotify(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/spotify/admin/disconnect`, {});
+    const headers = this.authService.getBasicAuthHeaders();
+    return this.http.post(`${this.apiUrl}/api/spotify/admin/disconnect`, {}, { headers });
   }
 
   // Métodos existentes para usuarios individuales

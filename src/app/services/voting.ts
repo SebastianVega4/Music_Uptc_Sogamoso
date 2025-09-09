@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, interval, of } from 'rxjs'; // Añadir 'of'
-import { map, startWith, switchMap, tap } from 'rxjs/operators'; // Añadir 'tap'
+import { Observable, interval, of } from 'rxjs';
+import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 
@@ -12,7 +12,7 @@ export class VotingService {
   private apiUrl = environment.apiUrl;
   private cachedSongs: any[] = [];
   private lastFetchTime: number = 0;
-  private readonly CACHE_DURATION = 30000; // 30 segundos de caché
+  private readonly CACHE_DURATION = 30000;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -111,33 +111,27 @@ export class VotingService {
   }
 
   deleteSong(trackid: string): Observable<any> {
-    const token = this.authService.getAuthToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
+    // Usar autenticación básica en lugar de Bearer token
+    const headers = this.authService.getBasicAuthHeaders();
   
     const baseUrl = `${this.apiUrl}/api/votes?trackid=${trackid}`;
     const url = this.getCacheBustedUrl(baseUrl);
     
     return this.http.delete(url, { headers }).pipe(
       tap(() => {
-        // Invalidar caché después de eliminar
         this.invalidateCache();
       })
     );
   }
 
   deleteAllVotes(): Observable<any> {
-    const token = this.authService.getAuthToken();
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
+    // Usar autenticación básica en lugar de Bearer token
+    const headers = this.authService.getBasicAuthHeaders();
   
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes/all`);
     
     return this.http.delete(url, { headers }).pipe(
       tap(() => {
-        // Invalidar caché después de eliminar todo
         this.invalidateCache();
       })
     );
