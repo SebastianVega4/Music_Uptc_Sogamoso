@@ -1,54 +1,60 @@
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-4">
-    <div class="card">
-      <div class="card-header bg-primary text-white text-center">
-        <h5 class="mb-0">Acceso Administrador</h5>
-      </div>
-      <div class="card-body">
-        <form (ngSubmit)="login()" *ngIf="!authService.isLoggedIn()">
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input 
-              type="email" 
-              class="form-control" 
-              id="email" 
-              [(ngModel)]="email" 
-              name="email"
-              required
-            >
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input 
-              type="password" 
-              class="form-control" 
-              id="password" 
-              [(ngModel)]="password" 
-              name="password"
-              required
-            >
-          </div>
-          
-          <div *ngIf="errorMessage" class="alert alert-danger">
-            {{ errorMessage }}
-          </div>
-          
-          <button 
-            type="submit" 
-            class="btn btn-primary w-100" 
-            [disabled]="isLoading"
-          >
-            <i class="fas fa-spinner fa-spin me-1" *ngIf="isLoading"></i>
-            Iniciar Sesión
-          </button>
-        </form>
+<div class="futuristic-background"></div>
+<div class="particles">
+  <div 
+    class="particle"
+    *ngFor="let p of particles"
+    [ngStyle]="{ 
+      'width': p.width, 
+      'height': p.height, 
+      'left': p.left, 
+      'animation-duration': p.animationDuration, 
+      'animation-delay': p.animationDelay 
+    }"
+  ></div>
+</div>
 
-        <div *ngIf="authService.isLoggedIn()" class="text-center">
-          <p>Ya has iniciado sesión como administrador.</p>
-          <a routerLink="/admin-panel" class="btn btn-primary">Ir al Panel de Administración</a>
-          <button class="btn btn-secondary ms-2" (click)="authService.logout()">Cerrar Sesión</button>
-        </div>
+<div class="login-container">
+  <div class="glassmorphism-form">
+    <h2 class="form-title">Acceso Administrador</h2>
+    
+    <form (ngSubmit)="login()" *ngIf="!authService.isLoggedIn()">
+      <div class="input-group">
+        <input 
+          type="email" 
+          class="form-input"
+          id="email" 
+          [(ngModel)]="email" 
+          name="email"
+          required
+        >
+        <label for="email" class="form-label">Email</label>
       </div>
+      
+      <div class="input-group">
+        <input 
+          type="password" 
+          class="form-input"
+          id="password" 
+          [(ngModel)]="password" 
+          name="password"
+          required
+        >
+        <label for="password" class="form-label">Contraseña</label>
+      </div>
+      
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+      
+      <button type="submit" class="login-button" [disabled]="isLoading">
+        <span class="button-text">{{ isLoading ? 'Verificando...' : 'Ingresar' }}</span>
+        <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+      </button>
+    </form>
+
+    <div *ngIf="authService.isLoggedIn()" class="logged-in-message">
+      <p>Sesión iniciada. Redirigiendo al panel de administrador...</p>
+      <a routerLink="/admin-panel" class="admin-link">Ir al Panel</a>
     </div>
   </div>
 </div>
