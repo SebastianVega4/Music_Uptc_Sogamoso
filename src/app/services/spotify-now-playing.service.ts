@@ -67,4 +67,19 @@ export class SpotifyNowPlayingService {
       switchMap(() => this.getCurrentlyPlaying())
     );
   }
+
+  addToQueue(trackUri: string): Observable<any> {
+    const headers = this.authService.getBasicAuthHeaders();
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/queue`, 
+      { uri: trackUri },
+      { headers }
+    );
+  }
+  
+  // Obtener la cola de reproducción actual
+  getQueue(): Observable<any> {
+    const headers = this.authService.getBasicAuthHeaders();
+    return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
+  }
 }

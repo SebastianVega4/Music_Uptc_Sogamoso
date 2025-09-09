@@ -18,6 +18,9 @@ export class AdminPanelComponent implements OnInit {
   isLoading: boolean = true;
   spotifyStatus: any = null;
   adminCurrentlyPlaying: any = null;
+  queue: any[] = [];
+  showQueue: boolean = false;
+  isLoadingQueue: boolean = false;
 
 
   constructor(
@@ -165,8 +168,47 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
+  // Método para agregar canción a la cola
+  addToQueue(trackUri: string): void {
+    this.spotifyService.addToQueue(trackUri).subscribe({
+      next: () => {
+        alert('Canción agregada a la cola correctamente');
+        this.loadQueue(); // Recargar la cola
+      },
+      error: (error) => {
+        console.error('Error al agregar a la cola:', error);
+        alert('Error al agregar a la cola: ' + (error.error?.error || 'Error desconocido'));
+      }
+    });
+  }
+
+  // Método para cargar la cola de reproducción
+  loadQueue(): void {
+    this.isLoadingQueue = true;
+    this.spotifyService.getQueue().subscribe({
+      next: (data) => {
+        this.queue = data.queue || [];
+        this.isLoadingQueue = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar la cola:', error);
+        this.isLoadingQueue = false;
+        alert('Error al cargar la cola de reproducción');
+      }
+    });
+  }
+
+  // Método para togglear la visualización de la cola
+  toggleQueue(): void {
+    this.showQueue = !this.showQueue;
+    if (this.showQueue) {
+      this.loadQueue();
+    }
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
   }
+
 }

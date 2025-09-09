@@ -5,6 +5,44 @@
   </button>
 </div>
 
+<!-- Sección de Cola de Reproducción -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Cola de Reproducción</h5>
+    <button class="btn btn-sm btn-outline-secondary" (click)="toggleQueue()">
+      <i class="fas" [class.fa-eye]="!showQueue" [class.fa-eye-slash]="showQueue"></i>
+      {{ showQueue ? 'Ocultar' : 'Mostrar' }} Cola
+    </button>
+  </div>
+  <div class="card-body" *ngIf="showQueue">
+    <div *ngIf="isLoadingQueue" class="text-center py-3">
+      <i class="fas fa-spinner fa-spin fa-2x"></i>
+      <p class="mt-2">Cargando cola de reproducción...</p>
+    </div>
+
+    <div *ngIf="!isLoadingQueue && queue.length === 0" class="alert alert-info">
+      No hay canciones en la cola de reproducción.
+    </div>
+
+    <div *ngFor="let item of queue; let i = index" class="card mb-2">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-1 text-center">
+            <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
+          </div>
+          <div class="col-2">
+            <img [src]="item.album?.images[0]?.url || 'https://placehold.co/60x60?text=No+Image'" 
+                 class="img-fluid rounded" [alt]="item.name">
+          </div>
+          <div class="col-9">
+            <h6 class="mb-1">{{ item.name }}</h6>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Sección de Spotify Admin -->
 <div class="card mb-4">
   <div class="card-header">
@@ -86,6 +124,9 @@
             </span>
           </div>
           <div class="col-2 text-end">
+            <button class="btn btn-success btn-sm me-1" (click)="addToQueue('spotify:track:' + song.id)">
+              <i class="fas fa-plus"></i> Cola
+            </button>
             <button class="btn btn-danger btn-sm" (click)="deleteSong(song.id)">
               <i class="fas fa-trash me-1"></i>Eliminar
             </button>

@@ -1,217 +1,31 @@
-.search-container {
-  margin-bottom: 2rem;
-}
-
-.card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(29, 185, 84, 0.15);
-    border-color: rgba(29, 185, 84, 0.2);
-  }
-}
-
-.card-header {
-  background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
-  color: var(--text-primary);
-  font-weight: 700;
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  
-  h5 {
-    margin: 0;
-    font-size: 1.2rem;
-    
-    i {
-      color: var(--primary-color);
-      margin-right: 0.5rem;
-    }
-  }
-}
-
-.card-body {
-  padding: 1.5rem;
-}
-
-.input-group {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.form-control {
-  background: rgba(42, 42, 42, 0.7);
-  border: 1px solid rgba(62, 62, 62, 0.5);
-  color: var(--text-primary);
-  border-radius: 50px;
-  padding: 0.9rem 1.5rem;
-  transition: all 0.3s ease;
-  flex-grow: 1;
-  
-  &:focus {
-    background: rgba(42, 42, 42, 0.9);
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.3rem rgba(29, 185, 84, 0.2);
-  }
-  
-  &::placeholder {
-    color: var(--text-tertiary);
-  }
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #1aa34a 100%);
-  border: none;
-  border-radius: 50px;
-  padding: 0.9rem 1.8rem;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(29, 185, 84, 0.3);
-  white-space: nowrap;
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(29, 185, 84, 0.4);
-  }
-  
-  &:disabled {
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
 .track-card {
-  background: rgba(42, 42, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  margin-bottom: 0.8rem;
-  overflow: hidden;
-  
-  &:hover {
-    transform: translateY(-3px);
-    background: rgba(42, 42, 42, 0.7);
-    border-color: rgba(29, 185, 84, 0.2);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  }
-  
-  .card-body {
-    padding: 1rem;
-  }
-  
-  img {
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    
-    &:hover {
-      transform: scale(1.05);
-    }
-  }
-  
-  h6 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.3rem;
-  }
-  
-  .text-muted {
-    color: var(--text-secondary) !important;
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-  }
-  
-  .small {
-    font-size: 0.85rem;
-  }
-}
-
-.btn-success {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #1aa34a 100%);
-  border: none;
-  border-radius: 50px;
-  padding: 0.5rem 1.2rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+  transition: transform 0.2s, background-color 0.2s;
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(29, 185, 84, 0.4);
+    background-color: #282828;
   }
 }
 
 .results-container {
   max-height: 400px;
   overflow-y: auto;
-  margin-top: 1rem;
-  padding-right: 0.5rem;
-  
-  /* Scroll personalizado */
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(42, 42, 42, 0.5);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #1ed760;
-  }
-}
-
-.alert-info {
-  background: rgba(83, 143, 221, 0.15);
-  color: #538fdd;
-  border: none;
-  border-radius: 12px;
-  padding: 1.2rem;
-  text-align: center;
 }
 
 // Para móviles
 @media (max-width: 576px) {
-  .input-group {
-    flex-direction: column;
-  }
-  
-  .btn-primary {
-    width: 100%;
-  }
-  
   .track-card {
-    .row {
-      flex-direction: column;
-      text-align: center;
+    .card-body {
+      padding: 0.75rem;
     }
     
-    .col-3, .col-5, .col-4 {
-      width: 100%;
-      max-width: 100%;
-      flex: 0 0 100%;
+    h6 {
+      font-size: 0.9rem;
     }
     
-    .text-end {
-      text-align: center !important;
-      margin-top: 1rem;
+    .btn-sm {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
     }
   }
 }
