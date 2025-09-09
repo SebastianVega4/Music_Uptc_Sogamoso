@@ -1,19 +1,27 @@
-/* Importación de fuentes y iconos */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+/* Importación de fuentes modernas */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
-/* Variables de colores de Spotify */
+/* Variables de colores futuristas de Spotify */
 :root {
   --primary-color: #1DB954; /* Verde Spotify */
-  --dark-bg: #121212; /* Fondo oscuro Spotify */
-  --card-bg: #181818; /* Fondo de tarjetas */
-  --hover-bg: #282828; /* Fondo al pasar el ratón */
+  --primary-glow: rgba(29, 185, 84, 0.4);
+  --dark-bg: #0a0a0a; /* Fondo más oscuro */
+  --card-bg: #121212; /* Fondo de tarjetas */
+  --card-hover: #1a1a1a;
+  --glass-bg: rgba(18, 18, 18, 0.7);
   --text-primary: #FFFFFF;
   --text-secondary: #B3B3B3;
   --text-tertiary: #727272;
+  --accent-purple: #8D67AB;
+  --accent-pink: #F037A5;
+  --accent-blue: #2D46B9;
+  --gradient-bg: linear-gradient(135deg, #1DB954 0%, #191414 100%);
+  --gradient-card: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(25, 20, 20, 0.1) 100%);
 }
 
-/* Estilos globales */
+/* Estilos globales futuristas */
 * {
   margin: 0;
   padding: 0;
@@ -21,30 +29,78 @@
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Inter', 'Montserrat', sans-serif;
   background-color: var(--dark-bg);
   color: var(--text-primary);
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* Barra de navegación */
+/* Efecto de partículas futuristas en el fondo */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(29, 185, 84, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(141, 103, 171, 0.1) 0%, transparent 40%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Barra de navegación con efecto de cristal */
 .navbar {
-  background-color: #000000;
-  border-bottom: 1px solid #282828;
-  padding: 0.8rem 1rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.8rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar-brand {
   color: var(--text-primary);
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-brand::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--primary-glow);
 }
 
 .navbar-nav .nav-link {
   color: var(--text-secondary);
-  font-weight: 500;
-  transition: color 0.2s ease;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary-color);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
 .navbar-nav .nav-link:hover,
@@ -52,105 +108,148 @@ body {
   color: var(--text-primary);
 }
 
-/* Contenedor principal */
-.container {
-  padding: 1rem;
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  width: 70%;
 }
 
-/* Tarjetas con estilo Spotify */
+/* Contenedor principal */
+.container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Tarjetas con efecto de cristal y neón */
 .card {
-  background-color: var(--card-bg);
-  border: none;
-  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   overflow: hidden;
-  transition: background-color 0.3s ease;
-  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .card:hover {
-  background-color: var(--hover-bg);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(29, 185, 84, 0.15);
+  border-color: rgba(29, 185, 84, 0.2);
 }
 
 .card-header {
-  background-color: transparent;
-  border-bottom: 1px solid #282828;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  padding: 1rem 1.5rem;
+  padding: 1.2rem 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .card-body {
-  padding: 1.5rem;
+  padding: 1.8rem;
 }
 
-/* Botones con estilo Spotify */
+/* Botones futuristas con efecto de brillo */
 .btn {
-  border-radius: 500px;
+  border-radius: 50px;
   font-weight: 700;
-  padding: 0.5rem 1.5rem;
-  transition: all 0.2s ease;
+  padding: 0.7rem 1.8rem;
+  transition: all 0.3s ease;
   border: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.5s ease;
+}
+
+.btn:hover::before {
+  left: 100%;
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
+  background: var(--primary-color);
   color: var(--text-primary);
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
 }
 
 .btn-primary:hover {
-  background-color: #1ed760;
-  transform: scale(1.05);
+  background: #1ed760;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
 }
 
 .btn-success {
-  background-color: var(--primary-color);
+  background: var(--primary-color);
   color: var(--text-primary);
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
 }
 
 .btn-success:hover {
-  background-color: #1ed760;
-  transform: scale(1.05);
+  background: #1ed760;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
 }
 
 .btn-danger {
-  background-color: transparent;
+  background: transparent;
   color: #e22134;
-  border: 1px solid #727272;
+  border: 1px solid #e22134;
+  box-shadow: 0 4px 15px rgba(226, 33, 52, 0.2);
 }
 
 .btn-danger:hover {
-  background-color: #e22134;
+  background: #e22134;
   color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(226, 33, 52, 0.3);
 }
 
 .btn-outline-danger {
   color: #e22134;
   border: 1px solid #e22134;
   background-color: transparent;
+  box-shadow: 0 4px 15px rgba(226, 33, 52, 0.2);
 }
 
 .btn-outline-danger:hover {
   background-color: #e22134;
   color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(226, 33, 52, 0.3);
 }
 
 .btn-sm {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
 }
 
-/* Campos de formulario */
+/* Campos de formulario futuristas */
 .form-control {
-  background-color: #2a2a2a;
-  border: 1px solid #3e3e3e;
+  background: rgba(42, 42, 42, 0.6);
+  border: 1px solid rgba(62, 62, 62, 0.5);
   color: var(--text-primary);
-  border-radius: 500px;
-  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  transition: all 0.3s ease;
 }
 
 .form-control:focus {
-  background-color: #2a2a2a;
+  background: rgba(42, 42, 42, 0.8);
   border-color: var(--primary-color);
   color: var(--text-primary);
   box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
@@ -160,72 +259,85 @@ body {
   color: var(--text-tertiary);
 }
 
-/* Input group */
-.input-group .btn {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-/* Alertas */
+/* Alertas con efecto de cristal */
 .alert {
   border: none;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  padding: 1.2rem 1.8rem;
+  backdrop-filter: blur(10px);
 }
 
 .alert-success {
-  background-color: rgba(29, 185, 84, 0.1);
+  background: rgba(29, 185, 84, 0.15);
   color: var(--primary-color);
+  border: 1px solid rgba(29, 185, 84, 0.2);
 }
 
 .alert-info {
-  background-color: rgba(83, 143, 221, 0.1);
+  background: rgba(83, 143, 221, 0.15);
   color: #538fdd;
+  border: 1px solid rgba(83, 143, 221, 0.2);
 }
 
 .alert-warning {
-  background-color: rgba(221, 177, 83, 0.1);
+  background: rgba(221, 177, 83, 0.15);
   color: #ddb153;
+  border: 1px solid rgba(221, 177, 83, 0.2);
 }
 
 .alert-danger {
-  background-color: rgba(226, 33, 52, 0.1);
+  background: rgba(226, 33, 52, 0.15);
   color: #e22134;
+  border: 1px solid rgba(226, 33, 52, 0.2);
 }
 
-/* Badges */
+/* Badges futuristas */
 .badge {
-  border-radius: 500px;
-  padding: 0.5rem 0.75rem;
-  font-weight: 600;
+  border-radius: 50px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .bg-primary {
-  background-color: var(--primary-color) !important;
+  background: var(--primary-color) !important;
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
 }
 
 .bg-success {
-  background-color: var(--primary-color) !important;
+  background: var(--primary-color) !important;
+  box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
 }
 
-/* Imágenes */
+/* Imágenes con efecto de elevación */
 .img-fluid {
   max-width: 100%;
   height: auto;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
-.rounded {
-  border-radius: 8px;
+.img-thumbnail {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
-/* Elementos de audio personalizados */
+.img-thumbnail:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Elementos de audio personalizados futuristas */
 .audio-player {
   width: 100%;
   margin-top: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .audio-player::-webkit-media-controls-panel {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
 }
 
 .audio-player::-webkit-media-controls-play-button {
@@ -238,17 +350,18 @@ body {
   color: var(--text-primary);
 }
 
-/* Barra de progreso personalizada */
+/* Barra de progreso futurista */
 .progress {
-  height: 4px;
-  background-color: #5a5a5a;
-  border-radius: 2px;
+  height: 6px;
+  background-color: rgba(90, 90, 90, 0.3);
+  border-radius: 3px;
   overflow: hidden;
-  margin: 0.5rem 0;
+  margin: 0.8rem 0;
 }
 
 .progress-bar {
-  background-color: var(--primary-color);
+  background: var(--primary-color);
+  box-shadow: 0 0 10px var(--primary-glow);
 }
 
 /* Utilidades de texto */
@@ -260,38 +373,45 @@ body {
   text-align: center;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .container {
-    padding: 0.5rem;
+/* Efectos de animación futuristas */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px);
   }
-  
-  .card-header {
-    padding: 1rem;
-  }
-  
-  .card-body {
-    padding: 1rem;
-  }
-  
-  .navbar-brand {
-    font-size: 1.2rem;
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
   }
 }
 
-/* Animaciones */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes glow {
+  0% { box-shadow: 0 0 5px var(--primary-glow); }
+  50% { box-shadow: 0 0 20px var(--primary-glow); }
+  100% { box-shadow: 0 0 5px var(--primary-glow); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in;
+  animation: fadeIn 0.5s ease-out;
 }
 
-/* Scroll personalizado */
+.glow {
+  animation: glow 2s infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Scroll personalizado futurista */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -299,10 +419,99 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #5a5a5a;
-  border-radius: 4px;
+  background: var(--primary-color);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: #1ed760;
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Grid de canciones futurista */
+.songs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.song-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.song-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(29, 185, 84, 0.15);
+  border-color: rgba(29, 185, 84, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .card-body {
+    padding: 1.2rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.3rem;
+  }
+  
+  .songs-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .btn {
+    padding: 0.6rem 1.5rem;
+  }
+}
+
+/* Efectos de carga futuristas */
+.loading-spinner {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(29, 185, 84, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Efectos de transición para elementos de la interfaz */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Títulos con efecto de gradiente */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
