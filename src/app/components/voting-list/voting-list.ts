@@ -39,19 +39,19 @@ export class VotingListComponent implements OnInit, OnDestroy {
 
   startPolling(): void {
     this.pollingSubscription = this.votingService.getRankedSongsPolling().subscribe({
-      next: (rankedSongs) => {
+      next: (rankedSongs: any[]) => {
         this.songs = rankedSongs;
-        
+
         // Obtener canciones recientes por separado
         this.votingService.getRecentlyAddedSongs().subscribe({
-          next: (recentSongs) => {
+          next: (recentSongs: any[]) => {
             this.recentlyAddedSongs = recentSongs;
           }
         });
-        
+
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar canciones:', error);
         this.isLoading = false;
       },
@@ -60,12 +60,12 @@ export class VotingListComponent implements OnInit, OnDestroy {
 
   forceRefresh(): void {
     if (this.isRefreshing || this.countdown > 0) return;
-  
+
     this.isRefreshing = true;
     this.votingService.forceRefresh().subscribe({
       next: (rankedSongs) => {
         this.songs = rankedSongs;
-        
+
         this.votingService.getRecentlyAddedSongs().subscribe({
           next: (recentSongs) => {
             this.recentlyAddedSongs = recentSongs;
@@ -82,13 +82,11 @@ export class VotingListComponent implements OnInit, OnDestroy {
     });
   }
 
-  
-
   formatTimeAgo(dateString: string): string {
     const now = new Date();
     const date = new Date(dateString);
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) {
       return 'ahora mismo';
     } else if (diffInSeconds < 3600) {
@@ -103,4 +101,45 @@ export class VotingListComponent implements OnInit, OnDestroy {
     }
   }
 
+  startCooldown(): void {
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+    }
+    this.countdown = this.refreshCooldown;
+    this.timerSubscription = timer(0, 1000)
+      .subscribe(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          if (this.timerSubscription) {
+            this.timerSubscription.unsubscribe();
+            this.timerSubscription = null;
+          }
+        }
+      });
+  }
+
+  vote(song: any): void {
+    const trackInfo = {
+      name: song.name,
+      artists: song.artists,
+      image: song.image,
+      album: song.album,
+      preview_url: song.preview_url,
+    };
+
+    this.votingService.voteForSong(song.id, trackInfo).subscribe({
+      next: () => {
+        alert('¡Tu voto ha sido registrado!');
+        this.forceRefresh(); // Actualización inmediata para feedback instantáneo
+      },
+      error: (error) => {
+        if (error.status === 409) {
+          alert('Ya has votado por esta canción con esta IP');
+        } else {
+          alert('Error al registrar tu voto. Intenta nuevamente.');
+        }
+      },
+    });
+  }
 }

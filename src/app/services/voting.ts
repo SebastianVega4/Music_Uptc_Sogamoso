@@ -33,7 +33,7 @@ export class VotingService {
     if (!songs || songs.length === 0) {
       return [];
     }
-  
+
     return songs.sort((a, b) => {
       if (a.votes > b.votes) return -1;
       if (a.votes < b.votes) return 1;
@@ -41,22 +41,43 @@ export class VotingService {
     });
   }
 
+  voteForSong(trackid: string, trackInfo: any): Observable<any> {
+    const songData = {
+      trackid,
+      trackInfo
+    };
+
+    return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
+      tap(() => {
+        this.invalidateCache();
+      })
+    );
+  }
+
+  // Sondeo para obtener el ranking de canciones cada 60 segundos
+  getRankedSongsPolling(): Observable<any[]> {
+    return interval(60000).pipe(
+      startWith(0),
+      switchMap(() => this.getRankedSongs())
+    );
+  }
+
   getRankedSongs(): Observable<any[]> {
     const now = Date.now();
-    
+
     if (this.cachedSongs.length > 0 && (now - this.lastFetchTime) < this.CACHE_DURATION) {
       return of([...this.cachedSongs]);
     }
-  
+
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
-    
+
     return this.http.get<any[]>(url).pipe(
       map(songs => {
         const processedSongs = this.processSongs(songs || []);
-        
+
         this.cachedSongs = processedSongs;
         this.lastFetchTime = now;
-        
+
         return processedSongs;
       })
     );
@@ -71,7 +92,7 @@ export class VotingService {
       })
     );
   }
-  
+
   deleteSong(trackid: string): Observable<any> {
     // Usar autenticación básica en lugar de Bearer token
     const headers = this.authService.getAuthHeaders();

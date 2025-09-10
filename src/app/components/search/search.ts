@@ -35,7 +35,7 @@ export class SearchComponent {
         this.results = data;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al buscar:', error);
         this.isLoading = false;
         alert('Error al buscar canciones. Intenta nuevamente.');
