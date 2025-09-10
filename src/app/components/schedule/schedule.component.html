@@ -5,32 +5,31 @@
       </h5>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Día</th>
-              <th>Almuerzo</th>
-              <th>Cena</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let schedule of schedules; let i = index" [class.table-primary]="isToday(i)">
-              <td>
-                <strong [class.text-success]="isToday(i)">{{ daysOfWeek[i] }}</strong>
-                <span *ngIf="isToday(i)" class="badge bg-success ms-2">Hoy</span>
-              </td>
-              <td>
-                {{ formatTime(schedule.lunch_start) }} - {{ formatTime(schedule.lunch_end) }}
-                <span *ngIf="!schedule.lunch_start && !schedule.lunch_end" class="text-muted">No programado</span>
-              </td>
-              <td>
-                {{ formatTime(schedule.dinner_start) }} - {{ formatTime(schedule.dinner_end) }}
-                <span *ngIf="!schedule.dinner_start && !schedule.dinner_end" class="text-muted">No programado</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-container">
+        <div class="schedule-table">
+          <div class="schedule-header">
+            <div class="schedule-cell">Día</div>
+            <div class="schedule-cell">Almuerzo</div>
+            <div class="schedule-cell">Cena</div>
+          </div>
+          
+          <div class="schedule-row" *ngFor="let schedule of schedules; let i = index" [class.today]="isToday(i)">
+            <div class="schedule-cell day-cell">
+              <strong [class.text-success]="isToday(i)">{{ daysOfWeek[i] }}</strong>
+              <span *ngIf="isToday(i)" class="badge bg-success">Hoy</span>
+            </div>
+            <div class="schedule-cell">
+              <div class="time-slot" [class.no-schedule]="!schedule.lunch_start && !schedule.lunch_end">
+                {{ schedule.lunch_start && schedule.lunch_end ? (formatTime(schedule.lunch_start) + ' - ' + formatTime(schedule.lunch_end)) : 'No programado' }}
+              </div>
+            </div>
+            <div class="schedule-cell">
+              <div class="time-slot" [class.no-schedule]="!schedule.dinner_start && !schedule.dinner_end">
+                {{ schedule.dinner_start && schedule.dinner_end ? (formatTime(schedule.dinner_start) + ' - ' + formatTime(schedule.dinner_end)) : 'No programado' }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

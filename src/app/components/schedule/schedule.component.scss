@@ -1,0 +1,160 @@
+// Estilos para la tabla de horarios
+.schedule-container {
+    margin-bottom: 2rem;
+    
+    .card-header {
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
+    }
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+  
+  .schedule-table {
+    width: 100%;
+    display: table;
+  }
+  
+  .schedule-header {
+    display: table-row;
+    font-weight: 700;
+    background: rgba(29, 185, 84, 0.1);
+    
+    .schedule-cell {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  .schedule-row {
+    display: table-row;
+    transition: background-color 0.3s ease;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    &.today {
+      background-color: rgba(29, 185, 84, 0.1);
+      
+      .schedule-cell {
+        border-color: rgba(29, 185, 84, 0.3);
+      }
+    }
+  }
+  
+  .schedule-cell {
+    display: table-cell;
+    padding: 0.8rem;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    
+    &.day-cell {
+      text-align: left;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      .badge {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+  
+  .time-slot {
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: rgba(42, 42, 42, 0.3);
+    
+    &.no-schedule {
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+  }
+  
+  // Media queries para responsividad de horarios
+  @media (max-width: 768px) {
+    .schedule-table {
+      display: block;
+      width: 100%;
+    }
+    
+    .schedule-header {
+      display: none;
+    }
+    
+    .schedule-row {
+      display: block;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(42, 42, 42, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      
+      &.today {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 10px rgba(29, 185, 84, 0.2);
+      }
+    }
+    
+    .schedule-cell {
+      display: block;
+      text-align: left;
+      padding: 0.5rem 0;
+      border: none;
+      
+      &.day-cell {
+        justify-content: flex-start;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      &:not(.day-cell)::before {
+        content: attr(data-label);
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.3rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+    }
+    
+    // Añadir etiquetas para celdas en vista móvil
+    .schedule-cell:nth-child(2)::before {
+      content: "Almuerzo:";
+    }
+    
+    .schedule-cell:nth-child(3)::before {
+      content: "Cena:";
+    }
+    
+    .time-slot {
+      display: inline-block;
+      min-width: 120px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .schedule-row {
+      padding: 0.8rem;
+    }
+    
+    .day-cell {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      .badge {
+        margin: 0.3rem 0 0 0;
+      }
+    }
+    
+    .time-slot {
+      min-width: 100px;
+    }
+  }

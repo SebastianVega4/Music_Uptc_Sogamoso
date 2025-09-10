@@ -83,21 +83,34 @@ export class VotingListComponent implements OnInit, OnDestroy {
   }
 
   formatTimeAgo(dateString: string): string {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-      return 'ahora mismo';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `hace ${minutes} min`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `hace ${hours} h`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `hace ${days} d`;
+    try {
+      const now = new Date();
+      const date = new Date(dateString);
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'reciente';
+      }
+      
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      const diffInMinutes = Math.floor(diffInSeconds / 60);
+      const diffInHours = Math.floor(diffInSeconds / 3600);
+      const diffInDays = Math.floor(diffInSeconds / 86400);
+      
+      if (diffInSeconds < 60) {
+        return 'ahora mismo';
+      } else if (diffInMinutes < 60) {
+        return `hace ${diffInMinutes} min`;
+      } else if (diffInHours < 24) {
+        return `hace ${diffInHours} h`;
+      } else if (diffInDays === 1) {
+        return 'ayer';
+      } else {
+        return `hace ${diffInDays} d`;
+      }
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return 'reciente';
     }
   }
 
