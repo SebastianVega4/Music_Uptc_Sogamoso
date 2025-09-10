@@ -5,13 +5,14 @@ import { VotingListComponent } from "../voting-list/voting-list";
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { Subscription } from 'rxjs';
 import { AnnouncementComponent } from '../announcement/announcement.component';
+import { ScheduleComponent } from "../schedule/schedule.component";
 
 @Component({
   standalone: true,
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
-  imports: [CommonModule, SearchComponent, VotingListComponent, AnnouncementComponent]
+  imports: [CommonModule, SearchComponent, VotingListComponent, AnnouncementComponent, ScheduleComponent]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   adminCurrentlyPlaying: any = null;

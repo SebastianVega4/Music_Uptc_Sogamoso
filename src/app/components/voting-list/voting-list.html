@@ -17,16 +17,26 @@
   <div class="content" *ngIf="!isLoading">
     <!-- Recently Added Section - Updated Layout -->
     <div class="recently-added" *ngIf="recentlyAddedSongs.length > 0">
-      <h2>Agregadas Recientemente</h2>
-      <div class="song-grid">
-        <div class="song-card" *ngFor="let song of recentlyAddedSongs">
-          <img [src]="song.image" [alt]="song.name">
-          <div class="song-info">
-            <h6>{{ song.name }}</h6>
-            <p>{{ song.artists.join(', ') }}</p>
+      <h2>Recién Agregadas</h2>
+      <div class="recent-songs-grid">
+        <div class="recent-song-card" *ngFor="let song of recentlyAddedSongs">
+          <img [src]="song.image" [alt]="song.name" class="recent-song-image">
+          <div class="recent-song-info">
+            <h6 class="recent-song-title">{{ song.name }}</h6>
+            <p class="recent-song-artist">{{ song.artists.join(', ') }}</p>
+            <div class="recent-song-meta">
+              <span class="badge bg-secondary">
+                <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }}
+              </span>
+              <span class="badge bg-light text-dark">
+                <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(song.createdAt) }}
+              </span>
+            </div>
           </div>
-          <div class="song-actions">
-            <button class="btn-vote-small" (click)="vote(song)">Votar</button>
+          <div class="recent-song-actions">
+            <button class="btn-vote-small" (click)="vote(song)">
+              <i class="fas fa-thumbs-up"></i> Votar
+            </button>
           </div>
         </div>
       </div>

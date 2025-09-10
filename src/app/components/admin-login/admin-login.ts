@@ -57,20 +57,22 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Por favor, completa ambos campos.';
       return;
     }
-
+  
     this.isLoading = true;
     this.errorMessage = '';
-
+  
     this.authService.login(this.email, this.password)
-      .then(() => {
-        this.isLoading = false;
-        setTimeout(() => {
-          this.router.navigate(['/admin-panel']);
-        }, 1500);
-      })
-      .catch((error) => {
-        this.isLoading = false;
-        this.errorMessage = this.getFirebaseErrorMessage(error);
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          setTimeout(() => {
+            this.router.navigate(['/admin-panel']);
+          }, 1500);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = this.getFirebaseErrorMessage(error);
+        }
       });
   }
 

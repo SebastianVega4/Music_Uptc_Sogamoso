@@ -1,0 +1,36 @@
+<div class="schedule-container card">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="fas fa-clock me-2"></i>Horarios de Música
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Día</th>
+              <th>Almuerzo</th>
+              <th>Cena</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let schedule of schedules; let i = index" [class.table-primary]="isToday(i)">
+              <td>
+                <strong [class.text-success]="isToday(i)">{{ daysOfWeek[i] }}</strong>
+                <span *ngIf="isToday(i)" class="badge bg-success ms-2">Hoy</span>
+              </td>
+              <td>
+                {{ formatTime(schedule.lunch_start) }} - {{ formatTime(schedule.lunch_end) }}
+                <span *ngIf="!schedule.lunch_start && !schedule.lunch_end" class="text-muted">No programado</span>
+              </td>
+              <td>
+                {{ formatTime(schedule.dinner_start) }} - {{ formatTime(schedule.dinner_end) }}
+                <span *ngIf="!schedule.dinner_start && !schedule.dinner_end" class="text-muted">No programado</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>

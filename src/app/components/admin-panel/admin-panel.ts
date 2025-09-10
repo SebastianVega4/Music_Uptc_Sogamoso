@@ -2,16 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { AuthService } from '../../services/auth';
+import { ScheduleService } from '../../services/schedule.service';
 import { Router } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   standalone: true,
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],
-  imports: [CommonModule]
+  imports: [CommonModule, FormsModule] 
 })
 export class AdminPanelComponent implements OnInit {
   songs: any[] = [];
@@ -21,6 +23,8 @@ export class AdminPanelComponent implements OnInit {
   queue: any[] = [];
   showQueue: boolean = false;
   isLoadingQueue: boolean = false;
+  schedules: any[] = [];
+  isEditingSchedules = false;
 
 
   constructor(
@@ -28,7 +32,8 @@ export class AdminPanelComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private spotifyService: SpotifyNowPlayingService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private scheduleService: ScheduleService
   ) { }
 
   ngOnInit(): void {
@@ -206,9 +211,34 @@ export class AdminPanelComponent implements OnInit {
     }
   }
 
+  loadSchedules(): void {
+    this.scheduleService.getSchedules().subscribe({
+      next: (data) => {
+        this.schedules = data;
+      },
+      error: (error) => {
+        console.error('Error al cargar horarios:', error);
+      }
+    });
+  }
+  
+  // Método para guardar horarios
+  saveSchedules(): void {
+    this.scheduleService.updateSchedules(this.schedules).subscribe({
+      next: () => {
+        alert('Horarios actualizados correctamente');
+        this.isEditingSchedules = false;
+      },
+      error: (error) => {
+        console.error('Error al actualizar horarios:', error);
+        alert('Error al actualizar horarios');
+      }
+    });
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
+    this.loadSchedules();
   }
-
 }

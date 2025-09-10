@@ -38,12 +38,17 @@ export class VotingListComponent implements OnInit, OnDestroy {
   }
 
   startPolling(): void {
-    this.pollingSubscription = this.votingService.getRankedSongsPolling().pipe(
-      map(rankedSongs => this.processSongs(rankedSongs))
-    ).subscribe({
-      next: ({ranked, recent}) => {
-        this.songs = ranked;
-        this.recentlyAddedSongs = recent;
+    this.pollingSubscription = this.votingService.getRankedSongsPolling().subscribe({
+      next: (rankedSongs) => {
+        this.songs = rankedSongs;
+        
+        // Obtener canciones recientes por separado
+        this.votingService.getRecentlyAddedSongs().subscribe({
+          next: (recentSongs) => {
+            this.recentlyAddedSongs = recentSongs;
+          }
+        });
+        
         this.isLoading = false;
       },
       error: (error) => {
@@ -55,16 +60,19 @@ export class VotingListComponent implements OnInit, OnDestroy {
 
   forceRefresh(): void {
     if (this.isRefreshing || this.countdown > 0) return;
-
+  
     this.isRefreshing = true;
-    this.votingService.getRankedSongs().pipe(
-      map(rankedSongs => this.processSongs(rankedSongs))
-    ).subscribe({
-      next: ({ranked, recent}) => {
-        this.songs = ranked;
-        this.recentlyAddedSongs = recent;
-        this.isRefreshing = false;
-        this.startCooldown();
+    this.votingService.forceRefresh().subscribe({
+      next: (rankedSongs) => {
+        this.songs = rankedSongs;
+        
+        this.votingService.getRecentlyAddedSongs().subscribe({
+          next: (recentSongs) => {
+            this.recentlyAddedSongs = recentSongs;
+            this.isRefreshing = false;
+            this.startCooldown();
+          }
+        });
       },
       error: (error) => {
         console.error('Error al forzar actualización:', error);
@@ -74,56 +82,25 @@ export class VotingListComponent implements OnInit, OnDestroy {
     });
   }
 
-  startCooldown(): void {
-    if (this.timerSubscription) {
-      this.timerSubscription.unsubscribe();
-    }
-    this.countdown = this.refreshCooldown;
-    this.timerSubscription = timer(0, 1000)
-      .subscribe(() => {
-        if (this.countdown > 0) {
-          this.countdown--;
-        } else {
-          if (this.timerSubscription) {
-            this.timerSubscription.unsubscribe();
-            this.timerSubscription = null;
-          }
-        }
-    });
-  }
-
-  private processSongs(rankedSongs: any[]) {
-    // Filtrar solo las canciones con exactamente 1 voto (recién agregadas)
-    const recentSongs = rankedSongs
-      .filter(song => song.votes === 1)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 4); // Limita la lista a 3 canciones
   
-    // Retorna tanto el ranking general (ya ordenado por votos) como la lista de recientes
-    return { ranked: rankedSongs, recent: recentSongs };
+
+  formatTimeAgo(dateString: string): string {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'ahora mismo';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `hace ${minutes} min`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `hace ${hours} h`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `hace ${days} d`;
+    }
   }
 
-  vote(song: any): void {
-    const trackInfo = {
-      name: song.name,
-      artists: song.artists,
-      image: song.image,
-      album: song.album,
-      preview_url: song.preview_url,
-    };
-
-    this.votingService.voteForSong(song.id, trackInfo).subscribe({
-      next: () => {
-        alert('¡Tu voto ha sido registrado!');
-        this.forceRefresh(); // Actualización inmediata para feedback instantáneo
-      },
-      error: (error) => {
-        if (error.status === 409) {
-          alert('Ya has votado por esta canción con esta IP');
-        } else {
-          alert('Error al registrar tu voto. Intenta nuevamente.');
-        }
-      },
-    });
-  }
 }

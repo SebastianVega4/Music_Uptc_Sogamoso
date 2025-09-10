@@ -15,8 +15,6 @@ api/node_modules/
 /yarn.lock
 
 node_modules/
-src/app/services/auth.ts
-/home/user/Music_Uptc_Sogamoso/src/app/services/auth.ts
 .env
 .env.local
 .DS_Store

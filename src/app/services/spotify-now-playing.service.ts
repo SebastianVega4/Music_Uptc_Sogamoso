@@ -46,7 +46,7 @@ export class SpotifyNowPlayingService {
 
   // Desconectar Spotify del admin
   disconnectAdminSpotify(): Observable<any> {
-    const headers = this.authService.getBasicAuthHeaders();
+    const headers = this.authService.getAuthHeaders();
     return this.http.post(`${this.apiUrl}/api/spotify/admin/disconnect`, {}, { headers });
   }
 
@@ -69,7 +69,7 @@ export class SpotifyNowPlayingService {
   }
 
   addToQueue(trackUri: string): Observable<any> {
-    const headers = this.authService.getBasicAuthHeaders();
+    const headers = this.authService.getAuthHeaders();
     return this.http.post(
       `${this.apiUrl}/api/spotify/admin/queue`, 
       { uri: trackUri },
@@ -79,7 +79,7 @@ export class SpotifyNowPlayingService {
   
   // Obtener la cola de reproducción actual
   getQueue(): Observable<any> {
-    const headers = this.authService.getBasicAuthHeaders();
+    const headers = this.authService.getAuthHeaders();
     return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
   }
 }
