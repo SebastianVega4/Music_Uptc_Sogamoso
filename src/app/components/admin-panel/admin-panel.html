@@ -6,8 +6,8 @@
 </div>
 
 <!-- Sección de Horarios -->
-<div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
+<div class="card mb-4" (click)="hideAnnouncement()">
+  <div class="card-header d-flex justify-content-between align-items-center"  >
     <h5 class="mb-0">Horarios de Música</h5>
     <button class="btn btn-sm" 
             [class.btn-outline-primary]="!isEditingSchedules" 
@@ -17,7 +17,7 @@
       {{ isEditingSchedules ? 'Cancelar' : 'Editar' }}
     </button>
   </div>
-  <div class="card-body">
+  <div class="card-body" *ngIf="!isHidden">
     <div *ngIf="!isEditingSchedules">
       <div class="table-responsive">
         <table class="table table-sm">
@@ -230,7 +230,7 @@
             <button class="btn btn-success btn-sm me-1" (click)="addToQueue('spotify:track:' + song.id)">
               <i class="fas fa-plus"></i> Cola
             </button>
-            <button class="btn btn-danger btn-sm" (click)="deleteSong(song.id)">
+            <button class="btn btn-danger btn-sm me-1" (click)="deleteSong(song.id)">
               <i class="fas fa-trash me-1"></i>Eliminar
             </button>
           </div>

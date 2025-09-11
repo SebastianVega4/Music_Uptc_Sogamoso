@@ -170,6 +170,12 @@
 /* Animación de entrada */
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 4px 15px rgba(3, 95, 11, 0.575);
+
+
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  }
 }
 
 @keyframes fadeIn {

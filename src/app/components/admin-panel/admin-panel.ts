@@ -25,6 +25,7 @@ export class AdminPanelComponent implements OnInit {
   isLoadingQueue: boolean = false;
   schedules: any[] = [];
   isEditingSchedules = false;
+  isHidden = true;
 
   constructor(
     private votingService: VotingService,
@@ -34,6 +35,18 @@ export class AdminPanelComponent implements OnInit {
     private route: ActivatedRoute,
     private scheduleService: ScheduleService
   ) { }
+
+
+
+  hideAnnouncement() {
+    if (this.isHidden){
+    this.isHidden = false;
+    localStorage.setItem('announcementHidden', 'false');
+    }else{
+    this.isHidden = true;
+    localStorage.setItem('announcementHidden', 'true');
+    }
+  }
 
   ngOnInit(): void {
     this.loadSongs();
@@ -216,21 +229,21 @@ export class AdminPanelComponent implements OnInit {
       next: (data) => {
         this.schedules = data;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar horarios:', error);
         alert('Error al cargar los horarios');
       }
     });
   }
 
-  // Método para guardar horarios
+  // Método para guardar horarios - CORREGIDO
   saveSchedules(): void {
-    this.scheduleService.saveSchedules(this.schedules).subscribe({
+    this.scheduleService.updateSchedules(this.schedules).subscribe({
       next: () => {
         alert('Horarios guardados correctamente');
         this.isEditingSchedules = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al guardar horarios:', error);
         alert('Error al guardar los horarios');
       }
