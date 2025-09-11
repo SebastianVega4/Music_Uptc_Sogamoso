@@ -365,6 +365,25 @@ h2 {
   flex-direction: column;
   gap: 0.4rem;
   min-width: 0;
+  
+  // Nueva sección para botones pequeños
+  > div:last-child {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+    
+    .btn-vote {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      min-width: auto;
+      
+      i {
+        font-size: 0.7rem;
+        margin-right: 0.3rem;
+      }
+    }
+  }
 }
 
 .recent-song-info {

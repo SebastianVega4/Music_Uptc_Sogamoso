@@ -1,160 +1,280 @@
-// Estilos para la tabla de horarios
-.schedule-container {
-    margin-bottom: 2rem;
+// Estilos para la tabla de horarios - Versión mejorada
+.schedule-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  
+  .card-header {
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.2rem 1.5rem;
     
-    .card-header {
-      background: linear-gradient(135deg, rgba(29, 185, 84, 0.15) 0%, rgba(141, 103, 171, 0.15) 100%);
+    h5 {
+      margin: 0;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      font-size: 1.2rem;
+      
+      i {
+        color: var(--primary-color);
+        margin-right: 0.8rem;
+        font-size: 1.1rem;
+      }
     }
   }
   
-  .table-container {
-    overflow-x: auto;
-    border-radius: 8px;
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+.schedule-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-primary);
+  
+  thead {
+    th {
+      background: rgba(29, 185, 84, 0.1);
+      padding: 0.9rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      
+      &:first-child {
+        border-top-left-radius: 8px;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 8px;
+      }
+    }
+  }
+  
+  tbody {
+    tr {
+      transition: all 0.3s ease;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      
+      &:last-child {
+        border-bottom: none;
+        
+        td {
+          &:first-child {
+            border-bottom-left-radius: 8px;
+          }
+          
+          &:last-child {
+            border-bottom-right-radius: 8px;
+          }
+        }
+      }
+    }
+    
+    td {
+      padding: 1rem;
+      font-size: 0.95rem;
+      
+      &:first-child {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+  }
+}
+
+.time-slot {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  background: rgba(42, 42, 42, 0.4);
+  font-size: 0.9rem;
+  
+  &.empty {
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+}
+
+.status-badge {
+  padding: 0.5rem 0.9rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  
+  &.active {
+    background: rgba(29, 185, 84, 0.2);
+    color: var(--primary-color);
+    border: 1px solid rgba(29, 185, 84, 0.3);
+  }
+  
+  &.inactive {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(29, 185, 84, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .schedule-card {
+    .card-header {
+      padding: 1rem;
+      
+      h5 {
+        font-size: 1.1rem;
+      }
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
   }
   
   .schedule-table {
-    width: 100%;
-    display: table;
-  }
-  
-  .schedule-header {
-    display: table-row;
-    font-weight: 700;
-    background: rgba(29, 185, 84, 0.1);
-    
-    .schedule-cell {
-      padding: 1rem;
-      text-align: center;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-    }
-  }
-  
-  .schedule-row {
-    display: table-row;
-    transition: background-color 0.3s ease;
-    
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    &.today {
-      background-color: rgba(29, 185, 84, 0.1);
-      
-      .schedule-cell {
-        border-color: rgba(29, 185, 84, 0.3);
-      }
-    }
-  }
-  
-  .schedule-cell {
-    display: table-cell;
-    padding: 0.8rem;
-    text-align: center;
-    vertical-align: middle;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    
-    &.day-cell {
-      text-align: left;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      
-      .badge {
-        margin-left: 0.5rem;
-      }
-    }
-  }
-  
-  .time-slot {
-    padding: 0.5rem;
-    border-radius: 6px;
-    background: rgba(42, 42, 42, 0.3);
-    
-    &.no-schedule {
-      color: var(--text-tertiary);
-      font-style: italic;
-    }
-  }
-  
-  // Media queries para responsividad de horarios
-  @media (max-width: 768px) {
-    .schedule-table {
-      display: block;
-      width: 100%;
-    }
-    
-    .schedule-header {
+    thead {
       display: none;
     }
     
-    .schedule-row {
-      display: block;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: 8px;
-      background: rgba(42, 42, 42, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      
-      &.today {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 10px rgba(29, 185, 84, 0.2);
-      }
-    }
-    
-    .schedule-cell {
-      display: block;
-      text-align: left;
-      padding: 0.5rem 0;
-      border: none;
-      
-      &.day-cell {
-        justify-content: flex-start;
-        margin-bottom: 0.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      
-      &:not(.day-cell)::before {
-        content: attr(data-label);
-        font-weight: 700;
+    tbody {
+      tr {
         display: block;
-        margin-bottom: 0.3rem;
-        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(42, 42, 42, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      td {
+        display: block;
+        padding: 0.6rem 0;
+        text-align: left;
+        border: none;
         font-size: 0.9rem;
+        
+        &::before {
+          content: attr(data-label);
+          font-weight: 700;
+          display: block;
+          margin-bottom: 0.3rem;
+          color: var(--text-secondary);
+          font-size: 0.8rem;
+          text-transform: uppercase;
+        }
+        
+        &:first-child {
+          padding-top: 0;
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          
+          &::before {
+            display: none;
+          }
+        }
       }
     }
-    
-    // Añadir etiquetas para celdas en vista móvil
-    .schedule-cell:nth-child(2)::before {
-      content: "Almuerzo:";
-    }
-    
-    .schedule-cell:nth-child(3)::before {
-      content: "Cena:";
-    }
-    
-    .time-slot {
-      display: inline-block;
-      min-width: 120px;
-    }
+  }
+
+  .time-slot {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
   }
   
-  @media (max-width: 480px) {
-    .schedule-row {
-      padding: 0.8rem;
-    }
-    
-    .day-cell {
-      flex-direction: column;
-      align-items: flex-start;
-      
-      .badge {
-        margin: 0.3rem 0 0 0;
+  .status-badge {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-table {
+    tbody {
+      tr {
+        padding: 0.8rem;
       }
     }
-    
-    .time-slot {
-      min-width: 100px;
-    }
   }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+  }
+  
+  i {
+    font-size: 0.9rem;
+  }
+}

@@ -17,6 +17,12 @@ export class AnnouncementComponent {
     localStorage.setItem('announcementHidden', 'true');
   }
 
+  nohideAnnouncement() {
+    this.isHidden = false;
+    // Opcional: guardar en localStorage para no mostrar nuevamente
+    localStorage.setItem('announcementHidden', 'true');
+  }
+
   ngOnInit() {
     // Opcional: verificar si ya fue ocultado anteriormente
     const hidden = localStorage.getItem('announcementHidden');

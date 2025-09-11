@@ -1,15 +1,22 @@
-<div class="card mb-4">
-  <div class="card-header">
+<div class="card schedule-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Horarios de Música</h5>
+    <button class="btn-close" (click)="hideAnnouncement()" title="Abrir" *ngIf="!isHidden">
+      <i>Cerrar</i>
+    </button>
+    <button class="btn-close" (click)="nohideAnnouncement()" title="Cerrar" *ngIf="isHidden">
+      <i>Abrir</i>
+    </button>
   </div>
-  <div class="card-body">
-    <div *ngIf="isLoading" class="text-center py-3">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p class="mt-2">Cargando horarios...</p>
+
+  <div class="card-body" *ngIf="!isHidden">
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando horarios...</p>
     </div>
 
-    <div *ngIf="!isLoading" class="table-responsive">
-      <table class="table table-sm">
+    <div *ngIf="!isLoading"class="schedule-table-container">
+      <table class="schedule-table">
         <thead>
           <tr>
             <th>Día</th>
@@ -20,11 +27,19 @@
         </thead>
         <tbody>
           <tr *ngFor="let schedule of schedules">
-            <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
-            <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
-            <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</td>
-            <td>
-              <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
+            <td data-label="Día"><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
+            <td data-label="Almuerzo">
+              <span class="time-slot" [class.empty]="!schedule.lunch_start && !schedule.lunch_end">
+                {{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}
+              </span>
+            </td>
+            <td data-label="Cena">
+              <span class="time-slot" [class.empty]="!schedule.dinner_start && !schedule.dinner_end">
+                {{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}
+              </span>
+            </td>
+            <td data-label="Estado">
+              <span class="status-badge" [class.active]="schedule.is_active" [class.inactive]="!schedule.is_active">
                 {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
