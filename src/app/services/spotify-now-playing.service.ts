@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, interval } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Observable, interval, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { switchMap, startWith } from 'rxjs/operators';
+import { switchMap, startWith, catchError } from 'rxjs/operators';
 import { AuthService } from './auth';
 
 @Injectable({
@@ -21,9 +21,33 @@ export class SpotifyNowPlayingService {
   // Obtener la canción actual del admin (para todos los usuarios)
   getAdminCurrentlyPlaying(): Observable<any> {
     const url = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/admin/currently-playing`);
-    return this.http.get(url);
+    return this.http.get(url).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          // Token expirado, intentar refrescar automáticamente
+          console.log('Token de Spotify expirado, intentando refrescar...');
+          return this.refreshAdminToken().pipe(
+            switchMap(() => {
+              // Reintentar la solicitud después del refresco
+              const newUrl = this.getCacheBustedUrl(`${this.apiUrl}/api/spotify/admin/currently-playing`);
+              return this.http.get(newUrl);
+            }),
+            catchError(refreshError => {
+              console.error('Error al refrescar token:', refreshError);
+              return throwError(() => refreshError);
+            })
+          );
+        }
+        return throwError(() => error);
+      })
+    );
   }
 
+  // Método para refrescar el token del admin
+  private refreshAdminToken(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/api/spotify/admin/refresh-token`, {}, { headers });
+  }
   // Polling para obtener la canción actual del admin cada 3 segundos
   getAdminCurrentlyPlayingPolling(): Observable<any> {
     return interval(30000).pipe(  // 30 segundos en lugar de 3
@@ -71,12 +95,12 @@ export class SpotifyNowPlayingService {
   addToQueue(trackUri: string): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(
-      `${this.apiUrl}/api/spotify/admin/queue`, 
+      `${this.apiUrl}/api/spotify/admin/queue`,
       { uri: trackUri },
       { headers }
     );
   }
-  
+
   // Obtener la cola de reproducción actual
   getQueue(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
