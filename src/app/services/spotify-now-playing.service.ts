@@ -10,12 +10,39 @@ import { AuthService } from './auth';
 })
 export class SpotifyNowPlayingService {
   private apiUrl = environment.apiUrl;
+  private automaticCheckInterval: any = null;
 
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  constructor(private http: HttpClient, private authService: AuthService) {
+    this.startAutomaticPlayingSongCheck(30000); // Verificar cada 30 segundos
+  }
 
   // Helper to get a cache-busting URL
   private getCacheBustedUrl(url: string): string {
     return `${url}?_=${new Date().getTime()}`;
+  }
+
+  startAutomaticPlayingSongCheck(intervalMs: number = 30000): void {
+    this.stopAutomaticPlayingSongCheck();
+    
+    this.automaticCheckInterval = setInterval(() => {
+      this.checkAndRemovePlayingSongFromRanking().subscribe({
+        next: (response: any) => {
+          if (response.deleted) {
+            alert(`Canción eliminada automáticamente del ranking: ${response.song.name}`);
+          }
+        },
+        error: (error) => {
+          console.error('Error en verificación automática:', error);
+        }
+      });
+    }, intervalMs);
+  }
+
+  stopAutomaticPlayingSongCheck(): void {
+    if (this.automaticCheckInterval) {
+      clearInterval(this.automaticCheckInterval);
+      this.automaticCheckInterval = null;
+    }
   }
 
   // Obtener la canción actual del admin (para todos los usuarios)
@@ -99,6 +126,11 @@ export class SpotifyNowPlayingService {
     );
   }
 
+  checkAndRemovePlayingSongFromRanking(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/api/spotify/admin/check-playing-song`, {}, { headers });
+  }
+  
   // Obtener la cola de reproducción actual
   getQueue(): Observable<any> {
     const headers = this.authService.getAuthHeaders();

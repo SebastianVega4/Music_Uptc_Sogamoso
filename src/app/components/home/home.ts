@@ -6,6 +6,7 @@ import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.ser
 import { Subscription } from 'rxjs';
 import { AnnouncementComponent } from '../announcement/announcement.component';
 import { ScheduleComponent } from "../schedule/schedule.component";
+import { VotingService } from '../../services/voting';
 
 @Component({
   standalone: true,
@@ -22,12 +23,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private pollingSubscription: Subscription | null = null;
   private progressInterval: any = null;
-  
+
   // Properties for robust progress tracking
   private songInitialProgressMs: number = 0;
   private lastSyncTime: number = 0;
 
-  constructor(private spotifyService: SpotifyNowPlayingService) {}
+  constructor(
+    private spotifyService: SpotifyNowPlayingService,
+    private votingService: VotingService
+  ) { }
 
   ngOnInit(): void {
     this.startAdminSpotifyPolling();
@@ -103,6 +107,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.progressInterval = setInterval(() => {
       this.updateProgress();
     }, 500);
+    
+    // Verificar si debemos eliminar esta canción del ranking
+    this.checkAndRemovePlayingSong();
   }
 
   private syncProgressBar(progressMs: number, durationMs: number): void {
@@ -111,18 +118,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.lastSyncTime = Date.now();
     this.updateProgress(); // Update progress immediately on sync
   }
-  
+
   private updateProgress(): void {
     if (!this.adminCurrentlyPlaying || this.songDurationMs <= 0) {
       this.progress = 0;
       return;
     }
-    
+
     const elapsedTimeSinceSync = Date.now() - this.lastSyncTime;
     const currentProgressMs = this.songInitialProgressMs + elapsedTimeSinceSync;
-    
+
     this.progress = Math.min((currentProgressMs / this.songDurationMs) * 100, 100);
-    
+
     if (this.progress >= 100) {
       // Let the polling handle the next state, just stop the local timer
       this.stopProgressBar();
@@ -143,14 +150,34 @@ export class HomeComponent implements OnInit, OnDestroy {
       (votingList as any).forceRefresh();
     }
   }
-  
+
+  private checkAndRemovePlayingSong(): void {
+    if (this.adminCurrentlyPlaying && this.adminCurrentlyPlaying.id) {
+      // Pequeña demora para asegurar que la canción está realmente reproduciéndose
+      setTimeout(() => {
+        this.spotifyService.checkAndRemovePlayingSongFromRanking().subscribe({
+          next: (response: any) => {
+            if (response.deleted) {
+              console.log('Canción eliminada del ranking:', response.song.name);
+              // Forzar actualización de la lista de votación
+              this.votingService.forceRefresh().subscribe();
+            }
+          },
+          error: (error) => {
+            console.error('Error al verificar canción en reproducción:', error);
+          }
+        });
+      }, 3000); // Esperar 3 segundos antes de verificar
+    }
+  }
+
   formatTime(ms: number): string {
     if (!ms) return '0:00';
-    
+
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    
+
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
 }

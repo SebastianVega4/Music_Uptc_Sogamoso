@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],
-  imports: [CommonModule, FormsModule] 
+  imports: [CommonModule, FormsModule]
 })
 export class AdminPanelComponent implements OnInit {
   songs: any[] = [];
@@ -36,15 +36,30 @@ export class AdminPanelComponent implements OnInit {
     private scheduleService: ScheduleService
   ) { }
 
-
+  checkPlayingSong(): void {
+    this.spotifyService.checkAndRemovePlayingSongFromRanking().subscribe({
+      next: (response: any) => {
+        if (response.deleted) {
+          alert(`Canción "${response.song.name}" eliminada del ranking por estar en reproducción`);
+          this.loadSongs(); // Recargar la lista
+        } else {
+          alert(response.message || "La canción en reproducción no está en el ranking");
+        }
+      },
+      error: (error) => {
+        console.error('Error al verificar canción en reproducción:', error);
+        alert('Error al verificar la canción en reproducción');
+      }
+    });
+  }
 
   hideAnnouncement() {
-    if (this.isHidden){
-    this.isHidden = false;
-    localStorage.setItem('announcementHidden', 'false');
-    }else{
-    this.isHidden = true;
-    localStorage.setItem('announcementHidden', 'true');
+    if (this.isHidden) {
+      this.isHidden = false;
+      localStorage.setItem('announcementHidden', 'false');
+    } else {
+      this.isHidden = true;
+      localStorage.setItem('announcementHidden', 'true');
     }
   }
 
@@ -52,7 +67,7 @@ export class AdminPanelComponent implements OnInit {
     this.loadSongs();
     this.checkSpotifyStatus();
     this.loadSchedules();
-    
+
     this.route.queryParams.subscribe(params => {
       if (params['spotify_connected'] === 'true') {
         alert('Spotify conectado correctamente');
@@ -253,31 +268,31 @@ export class AdminPanelComponent implements OnInit {
   // Convertir formato de hora
   convertToAmPm(timeString: string): string {
     if (!timeString) return '';
-    
+
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
-    
+
     return `${hour12}:${minutes} ${ampm}`;
   }
 
   // Formatear tiempo transcurrido
   formatTimeAgo(dateString: string): string {
     if (!dateString) return 'Fecha desconocida';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return 'Hace un momento';
     if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins !== 1 ? 's' : ''}`;
     if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
     if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
-    
+
     return date.toLocaleDateString();
   }
 

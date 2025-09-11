@@ -7,12 +7,10 @@
 
 <!-- Sección de Horarios -->
 <div class="card mb-4" (click)="hideAnnouncement()">
-  <div class="card-header d-flex justify-content-between align-items-center"  >
+  <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Horarios de Música</h5>
-    <button class="btn btn-sm" 
-            [class.btn-outline-primary]="!isEditingSchedules" 
-            [class.btn-primary]="isEditingSchedules"
-            (click)="isEditingSchedules = !isEditingSchedules">
+    <button class="btn btn-sm" [class.btn-outline-primary]="!isEditingSchedules"
+      [class.btn-primary]="isEditingSchedules" (click)="isEditingSchedules = !isEditingSchedules">
       <i class="fas" [class.fa-edit]="!isEditingSchedules" [class.fa-times]="isEditingSchedules"></i>
       {{ isEditingSchedules ? 'Cancelar' : 'Editar' }}
     </button>
@@ -33,7 +31,8 @@
             <tr *ngFor="let schedule of schedules; let i = index">
               <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][i] }}</strong></td>
               <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
-              <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</td>
+              <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}
+              </td>
               <td>
                 <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
                   {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
@@ -44,7 +43,7 @@
         </table>
       </div>
     </div>
-    
+
     <div *ngIf="isEditingSchedules">
       <div class="table-responsive">
         <table class="table table-sm">
@@ -58,35 +57,31 @@
           </thead>
           <tbody>
             <tr *ngFor="let schedule of schedules; let i = index">
-              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
+              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong>
+              </td>
               <td>
                 <div class="row g-2">
                   <div class="col">
-                    <input type="time" class="form-control form-control-sm" 
-                           [(ngModel)]="schedule.lunch_start">
+                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.lunch_start">
                   </div>
                   <div class="col">
-                    <input type="time" class="form-control form-control-sm" 
-                           [(ngModel)]="schedule.lunch_end">
+                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.lunch_end">
                   </div>
                 </div>
               </td>
               <td>
                 <div class="row g-2">
                   <div class="col">
-                    <input type="time" class="form-control form-control-sm" 
-                           [(ngModel)]="schedule.dinner_start">
+                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.dinner_start">
                   </div>
                   <div class="col">
-                    <input type="time" class="form-control form-control-sm" 
-                           [(ngModel)]="schedule.dinner_end">
+                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.dinner_end">
                   </div>
                 </div>
               </td>
               <td>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" 
-                         [(ngModel)]="schedule.is_active">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="schedule.is_active">
                 </div>
               </td>
             </tr>
@@ -126,8 +121,8 @@
             <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
           </div>
           <div class="col-2">
-            <img [src]="item.album?.images[0]?.url || 'https://placehold.co/60x60?text=No+Image'" 
-                 class="img-fluid rounded" [alt]="item.name">
+            <img [src]="item.album?.images[0]?.url || 'https://placehold.co/60x60?text=No+Image'"
+              class="img-fluid rounded" [alt]="item.name">
           </div>
           <div class="col-9">
             <h6 class="mb-1">{{ item.name }}</h6>
@@ -151,7 +146,7 @@
           Desconectar
         </button>
       </div>
-      
+
       <div *ngIf="!spotifyStatus.authenticated || !spotifyStatus.token_valid" class="alert alert-warning">
         <i class="fab fa-spotify me-2"></i> Spotify no conectado
         <button class="btn btn-sm btn-success ms-3" (click)="connectSpotify()">
@@ -164,14 +159,18 @@
     <div *ngIf="adminCurrentlyPlaying && adminCurrentlyPlaying.is_playing" class="mt-3">
       <h6>Reproduciendo ahora (visible para todos):</h6>
       <div class="d-flex align-items-center">
-        <img [src]="adminCurrentlyPlaying.image" class="img-thumbnail me-3" style="width: 60px; height: 60px;" [alt]="adminCurrentlyPlaying.name">
+        <img [src]="adminCurrentlyPlaying.image" class="img-thumbnail me-3" style="width: 60px; height: 60px;"
+          [alt]="adminCurrentlyPlaying.name">
         <div>
           <strong>{{ adminCurrentlyPlaying.name }}</strong><br>
           <small class="text-muted">{{ adminCurrentlyPlaying.artists.join(', ') }}</small>
         </div>
       </div>
+      <button class="btn btn-warning btn-sm mt-2" (click)="checkPlayingSong()">
+        <i class="fas fa-trash-alt me-1"></i>Eliminar del ranking si existe
+      </button>
     </div>
-    
+
     <div *ngIf="adminCurrentlyPlaying && !adminCurrentlyPlaying.is_playing" class="mt-3">
       <div class="alert alert-info">
         <i class="fas fa-info-circle me-2"></i> No se está reproduciendo nada en Spotify
