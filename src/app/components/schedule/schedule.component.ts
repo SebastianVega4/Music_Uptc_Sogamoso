@@ -30,6 +30,10 @@ export class ScheduleComponent implements OnInit {
   
   ngOnInit(): void {
     this.loadSchedules();
+    const hidden = localStorage.getItem('announcementHidden');
+    if (hidden === 'true') {
+      this.isHidden = true;
+    }
   }
 
   loadSchedules(): void {
