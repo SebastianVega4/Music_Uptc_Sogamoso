@@ -31,8 +31,8 @@
           <tbody>
             <tr *ngFor="let schedule of schedules; let i = index">
               <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][i] }}</strong></td>
-              <td>{{ schedule.lunch_start || '-' }} - {{ schedule.lunch_end || '-' }}</td>
-              <td>{{ schedule.dinner_start || '-' }} - {{ schedule.dinner_end || '-' }}</td>
+              <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
+              <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</td>
             </tr>
           </tbody>
         </table>

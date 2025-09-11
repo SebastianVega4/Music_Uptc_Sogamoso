@@ -21,8 +21,8 @@
         <tbody>
           <tr *ngFor="let schedule of schedules">
             <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
-            <td>{{ schedule.lunch_start || '-' }} - {{ schedule.lunch_end || '-' }}</td>
-            <td>{{ schedule.dinner_start || '-' }} - {{ schedule.dinner_end || '-' }}</td>
+            <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
+            <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</td>
             <td>
               <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
                 {{ schedule.is_active ? 'Activo' : 'Inactivo' }}

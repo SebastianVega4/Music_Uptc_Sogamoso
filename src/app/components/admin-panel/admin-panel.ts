@@ -26,7 +26,6 @@ export class AdminPanelComponent implements OnInit {
   schedules: any[] = [];
   isEditingSchedules = false;
 
-
   constructor(
     private votingService: VotingService,
     private authService: AuthService,
@@ -236,6 +235,22 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
+  convertToAmPm(time: string): string {
+    if (!time) return '';
+    
+    // Dividir la hora y los minutos
+    const [hours, minutes] = time.split(':');
+    const hourNum = parseInt(hours, 10);
+    
+    // Determinar AM o PM
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    
+    // Convertir a formato 12 horas
+    const hour12 = hourNum % 12 || 12;
+    
+    return `${hour12}:${minutes} ${period}`;
+  }
+  
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
