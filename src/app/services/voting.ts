@@ -88,7 +88,7 @@ export class VotingService {
       map(songs => {
         return [...songs]
           .sort((a, b) => new Date(b.createdat).getTime() - new Date(a.createdat).getTime())
-          .slice(0, 9);
+          .slice(0, 10);
       })
     );
   }
