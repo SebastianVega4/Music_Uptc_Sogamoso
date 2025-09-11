@@ -191,7 +191,7 @@ export class AdminPanelComponent implements OnInit {
     this.isLoadingQueue = true;
     this.spotifyService.getQueue().subscribe({
       next: (data) => {
-        this.queue = data.queue || [];
+        this.queue = data;
         this.isLoadingQueue = false;
       },
       error: (error) => {
@@ -202,7 +202,7 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
-  // Método para togglear la visualización de la cola
+  // Alternar visibilidad de la cola
   toggleQueue(): void {
     this.showQueue = !this.showQueue;
     if (this.showQueue) {
@@ -210,6 +210,7 @@ export class AdminPanelComponent implements OnInit {
     }
   }
 
+  // Método para cargar horarios
   loadSchedules(): void {
     this.scheduleService.getSchedules().subscribe({
       next: (data) => {
@@ -217,43 +218,58 @@ export class AdminPanelComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar horarios:', error);
-      }
-    });
-  }
-  
-  // Método para guardar horarios
-  saveSchedules(): void {
-    this.scheduleService.updateSchedules(this.schedules).subscribe({
-      next: () => {
-        alert('Horarios actualizados correctamente');
-        this.isEditingSchedules = false;
-      },
-      error: (error) => {
-        console.error('Error al actualizar horarios:', error);
-        alert('Error al actualizar horarios');
+        alert('Error al cargar los horarios');
       }
     });
   }
 
-  convertToAmPm(time: string): string {
-    if (!time) return '';
-    
-    // Dividir la hora y los minutos
-    const [hours, minutes] = time.split(':');
-    const hourNum = parseInt(hours, 10);
-    
-    // Determinar AM o PM
-    const period = hourNum >= 12 ? 'PM' : 'AM';
-    
-    // Convertir a formato 12 horas
-    const hour12 = hourNum % 12 || 12;
-    
-    return `${hour12}:${minutes} ${period}`;
+  // Método para guardar horarios
+  saveSchedules(): void {
+    this.scheduleService.saveSchedules(this.schedules).subscribe({
+      next: () => {
+        alert('Horarios guardados correctamente');
+        this.isEditingSchedules = false;
+      },
+      error: (error) => {
+        console.error('Error al guardar horarios:', error);
+        alert('Error al guardar los horarios');
+      }
+    });
   }
-  
+
+  // Convertir formato de hora
+  convertToAmPm(timeString: string): string {
+    if (!timeString) return '';
+    
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    
+    return `${hour12}:${minutes} ${ampm}`;
+  }
+
+  // Formatear tiempo transcurrido
+  formatTimeAgo(dateString: string): string {
+    if (!dateString) return 'Fecha desconocida';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'Hace un momento';
+    if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins !== 1 ? 's' : ''}`;
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+    if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
+    
+    return date.toLocaleDateString();
+  }
+
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/']);
-    this.loadSchedules();
+    this.router.navigate(['/admin-login']);
   }
 }

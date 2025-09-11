@@ -26,6 +26,7 @@
               <th>Día</th>
               <th>Almuerzo</th>
               <th>Cena</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -33,6 +34,11 @@
               <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][i] }}</strong></td>
               <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
               <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
+                  {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -205,12 +211,20 @@
           <div class="col-2">
             <img [src]="song.image" class="img-fluid rounded" [alt]="song.name">
           </div>
-          <div class="col-7">
+          <div class="col-5">
             <h6 class="mb-1">{{ song.name }}</h6>
             <p class="text-muted mb-1 small">{{ song.artists.join(', ') }}</p>
-            <span class="badge bg-success">
-              <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }} votos
-            </span>
+            <div class="d-flex gap-2">
+              <span class="badge bg-success">
+                <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }}
+              </span>
+              <span class="badge bg-danger">
+                <i class="fas fa-thumbs-down me-1"></i>{{ song.dislikes || 0 }}
+              </span>
+            </div>
+          </div>
+          <div class="col-2">
+            <small class="text-muted">Agregada: {{ formatTimeAgo(song.createdat) }}</small>
           </div>
           <div class="col-2 text-end">
             <button class="btn btn-success btn-sm me-1" (click)="addToQueue('spotify:track:' + song.id)">
