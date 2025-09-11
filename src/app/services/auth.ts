@@ -22,17 +22,16 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/login`, { email, password })
-      .pipe(
-        tap((response: any) => {
-          if (response.token) {
-            localStorage.setItem('adminToken', response.token);
-            localStorage.setItem('adminUser', JSON.stringify(response.user));
-            this.currentUserSubject.next(response.user);
-          }
-        })
-      );
-  }
+    return this.http.post(`${this.apiUrl}/api/auth/login`, { email, password }).pipe(
+      tap((response: any) => {
+        if (response.token) {
+          localStorage.setItem('adminToken', response.token);
+          localStorage.setItem('adminUser', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
+        }
+      })
+  );
+}
 
   logout(): void {
     localStorage.removeItem('adminToken');
