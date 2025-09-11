@@ -30,7 +30,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let schedule of schedules; let i = index">
-              <td><strong>{{ ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][i] }}</strong></td>
+              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][i] }}</strong></td>
               <td>{{ schedule.lunch_start || '-' }} - {{ schedule.lunch_end || '-' }}</td>
               <td>{{ schedule.dinner_start || '-' }} - {{ schedule.dinner_end || '-' }}</td>
             </tr>
@@ -52,7 +52,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let schedule of schedules; let i = index">
-              <td><strong>{{ ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][i] }}</strong></td>
+              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
               <td>
                 <div class="row g-2">
                   <div class="col">

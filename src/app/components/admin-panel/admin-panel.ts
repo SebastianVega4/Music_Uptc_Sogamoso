@@ -39,11 +39,11 @@ export class AdminPanelComponent implements OnInit {
   ngOnInit(): void {
     this.loadSongs();
     this.checkSpotifyStatus();
-    // Verificar si se acaba de conectar Spotify
+    this.loadSchedules();
+    
     this.route.queryParams.subscribe(params => {
       if (params['spotify_connected'] === 'true') {
         alert('Spotify conectado correctamente');
-        // Recargar estado después de conectar
         setTimeout(() => {
           this.checkSpotifyStatus();
           this.getAdminCurrentlyPlaying();

@@ -1,35 +1,36 @@
-<div class="schedule-container card">
-    <div class="card-header">
-      <h5 class="mb-0">
-        <i class="fas fa-clock me-2"></i>Horarios de Música
-      </h5>
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Horarios de Música</h5>
+  </div>
+  <div class="card-body">
+    <div *ngIf="isLoading" class="text-center py-3">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p class="mt-2">Cargando horarios...</p>
     </div>
-    <div class="card-body">
-      <div class="table-container">
-        <div class="schedule-table">
-          <div class="schedule-header">
-            <div class="schedule-cell">Día</div>
-            <div class="schedule-cell">Almuerzo</div>
-            <div class="schedule-cell">Cena</div>
-          </div>
-          
-          <div class="schedule-row" *ngFor="let schedule of schedules; let i = index" [class.today]="isToday(i)">
-            <div class="schedule-cell day-cell">
-              <strong [class.text-success]="isToday(i)">{{ daysOfWeek[i] }}</strong>
-              <span *ngIf="isToday(i)" class="badge bg-success">Hoy</span>
-            </div>
-            <div class="schedule-cell">
-              <div class="time-slot" [class.no-schedule]="!schedule.lunch_start && !schedule.lunch_end">
-                {{ schedule.lunch_start && schedule.lunch_end ? (formatTime(schedule.lunch_start) + ' - ' + formatTime(schedule.lunch_end)) : 'No programado' }}
-              </div>
-            </div>
-            <div class="schedule-cell">
-              <div class="time-slot" [class.no-schedule]="!schedule.dinner_start && !schedule.dinner_end">
-                {{ schedule.dinner_start && schedule.dinner_end ? (formatTime(schedule.dinner_start) + ' - ' + formatTime(schedule.dinner_end)) : 'No programado' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
+    <div *ngIf="!isLoading" class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Almuerzo</th>
+            <th>Cena</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let schedule of schedules">
+            <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong></td>
+            <td>{{ schedule.lunch_start || '-' }} - {{ schedule.lunch_end || '-' }}</td>
+            <td>{{ schedule.dinner_start || '-' }} - {{ schedule.dinner_end || '-' }}</td>
+            <td>
+              <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
+                {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+</div>

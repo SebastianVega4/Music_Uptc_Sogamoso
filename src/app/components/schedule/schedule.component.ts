@@ -11,8 +11,7 @@ import { ScheduleService } from '../../services/schedule.service';
 })
 export class ScheduleComponent implements OnInit {
   schedules: any[] = [];
-  daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  currentDay: number = new Date().getDay(); // 0: Domingo, 1: Lunes, etc.
+  isLoading: boolean = true;
 
   constructor(private scheduleService: ScheduleService) { }
 
@@ -24,19 +23,12 @@ export class ScheduleComponent implements OnInit {
     this.scheduleService.getSchedules().subscribe({
       next: (data) => {
         this.schedules = data;
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al cargar horarios:', error);
+        this.isLoading = false;
       }
     });
-  }
-
-  isToday(dayIndex: number): boolean {
-    return dayIndex === this.currentDay;
-  }
-
-  formatTime(time: string): string {
-    if (!time) return '-';
-    return time.substring(0, 5); // Mostrar solo HH:MM
   }
 }
