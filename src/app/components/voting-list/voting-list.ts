@@ -84,33 +84,50 @@ export class VotingListComponent implements OnInit, OnDestroy {
 
   formatTimeAgo(dateString: string): string {
     try {
-      const now = new Date();
-      const date = new Date(dateString);
-      
+      // Verificar si es un string de fecha válido
+      if (!dateString) return 'reciente';
+
+      let date: Date;
+
+      // Manejar diferentes formatos de fecha
+      if (typeof dateString === 'string') {
+        // Si es un string ISO (con 'Z' al final)
+        if (dateString.includes('Z') || dateString.includes('+')) {
+          date = new Date(dateString);
+        } else {
+          // Si es un string sin timezone, asumir UTC
+          date = new Date(dateString + 'Z');
+        }
+      } else {
+        return 'Reciente';
+      }
+
       // Verificar si la fecha es válida
       if (isNaN(date.getTime())) {
-        return 'reciente';
+        console.warn('Fecha inválida:', dateString);
+        return 'Reciente';
       }
-      
+
+      const now = new Date();
       const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       const diffInHours = Math.floor(diffInSeconds / 3600);
       const diffInDays = Math.floor(diffInSeconds / 86400);
-      
+
       if (diffInSeconds < 60) {
-        return 'ahora mismo';
+        return 'Ahora Mismo';
       } else if (diffInMinutes < 60) {
-        return `hace ${diffInMinutes} min`;
+        return `Hace ${diffInMinutes} min`;
       } else if (diffInHours < 24) {
-        return `hace ${diffInHours} h`;
+        return `Hace ${diffInHours} h`;
       } else if (diffInDays === 1) {
-        return 'ayer';
+        return 'Ayer';
       } else {
-        return `hace ${diffInDays} d`;
+        return `Hace ${diffInDays} d`;
       }
     } catch (error) {
-      console.error('Error formateando fecha:', error);
-      return 'reciente';
+      console.error('Error formateando fecha:', error, 'Fecha recibida:', dateString);
+      return 'Reciente';
     }
   }
 

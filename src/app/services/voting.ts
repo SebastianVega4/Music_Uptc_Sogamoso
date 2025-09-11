@@ -37,7 +37,7 @@ export class VotingService {
     return songs.sort((a, b) => {
       if (a.votes > b.votes) return -1;
       if (a.votes < b.votes) return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
     });
   }
 
@@ -87,8 +87,8 @@ export class VotingService {
     return this.getRankedSongs().pipe(
       map(songs => {
         return [...songs]
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 6);
+          .sort((a, b) => new Date(b.createdat).getTime() - new Date(a.createdat).getTime())
+          .slice(0, 9);
       })
     );
   }

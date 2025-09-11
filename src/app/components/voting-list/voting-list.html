@@ -29,11 +29,11 @@
               <p class="recent-song-artist">{{ song.artists.join(', ') }}</p>
             </div>
             <div class="recent-song-meta">
-              <span class="badge bg-primary">
+              <span class="badge bg-secondary">
                 <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }}
               </span>
               <span class="badge bg-secondary">
-                <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(song.createdAt) }}
+                <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(song.createdat) }}
               </span>
             </div>
             <div class="recent-song-actions">
@@ -56,6 +56,7 @@
             <th>Título</th>
             <th>Artista</th>
             <th>Votos</th>
+            <th>Agregada</th>
             <th>Acción</th>
           </tr>
         </thead>
@@ -71,6 +72,9 @@
             <td>{{ song.artists.join(', ') }}</td>
             <td>
               <span class="vote-count"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
+            </td>
+            <td>
+              <span class="time-ago">{{ formatTimeAgo(song.createdat) }}</span>
             </td>
             <td>
               <button class="btn-vote" (click)="vote(song)">Votar</button>

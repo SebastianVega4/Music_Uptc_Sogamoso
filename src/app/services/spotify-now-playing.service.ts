@@ -24,8 +24,6 @@ export class SpotifyNowPlayingService {
     return this.http.get(url).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // Token expirado, intentar refrescar automáticamente
-          console.log('Token de Spotify expirado, intentando refrescar...');
           return this.refreshAdminToken().pipe(
             switchMap(() => {
               // Reintentar la solicitud después del refresco
