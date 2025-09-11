@@ -29,7 +29,6 @@ node_modules/
 
 # TypeScript cache
 *.tsbuildinfo
-auth.ts
 
 # Logs
 npm-debug.log*
