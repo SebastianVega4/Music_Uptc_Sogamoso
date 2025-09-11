@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -12,7 +12,19 @@ export class SpotifyService {
   constructor(private http: HttpClient) { }
 
   searchTracks(query: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/api/search?q=${encodeURIComponent(query)}`);
+    return this.http.get<any[]>(`${this.apiUrl}/api/search?q=${encodeURIComponent(query)}`).pipe(
+      map((tracks: any[]) => {
+        return tracks.map(track => ({
+          id: track.id,
+          name: track.name,
+          artists: track.artists,
+          album: track.album,
+          image: track.image,
+          preview_url: track.preview_url,
+          duration_ms: track.duration_ms
+        }));
+      })
+    );
   }
 
   getAuthUrl(): Observable<{ authUrl: string }> {

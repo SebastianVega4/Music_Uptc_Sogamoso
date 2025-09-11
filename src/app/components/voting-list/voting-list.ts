@@ -124,11 +124,11 @@ export class VotingListComponent implements OnInit, OnDestroy {
       const diffInDays = Math.floor(diffInSeconds / 86400);
 
       if (diffInSeconds < 60) {
-        return '${diffInSeconds} s';
+        return `${ diffInSeconds } s`;
       } else if (diffInMinutes < 60) {
-        return `Hace ${diffInMinutes} min ${diffInSeconds % 60} s}`;
+        return `Hace ${diffInMinutes} min ${diffInSeconds % 60} s`;
       } else if (diffInHours < 24) {
-        return `Hace ${diffInHours} h y ${diffInMinutes % 60} min`;
+        return `Hace ${diffInHours} h ${diffInMinutes % 60 } min`;
       } else if (diffInDays === 1) {
         return 'Ayer';
       } else {
