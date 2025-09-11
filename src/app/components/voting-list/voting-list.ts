@@ -16,6 +16,7 @@ export class VotingListComponent implements OnInit, OnDestroy {
   recentlyAddedSongs: any[] = [];
   isLoading: boolean = true;
   isRefreshing: boolean = false;
+  userVotes: Map<string, boolean> = new Map();
   private pollingSubscription: Subscription | null = null;
 
   refreshCooldown = 30; // seconds
@@ -82,6 +83,14 @@ export class VotingListComponent implements OnInit, OnDestroy {
     });
   }
 
+  hasUserLiked(trackId: string): boolean {
+    return this.userVotes.has(trackId) && this.userVotes.get(trackId) === false;
+  }
+  
+  hasUserDisliked(trackId: string): boolean {
+    return this.userVotes.has(trackId) && this.userVotes.get(trackId) === true;
+  }
+
   formatTimeAgo(dateString: string): string {
     try {
       // Verificar si es un string de fecha válido
@@ -115,11 +124,11 @@ export class VotingListComponent implements OnInit, OnDestroy {
       const diffInDays = Math.floor(diffInSeconds / 86400);
 
       if (diffInSeconds < 60) {
-        return 'Ahora Mismo';
+        return '${diffInSeconds} s';
       } else if (diffInMinutes < 60) {
-        return `Hace ${diffInMinutes} min`;
+        return `Hace ${diffInMinutes} min ${diffInSeconds % 60} s}`;
       } else if (diffInHours < 24) {
-        return `Hace ${diffInHours} h`;
+        return `Hace ${diffInHours} h y ${diffInMinutes % 60} min`;
       } else if (diffInDays === 1) {
         return 'Ayer';
       } else {
@@ -149,7 +158,7 @@ export class VotingListComponent implements OnInit, OnDestroy {
       });
   }
 
-  vote(song: any): void {
+  vote(song: any, isDislike: boolean = false): void {
     const trackInfo = {
       name: song.name,
       artists: song.artists,
@@ -158,14 +167,38 @@ export class VotingListComponent implements OnInit, OnDestroy {
       preview_url: song.preview_url,
     };
 
-    this.votingService.voteForSong(song.id, trackInfo).subscribe({
-      next: () => {
-        alert('¡Tu voto ha sido registrado!');
-        this.forceRefresh(); // Actualización inmediata para feedback instantáneo
+    this.votingService.voteForSong(song.id, trackInfo, isDislike).subscribe({
+      next: (response: any) => {
+        if (response.deleted) {
+          alert('La canción ha sido eliminada por recibir muchos dislikes');
+        } else {
+          const voteType = isDislike ? 'dislike' : 'like';
+          alert(`¡Tu ${voteType} ha sido registrado!`);
+
+          // Actualizar el estado local de votos del usuario
+          this.userVotes.set(song.id, isDislike);
+        }
+        this.forceRefresh();
       },
       error: (error) => {
         if (error.status === 409) {
-          alert('Ya has votado por esta canción con esta IP');
+          // Si ya votó, ofrecer cambiar el voto
+          if (confirm('Ya has votado por esta canción. ¿Quieres cambiar tu voto?')) {
+            this.votingService.changeVote(song.id, trackInfo, isDislike).subscribe({
+              next: (response: any) => {
+                if (response.deleted) {
+                  alert('La canción ha sido eliminada por recibir muchos dislikes');
+                } else {
+                  alert('¡Tu voto ha sido cambiado!');
+                  this.userVotes.set(song.id, isDislike);
+                }
+                this.forceRefresh();
+              },
+              error: (err) => {
+                alert('Error al cambiar tu voto. Intenta nuevamente.');
+              }
+            });
+          }
         } else {
           alert('Error al registrar tu voto. Intenta nuevamente.');
         }

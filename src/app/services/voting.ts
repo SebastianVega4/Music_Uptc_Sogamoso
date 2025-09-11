@@ -41,10 +41,11 @@ export class VotingService {
     });
   }
 
-  voteForSong(trackid: string, trackInfo: any): Observable<any> {
+  voteForSong(trackid: string, trackInfo: any, isDislike: boolean = false): Observable<any> {
     const songData = {
       trackid,
-      trackInfo
+      trackInfo,
+      is_dislike: isDislike
     };
 
     return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
@@ -54,6 +55,11 @@ export class VotingService {
     );
   }
 
+  changeVote(trackid: string, trackInfo: any, newIsDislike: boolean): Observable<any> {
+    // Esto se manejará automáticamente en el backend basado en el voto existente
+    return this.voteForSong(trackid, trackInfo, newIsDislike);
+  }
+  
   // Sondeo para obtener el ranking de canciones cada 60 segundos
   getRankedSongsPolling(): Observable<any[]> {
     return interval(60000).pipe(

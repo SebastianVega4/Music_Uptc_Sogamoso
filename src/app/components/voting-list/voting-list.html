@@ -30,15 +30,15 @@
             </div>
             <div class="recent-song-meta">
               <span class="badge bg-secondary">
-                <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }}
-              </span>
-              <span class="badge bg-secondary">
                 <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(song.createdat) }}
               </span>
             </div>
-            <div class="recent-song-actions">
-              <button class="btn-vote" (click)="vote(song)">
-                <i class="fas fa-thumbs-up"></i>
+            <div>
+              <button class="btn-vote like-btn" (click)="vote(song, false)" [class.active]="hasUserLiked(song.id)">
+                <i class="fas fa-thumbs-up"></i>{{ song.votes || 0 }}
+              </button>
+              <button class="btn-vote dislike-btn" (click)="vote(song, true)" [class.active]="hasUserDisliked(song.id)">
+                <i class="fas fa-thumbs-down"></i>{{ song.dislikes || 0 }}
               </button>
             </div>
           </div>
@@ -71,13 +71,25 @@
             </td>
             <td>{{ song.artists.join(', ') }}</td>
             <td>
-              <span class="vote-count"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
+              <span class="vote-count">
+                <i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}
+              </span>
+              <span class="dislike-count">
+                <i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}
+              </span>
             </td>
             <td>
               <span class="time-ago">{{ formatTimeAgo(song.createdat) }}</span>
             </td>
             <td>
-              <button class="btn-vote" (click)="vote(song)">Votar</button>
+              <div class="vote-actions">
+                <button class="btn-vote like-btn" (click)="vote(song, false)" [class.active]="hasUserLiked(song.id)">
+                  <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="btn-vote dislike-btn" (click)="vote(song, true)" [class.active]="hasUserDisliked(song.id)">
+                  <i class="fas fa-thumbs-down"></i>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
