@@ -78,6 +78,7 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
+          <p>Preciona la cacion para ver los detallas </p>
         </div>
         <div class="col-md-6">
           <div class="d-flex flex-wrap gap-2 justify-content-md-end">
@@ -123,7 +124,7 @@
   <!-- Lista de canciones -->
   <div *ngIf="!isLoading && getTabSongs().length > 0" class="songs-grid">
     <div *ngFor="let song of getTabSongs(); let i = index" class="song-card spotify-card">
-      <div class="card-content">
+      <div class="card-content" (click)="onShowDetails(song)">
         <!-- Imagen con número de posición superpuesto -->
         <div class="song-image-container">
           <span class="position-number">{{ i + 1 }}</span>
@@ -196,7 +197,7 @@
               </button>
             </div>
             <div class="col-md-8">
-              <h4>{{ selectedSong.name }}</h4>
+              <h4 class="text-muted">{{ selectedSong.name }}</h4>
               <p class="text-muted">{{ selectedSong.artists.join(', ') }}</p>
 
               <div class="row mt-4">
@@ -227,10 +228,10 @@
               </div>
 
               <div class="mt-4">
-                <h6>Última reproducción</h6>
+                <h6 class="text-muted" >Última reproducción</h6>
                 <p class="text-muted">{{ formatDate(selectedSong.last_played_at) }}</p>
 
-                <h6>Días desde la última reproducción</h6>
+                <h6 class="text-muted">Días desde la última reproducción</h6>
                 <p class="text-muted">{{ getDaysSinceLastPlayed(selectedSong) }} días</p>
               </div>
             </div>

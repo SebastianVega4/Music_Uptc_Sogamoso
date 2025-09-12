@@ -132,11 +132,21 @@ export class RankingComponent implements OnInit, OnDestroy {
             this.songs[index].total_votes += 1;
             this.calculateStats();
           }
+          
+          // Cerrar automáticamente el mensaje después de 5 segundos
+          setTimeout(() => {
+            this.voteMessage = '';
+          }, 5000);
         },
         error: (err) => {
           console.error('Error voting:', err);
           this.voteMessage = err.error?.error || 'Error al votar. Intenta nuevamente.';
           this.isVoting = false;
+          
+          // Cerrar automáticamente el mensaje de error después de 3 segundos
+          setTimeout(() => {
+            this.voteMessage = '';
+          }, 3000);
         }
       });
   }
