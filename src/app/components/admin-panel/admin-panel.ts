@@ -42,15 +42,15 @@ export class AdminPanelComponent implements OnInit {
     this.spotifyService.checkAndRemovePlayingSongFromRanking().subscribe({
       next: (response: any) => {
         if (response.deleted) {
-          alert(`Canción "${response.song.name}" eliminada del ranking por estar en reproducción`);
+          this.showMessage(`Canción "${response.song.name}" eliminada del ranking por estar en reproducción`);
           this.loadSongs(); // Recargar la lista
         } else {
-          alert(response.message || "La canción en reproducción no está en el ranking");
+          this.showMessage(response.message || "La canción en reproducción no está en el ranking", 'info');
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al verificar canción en reproducción:', error);
-        alert('Error al verificar la canción en reproducción');
+        this.showMessage('Error al verificar la canción en reproducción', 'error');
       }
     });
   }
@@ -72,7 +72,7 @@ export class AdminPanelComponent implements OnInit {
 
     this.route.queryParams.subscribe(params => {
       if (params['spotify_connected'] === 'true') {
-        alert('Spotify conectado correctamente');
+        this.showMessage('Spotify conectado correctamente');
         setTimeout(() => {
           this.checkSpotifyStatus();
           this.getAdminCurrentlyPlaying();
@@ -91,7 +91,7 @@ export class AdminPanelComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar canciones:', error);
         this.isLoading = false;
-        alert('Error al cargar la lista de canciones.');
+        this.showMessage('Error al cargar la lista de canciones.', 'error');
       },
     });
   }
@@ -131,7 +131,7 @@ export class AdminPanelComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al iniciar autenticación de Spotify:', error);
-        alert('Error al conectar con Spotify. Verifica la configuración.');
+        this.showMessage('Error al conectar con Spotify. Verifica la configuración.', 'error');
       }
     });
   }
@@ -143,13 +143,13 @@ export class AdminPanelComponent implements OnInit {
 
     this.spotifyService.disconnectAdminSpotify().subscribe({
       next: () => {
-        alert('Spotify desconectado correctamente');
+        this.showMessage('Spotify desconectado correctamente');
         this.spotifyStatus = { authenticated: false };
         this.adminCurrentlyPlaying = null;
       },
       error: (error) => {
         console.error('Error al desconectar Spotify:', error);
-        alert('Error al desconectar Spotify');
+        this.showMessage('Error al desconectar Spotify', 'error');
       }
     });
   }
@@ -161,18 +161,18 @@ export class AdminPanelComponent implements OnInit {
 
     this.votingService.deleteSong(trackId).subscribe({
       next: () => {
-        alert('Canción eliminada correctamente.');
+        this.showMessage('Canción eliminada correctamente.');
         this.loadSongs(); // Recargar la lista
       },
       error: (error) => {
         console.error('Error al eliminar canción:', error);
 
         if (error.status === 401) {
-          alert('Error de autenticación. Vuelve a iniciar sesión.');
+          this.showMessage('Error de autenticación. Vuelve a iniciar sesión.', 'error');
           this.authService.logout();
           this.router.navigate(['/admin-login']);
         } else {
-          alert('Error al eliminar la canción.');
+          this.showMessage('Error al eliminar la canción.', 'error');
         }
       },
     });
@@ -185,18 +185,18 @@ export class AdminPanelComponent implements OnInit {
 
     this.votingService.deleteAllVotes().subscribe({
       next: () => {
-        alert('Todos los votos han sido eliminados correctamente.');
+        this.showMessage('Todos los votos han sido eliminados correctamente.');
         this.loadSongs(); // Recargar la lista
       },
       error: (error) => {
         console.error('Error al eliminar todos los votos:', error);
 
         if (error.status === 401) {
-          alert('Error de autenticación. Vuelve a iniciar sesión.');
+          this.showMessage('Error de autenticación. Vuelve a iniciar sesión.', 'error');
           this.authService.logout();
           this.router.navigate(['/admin-login']);
         } else {
-          alert('Error al eliminar todos los votos.');
+          this.showMessage('Error al eliminar todos los votos.', 'error');
         }
       },
     });
@@ -206,12 +206,12 @@ export class AdminPanelComponent implements OnInit {
   addToQueue(trackUri: string): void {
     this.spotifyService.addToQueue(trackUri).subscribe({
       next: () => {
-        alert('Canción agregada a la cola correctamente');
+        this.showMessage('Canción agregada a la cola correctamente');
         this.loadQueue(); // Recargar la cola
       },
       error: (error) => {
         console.error('Error al agregar a la cola:', error);
-        alert('Error al agregar a la cola: ' + (error.error?.error || 'Error desconocido'));
+        this.showMessage('Error al agregar a la cola: ' + (error.error?.error || 'Error desconocido'), 'error');
       }
     });
   }
@@ -227,7 +227,7 @@ export class AdminPanelComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar la cola:', error);
         this.isLoadingQueue = false;
-        alert('Error al cargar la cola de reproducción');
+        this.showMessage('Error al cargar la cola de reproducción', 'error');
       }
     });
   }
@@ -248,21 +248,21 @@ export class AdminPanelComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error al cargar horarios:', error);
-        alert('Error al cargar los horarios');
+        this.showMessage('Error al cargar los horarios', 'error');
       }
     });
   }
 
-  // Método para guardar horarios - CORREGIDO
+  // Método para guardar horarios
   saveSchedules(): void {
     this.scheduleService.updateSchedules(this.schedules).subscribe({
       next: () => {
-        alert('Horarios guardados correctamente');
+        this.showMessage('Horarios guardados correctamente');
         this.isEditingSchedules = false;
       },
       error: (error: any) => {
         console.error('Error al guardar horarios:', error);
-        alert('Error al guardar los horarios');
+        this.showMessage('Error al guardar los horarios', 'error');
       }
     });
   }
@@ -298,14 +298,36 @@ export class AdminPanelComponent implements OnInit {
     return date.toLocaleDateString();
   }
 
+  // Método para mostrar mensajes
+  showMessage(message: string, type: string = 'success'): void {
+    // Usar alertas nativas por simplicidad
+    if (type === 'success') {
+      alert('✅ ' + message);
+    } else if (type === 'error') {
+      alert('❌ ' + message);
+    } else {
+      alert('ℹ️ ' + message);
+    }
+  }
+
+  // Método para forzar el ranking de la canción actual
   forceRankSong(): void {
+    if (!this.adminCurrentlyPlaying || !this.adminCurrentlyPlaying.id) {
+      this.showMessage('No hay ninguna canción reproduciéndose actualmente', 'error');
+      return;
+    }
+
+    if (!confirm('¿Agregar la canción actual al ranking histórico?')) {
+      return;
+    }
+
     this.rankingService.forceRankCurrentSong().subscribe({
-      next: (response) => {
-        this.showMessage('Canción agregada al ranking histórico');
+      next: (response: any) => {
+        this.showMessage('Canción agregada al ranking histórico correctamente');
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error forcing rank:', err);
-        this.showMessage('Error al agregar al ranking: ' + err.error?.error, 'error');
+        this.showMessage('Error al agregar al ranking: ' + (err.error?.error || 'Error desconocido'), 'error');
       }
     });
   }

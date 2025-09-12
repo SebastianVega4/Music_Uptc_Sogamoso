@@ -26,4 +26,9 @@ export class RankingService {
   getRankingStats(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/stats`);
   }
+  
+  forceRankCurrentSong(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/force-rank-current`, {});
+  }
+
 }
