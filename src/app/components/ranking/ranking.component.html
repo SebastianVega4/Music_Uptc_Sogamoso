@@ -1,0 +1,239 @@
+<!-- components/ranking/ranking.html -->
+<div class="ranking-container fade-in">
+  <div class="header-section">
+    <h1 class="gradient-text">
+      <i class="fas fa-trophy me-2"></i>Ranking Histórico
+    </h1>
+    <p class="text-muted">
+      Descubre las canciones más populares que han sonado en nuestro restaurante
+    </p>
+  </div>
+
+  <!-- Filtros y ordenamiento -->
+  <div class="filters-card card mb-4">
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Buscar canción o artista..." 
+              [(ngModel)]="filterText"
+            >
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+            <span class="text-muted me-2">Ordenar por:</span>
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="onSortChange('times_played')"
+            >
+              <i class="fas fa-play-circle me-1"></i>
+              Reproducciones
+              <i class="fas {{getSortIcon('times_played')}} ms-1"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="onSortChange('total_votes')"
+            >
+              <i class="fas fa-thumbs-up me-1"></i>
+              Votos
+              <i class="fas {{getSortIcon('total_votes')}} ms-1"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="onSortChange('last_played_at')"
+            >
+              <i class="fas fa-calendar me-1"></i>
+              Fecha
+              <i class="fas {{getSortIcon('last_played_at')}} ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes de estado -->
+  <div *ngIf="voteMessage" class="alert alert-info alert-dismissible fade show" role="alert">
+    {{ voteMessage }}
+    <button type="button" class="btn-close" (click)="voteMessage = ''"></button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="loading-spinner mb-3"></div>
+    <p class="text-muted">Cargando ranking histórico...</p>
+  </div>
+
+  <!-- Lista de canciones -->
+  <div *ngIf="!isLoading && filteredSongs.length > 0" class="songs-grid">
+    <div *ngFor="let song of filteredSongs; let i = index" class="song-card card">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <!-- Posición -->
+          <div class="col-1 text-center">
+            <span class="position-badge" [ngClass]="{
+              'first-place': i === 0,
+              'second-place': i === 1,
+              'third-place': i === 2
+            }">
+              {{ i + 1 }}
+            </span>
+          </div>
+
+          <!-- Imagen -->
+          <div class="col-2">
+            <img 
+              [src]="song.image || 'assets/default-song.png'" 
+              [alt]="song.name"
+              class="img-thumbnail"
+              (click)="onShowDetails(song)"
+            >
+          </div>
+
+          <!-- Información -->
+          <div class="col-6">
+            <h6 class="song-title mb-1" (click)="onShowDetails(song)">
+              {{ song.name }}
+            </h6>
+            <p class="artist-names text-muted mb-1">
+              {{ song.artists.join(', ') }}
+            </p>
+            <div class="song-stats">
+              <small class="text-muted">
+                <i class="fas fa-play me-1"></i>{{ song.times_played }} veces • 
+                <i class="fas fa-thumbs-up me-1"></i>{{ song.total_votes }} votos • 
+                Última vez: {{ formatDate(song.last_played_at) }}
+              </small>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="col-3 text-end">
+            <button 
+              class="btn btn-primary btn-sm mb-2"
+              (click)="onVote(song)"
+              [disabled]="isVoting"
+            >
+              <i class="fas fa-vote-yea me-1" *ngIf="!isVoting"></i>
+              <i class="fas fa-spinner fa-spin me-1" *ngIf="isVoting"></i>
+              Votar
+            </button>
+            <div class="approval-rate">
+              <div class="progress mb-1" style="height: 6px;">
+                <div 
+                  class="progress-bar bg-success" 
+                  [style.width.%]="getVotePercentage(song)"
+                ></div>
+              </div>
+              <small class="text-muted">
+                {{ getVotePercentage(song) }}% de aprobación
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && filteredSongs.length === 0" class="text-center py-5">
+    <i class="fas fa-music fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No se encontraron canciones</h4>
+    <p class="text-muted">Intenta con otros términos de búsqueda</p>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div *ngIf="selectedSong" class="modal-backdrop show" (click)="onCloseDetails()"></div>
+  <div *ngIf="selectedSong" class="modal show d-block" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content card">
+        <div class="modal-header card-header">
+          <h5 class="modal-title">
+            <i class="fas fa-info-circle me-2"></i>Detalles de la Canción
+          </h5>
+          <button type="button" class="btn-close" (click)="onCloseDetails()"></button>
+        </div>
+        <div class="modal-body card-body">
+          <div class="row">
+            <div class="col-md-4 text-center">
+              <img 
+                [src]="selectedSong.image || 'assets/default-song.png'" 
+                [alt]="selectedSong.name"
+                class="img-fluid rounded mb-3"
+              >
+              <button 
+                class="btn btn-primary w-100 mb-2"
+                (click)="onVote(selectedSong)"
+                [disabled]="isVoting"
+              >
+                <i class="fas fa-vote-yea me-1" *ngIf="!isVoting"></i>
+                <i class="fas fa-spinner fa-spin me-1" *ngIf="isVoting"></i>
+                Votar para reproducir
+              </button>
+            </div>
+            <div class="col-md-8">
+              <h3>{{ selectedSong.name }}</h3>
+              <p class="text-muted">{{ selectedSong.artists.join(', ') }}</p>
+              
+              <div class="stats-grid mb-4">
+                <div class="stat-item text-center">
+                  <div class="stat-value text-primary">{{ selectedSong.times_played }}</div>
+                  <div class="stat-label">Veces reproducida</div>
+                </div>
+                <div class="stat-item text-center">
+                  <div class="stat-value text-success">{{ selectedSong.total_votes }}</div>
+                  <div class="stat-label">Votos totales</div>
+                </div>
+                <div class="stat-item text-center">
+                  <div class="stat-value text-danger">{{ selectedSong.total_dislikes }}</div>
+                  <div class="stat-label">No me gusta</div>
+                </div>
+                <div class="stat-item text-center">
+                  <div class="stat-value">{{ getVotePercentage(selectedSong) }}%</div>
+                  <div class="stat-label">Aprobación</div>
+                </div>
+              </div>
+
+              <div class="timeline-info">
+                <h6 class="mb-3"><i class="fas fa-history me-2"></i>Historial</h6>
+                <div class="timeline-item">
+                  <span class="timeline-label">Primera reproducción:</span>
+                  <span class="timeline-value">{{ formatDate(selectedSong.first_played_at) }}</span>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-label">Última reproducción:</span>
+                  <span class="timeline-value">{{ formatDate(selectedSong.last_played_at) }}</span>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-label">Días desde última reproducción:</span>
+                  <span class="timeline-value">{{ getDaysSinceLastPlayed(selectedSong) }} días</span>
+                </div>
+              </div>
+
+              <div *ngIf="selectedSong.preview_url" class="mt-4">
+                <h6 class="mb-3"><i class="fas fa-play-circle me-2"></i>Vista previa</h6>
+                <audio 
+                  [src]="selectedSong.preview_url" 
+                  controls
+                  class="audio-player w-100"
+                ></audio>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
