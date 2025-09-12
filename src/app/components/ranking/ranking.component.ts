@@ -1,18 +1,19 @@
-// components/ranking/ranking.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { RankingService } from '../../services/ranking.service';
 import { VotingService } from '../../services/voting';
+import { Subscription } from 'rxjs';
 
 @Component({
   standalone: true,
   selector: 'app-ranking',
   templateUrl: './ranking.component.html',
-  styleUrls: ['./ranking.component.css'],
-  imports: [CommonModule, FormsModule]
+  styleUrls: ['./ranking.component.scss'],
+  imports: [CommonModule, FormsModule, RouterModule]
 })
-export class RankingComponent implements OnInit {
+export class RankingComponent implements OnInit, OnDestroy {
   songs: any[] = [];
   isLoading: boolean = true;
   error: string = '';
@@ -22,6 +23,10 @@ export class RankingComponent implements OnInit {
   selectedSong: any = null;
   isVoting: boolean = false;
   voteMessage: string = '';
+  activeTab: string = 'all';
+  stats: any = {};
+  
+  private pollingSubscription: Subscription | null = null;
 
   constructor(
     private rankingService: RankingService,
@@ -30,6 +35,22 @@ export class RankingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRanking();
+    this.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
+  }
+
+  startPolling(): void {
+    // Actualizar cada 60 segundos
+    this.pollingSubscription = this.votingService.getRankedSongsPolling().subscribe({
+      next: () => {
+        this.loadRanking();
+      }
+    });
   }
 
   loadRanking(): void {
@@ -40,6 +61,7 @@ export class RankingComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.songs = data;
+          this.calculateStats();
           this.isLoading = false;
         },
         error: (err) => {
@@ -48,6 +70,34 @@ export class RankingComponent implements OnInit {
           this.isLoading = false;
         }
       });
+  }
+
+  calculateStats(): void {
+    if (this.songs.length === 0) {
+      this.stats = {};
+      return;
+    }
+
+    // Estadísticas generales
+    this.stats.totalSongs = this.songs.length;
+    this.stats.totalPlays = this.songs.reduce((sum, song) => sum + song.times_played, 0);
+    this.stats.totalVotes = this.songs.reduce((sum, song) => sum + song.total_votes, 0);
+    this.stats.totalDislikes = this.songs.reduce((sum, song) => sum + song.total_dislikes, 0);
+    
+    // Canción más reproducida
+    this.stats.mostPlayed = this.songs.reduce((max, song) => 
+      song.times_played > max.times_played ? song : max, this.songs[0]);
+    
+    // Canción más votada
+    this.stats.mostVoted = this.songs.reduce((max, song) => 
+      song.total_votes > max.total_votes ? song : max, this.songs[0]);
+    
+    // Canción con mejor ratio
+    this.stats.bestRated = this.songs.reduce((best, song) => {
+      const ratio = this.getVotePercentage(song);
+      const bestRatio = this.getVotePercentage(best);
+      return ratio > bestRatio ? song : best;
+    }, this.songs[0]);
   }
 
   onSortChange(field: string): void {
@@ -79,6 +129,7 @@ export class RankingComponent implements OnInit {
           const index = this.songs.findIndex(s => s.track_id === song.track_id);
           if (index !== -1) {
             this.songs[index].total_votes += 1;
+            this.calculateStats();
           }
         },
         error: (err) => {
@@ -131,5 +182,26 @@ export class RankingComponent implements OnInit {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - lastPlayed.getTime());
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+  }
+
+  getTabSongs(): any[] {
+    switch (this.activeTab) {
+      case 'mostPlayed':
+        return [...this.filteredSongs].sort((a, b) => b.times_played - a.times_played);
+      case 'mostVoted':
+        return [...this.filteredSongs].sort((a, b) => b.total_votes - a.total_votes);
+      case 'bestRated':
+        return [...this.filteredSongs].sort((a, b) => {
+          const aRatio = this.getVotePercentage(a);
+          const bRatio = this.getVotePercentage(b);
+          return bRatio - aRatio;
+        });
+      default:
+        return this.filteredSongs;
+    }
   }
 }

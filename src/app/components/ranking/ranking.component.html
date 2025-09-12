@@ -1,4 +1,3 @@
-<!-- components/ranking/ranking.html -->
 <div class="ranking-container fade-in">
   <div class="header-section">
     <h1 class="gradient-text">
@@ -7,6 +6,64 @@
     <p class="text-muted">
       Descubre las canciones más populares que han sonado en nuestro restaurante
     </p>
+  </div>
+
+  <!-- Estadísticas generales -->
+  <div class="stats-grid mb-4">
+    <div class="stat-card card">
+      <div class="card-body text-center">
+        <i class="fas fa-music stat-icon"></i>
+        <h3 class="stat-value">{{ stats.totalSongs || 0 }}</h3>
+        <p class="stat-label">Canciones totales</p>
+      </div>
+    </div>
+    <div class="stat-card card">
+      <div class="card-body text-center">
+        <i class="fas fa-play-circle stat-icon"></i>
+        <h3 class="stat-value">{{ stats.totalPlays || 0 }}</h3>
+        <p class="stat-label">Reproducciones</p>
+      </div>
+    </div>
+    <div class="stat-card card">
+      <div class="card-body text-center">
+        <i class="fas fa-thumbs-up stat-icon"></i>
+        <h3 class="stat-value">{{ stats.totalVotes || 0 }}</h3>
+        <p class="stat-label">Votos positivos</p>
+      </div>
+    </div>
+    <div class="stat-card card">
+      <div class="card-body text-center">
+        <i class="fas fa-star stat-icon"></i>
+        <h3 class="stat-value">{{ stats.totalDislikes || 0 }}</h3>
+        <p class="stat-label">Votos negativos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pestañas de navegación -->
+  <div class="tabs-container mb-4">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'all'" (click)="setActiveTab('all')">
+          <i class="fas fa-list me-1"></i>Todas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'mostPlayed'" (click)="setActiveTab('mostPlayed')">
+          <i class="fas fa-play-circle me-1"></i>Más reproducidas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'mostVoted'" (click)="setActiveTab('mostVoted')">
+          <i class="fas fa-thumbs-up me-1"></i>Más votadas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'bestRated'" (click)="setActiveTab('bestRated')">
+          <i class="fas fa-star me-1"></i>Mejor valoradas
+        </a>
+      </li>
+    </ul>
   </div>
 
   <!-- Filtros y ordenamiento -->
@@ -77,8 +134,8 @@
   </div>
 
   <!-- Lista de canciones -->
-  <div *ngIf="!isLoading && filteredSongs.length > 0" class="songs-grid">
-    <div *ngFor="let song of filteredSongs; let i = index" class="song-card card">
+  <div *ngIf="!isLoading && getTabSongs().length > 0" class="songs-grid">
+    <div *ngFor="let song of getTabSongs(); let i = index" class="song-card card">
       <div class="card-body">
         <div class="row align-items-center">
           <!-- Posición -->
@@ -114,6 +171,7 @@
               <small class="text-muted">
                 <i class="fas fa-play me-1"></i>{{ song.times_played }} veces • 
                 <i class="fas fa-thumbs-up me-1"></i>{{ song.total_votes }} votos • 
+                <i class="fas fa-thumbs-down me-1"></i>{{ song.total_dislikes }} dislikes •
                 Última vez: {{ formatDate(song.last_played_at) }}
               </small>
             </div>
@@ -148,7 +206,7 @@
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!isLoading && filteredSongs.length === 0" class="text-center py-5">
+  <div *ngIf="!isLoading && getTabSongs().length === 0" class="text-center py-5">
     <i class="fas fa-music fa-3x text-muted mb-3"></i>
     <h4 class="text-muted">No se encontraron canciones</h4>
     <p class="text-muted">Intenta con otros términos de búsqueda</p>
@@ -180,55 +238,46 @@
               >
                 <i class="fas fa-vote-yea me-1" *ngIf="!isVoting"></i>
                 <i class="fas fa-spinner fa-spin me-1" *ngIf="isVoting"></i>
-                Votar para reproducir
+                Votar por esta canción
               </button>
             </div>
             <div class="col-md-8">
-              <h3>{{ selectedSong.name }}</h3>
+              <h4>{{ selectedSong.name }}</h4>
               <p class="text-muted">{{ selectedSong.artists.join(', ') }}</p>
               
-              <div class="stats-grid mb-4">
-                <div class="stat-item text-center">
-                  <div class="stat-value text-primary">{{ selectedSong.times_played }}</div>
-                  <div class="stat-label">Veces reproducida</div>
+              <div class="row mt-4">
+                <div class="col-6">
+                  <div class="stat-box text-center p-3 rounded">
+                    <h3 class="text-primary">{{ selectedSong.times_played }}</h3>
+                    <p class="mb-0 text-muted">Reproducciones</p>
+                  </div>
                 </div>
-                <div class="stat-item text-center">
-                  <div class="stat-value text-success">{{ selectedSong.total_votes }}</div>
-                  <div class="stat-label">Votos totales</div>
+                <div class="col-6">
+                  <div class="stat-box text-center p-3 rounded">
+                    <h3 class="text-success">{{ selectedSong.total_votes }}</h3>
+                    <p class="mb-0 text-muted">Votos positivos</p>
+                  </div>
                 </div>
-                <div class="stat-item text-center">
-                  <div class="stat-value text-danger">{{ selectedSong.total_dislikes }}</div>
-                  <div class="stat-label">No me gusta</div>
+                <div class="col-6 mt-3">
+                  <div class="stat-box text-center p-3 rounded">
+                    <h3 class="text-danger">{{ selectedSong.total_dislikes }}</h3>
+                    <p class="mb-0 text-muted">Votos negativos</p>
+                  </div>
                 </div>
-                <div class="stat-item text-center">
-                  <div class="stat-value">{{ getVotePercentage(selectedSong) }}%</div>
-                  <div class="stat-label">Aprobación</div>
-                </div>
-              </div>
-
-              <div class="timeline-info">
-                <h6 class="mb-3"><i class="fas fa-history me-2"></i>Historial</h6>
-                <div class="timeline-item">
-                  <span class="timeline-label">Primera reproducción:</span>
-                  <span class="timeline-value">{{ formatDate(selectedSong.first_played_at) }}</span>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-label">Última reproducción:</span>
-                  <span class="timeline-value">{{ formatDate(selectedSong.last_played_at) }}</span>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-label">Días desde última reproducción:</span>
-                  <span class="timeline-value">{{ getDaysSinceLastPlayed(selectedSong) }} días</span>
+                <div class="col-6 mt-3">
+                  <div class="stat-box text-center p-3 rounded">
+                    <h3 class="text-info">{{ getVotePercentage(selectedSong) }}%</h3>
+                    <p class="mb-0 text-muted">Porcentaje de aprobación</p>
+                  </div>
                 </div>
               </div>
-
-              <div *ngIf="selectedSong.preview_url" class="mt-4">
-                <h6 class="mb-3"><i class="fas fa-play-circle me-2"></i>Vista previa</h6>
-                <audio 
-                  [src]="selectedSong.preview_url" 
-                  controls
-                  class="audio-player w-100"
-                ></audio>
+              
+              <div class="mt-4">
+                <h6>Última reproducción</h6>
+                <p class="text-muted">{{ formatDate(selectedSong.last_played_at) }}</p>
+                
+                <h6>Días desde la última reproducción</h6>
+                <p class="text-muted">{{ getDaysSinceLastPlayed(selectedSong) }} días</p>
               </div>
             </div>
           </div>

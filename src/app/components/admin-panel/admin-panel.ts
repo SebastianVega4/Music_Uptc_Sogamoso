@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { AuthService } from '../../services/auth';
 import { ScheduleService } from '../../services/schedule.service';
+import { RankingService } from '../../services/ranking.service';
 import { Router } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { ActivatedRoute } from '@angular/router';
@@ -33,7 +34,8 @@ export class AdminPanelComponent implements OnInit {
     private router: Router,
     private spotifyService: SpotifyNowPlayingService,
     private route: ActivatedRoute,
-    private scheduleService: ScheduleService
+    private scheduleService: ScheduleService,
+    private rankingService: RankingService
   ) { }
 
   checkPlayingSong(): void {
@@ -294,6 +296,18 @@ export class AdminPanelComponent implements OnInit {
     if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
 
     return date.toLocaleDateString();
+  }
+
+  forceRankSong(): void {
+    this.rankingService.forceRankCurrentSong().subscribe({
+      next: (response) => {
+        this.showMessage('Canción agregada al ranking histórico');
+      },
+      error: (err) => {
+        console.error('Error forcing rank:', err);
+        this.showMessage('Error al agregar al ranking: ' + err.error?.error, 'error');
+      }
+    });
   }
 
   logout(): void {
