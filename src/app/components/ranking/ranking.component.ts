@@ -71,13 +71,14 @@ export class RankingComponent implements OnInit, OnDestroy {
         }
       });
   }
-
+  
+  // Y agregar este método para calcular estadísticas
   calculateStats(): void {
     if (this.songs.length === 0) {
       this.stats = {};
       return;
     }
-
+  
     // Estadísticas generales
     this.stats.totalSongs = this.songs.length;
     this.stats.totalPlays = this.songs.reduce((sum, song) => sum + song.times_played, 0);
