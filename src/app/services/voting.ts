@@ -47,7 +47,6 @@ export class VotingService {
       trackInfo,
       is_dislike: isDislike
     };
-
     return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
       tap(() => {
         this.invalidateCache();

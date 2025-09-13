@@ -49,6 +49,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   totalVotes: number = 0;
   uniqueVoters: number = 0;
 
+  // Agregar propiedad para mensajes
+  successMessage: string = '';
+  errorMessage: string = '';
+
   // Timers
   private refreshTimer: any;
   private currentSongTimer: any;
@@ -73,6 +77,23 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0), 0);
     this.uniqueVoters = Math.floor(this.totalVotes * 0.7);
   }
+
+  showMessage(message: string, isSuccess: boolean = true, duration: number = 3000) {
+    if (isSuccess) {
+      this.successMessage = message;
+    } else {
+      this.errorMessage = message;
+    }
+
+    setTimeout(() => {
+      if (isSuccess) {
+        this.successMessage = '';
+      } else {
+        this.errorMessage = '';
+      }
+    }, duration);
+  }
+
 
   ngOnDestroy() {
     if (this.refreshTimer) {
@@ -270,13 +291,26 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   searchSpotify() {
     if (!this.searchQuery.trim()) return;
 
+    this.isLoading = true;
+
     this.spotifyService.searchTracks(this.searchQuery).subscribe({
       next: (results: any[]) => {
-        this.searchResults = results;
+        // Asegúrate de que los resultados tengan la estructura correcta
+        this.searchResults = results.map(track => ({
+          ...track,
+          // Asegurar que la imagen esté disponible
+          image: track.image || track.album?.images?.[0]?.url || 'assets/default-song.png',
+          // Asegurar que artists sea un array
+          artists: Array.isArray(track.artists) ? track.artists :
+            (typeof track.artists === 'string' ? [track.artists] :
+              (track.artists ? [track.artists] : ['Artista desconocido']))
+        }));
+        this.isLoading = false;
       },
       error: (error: any) => {
         console.error('Error searching Spotify:', error);
-        alert('Error al buscar en Spotify. Intenta nuevamente.');
+        this.showMessage('Error al buscar en Spotify', false);
+        this.isLoading = false;
       }
     });
   }
@@ -334,10 +368,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.queueService.addToQueue(trackUri).subscribe({
       next: () => {
         this.loadQueue();
-        // Mostrar mensaje de éxito
+        this.showMessage('Canción agregada a la cola correctamente');
       },
       error: (error) => {
         console.error('Error adding to queue:', error);
+        this.showMessage('Error al agregar a la cola', false);
       }
     });
   }
@@ -356,7 +391,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Reproducir una pista
   playTrack(trackUri: string) {
-    this.queueService.addToQueue(trackUri).subscribe({
+    this.spotifyNowPlaying.playTrack(trackUri).subscribe({
       next: () => {
         setTimeout(() => {
           this.getAdminCurrentlyPlaying();
@@ -364,6 +399,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         console.error('Error playing track:', error);
+        alert('Error al reproducir la canción: ' + error.message);
       }
     });
   }

@@ -142,7 +142,7 @@
                 </div>
               </div>
             </div>
-            <div class="playing-actions">           
+            <div class="playing-actions">
               <button class="control-btn" (click)="checkPlayingSong()" title="Verificar en ranking">
                 <i class="fas fa-search"></i>
               </button>
@@ -395,8 +395,8 @@
 
           <div class="search-results" *ngIf="searchResults.length > 0">
             <div class="result-item" *ngFor="let track of searchResults">
-              <img [src]="track.album.images[0]?.url || 'assets/default-song.png'" alt="Album cover"
-                class="result-image">
+              <img [src]="track.image" alt="Album cover" class="result-image"
+                onerror="this.src='assets/default-song.png'">
               <div class="result-info">
                 <h4>{{ track.name }}</h4>
                 <p>{{ track.artists[0]?.name }}</p>
