@@ -5,7 +5,8 @@ import { VotingService } from '../../services/voting';
 import { SpotifyService } from '../../services/spotify';
 import { ScheduleService } from '../../services/schedule.service';
 import { AuthService } from '../../services/auth';
-import { QueueService } from '../../services/queue.service'; // ✅ Agregar esta importación
+import { QueueService } from '../../services/queue.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-admin-panel',
@@ -18,7 +19,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   showSearch = false;
   showRecentlyAdded = true;
   isEditingSchedules = false;
-  
+
   // Datos
   songs: any[] = [];
   queue: any[] = [];
@@ -27,19 +28,24 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   schedules: any[] = [];
   spotifyStatus: any = null;
   adminCurrentlyPlaying: any = null;
-  
+
   // Estados de carga
   isLoading = false;
   isLoadingQueue = false;
   isLoadingCurrent = false;
   isPlaying = false;
-  
+
   // Búsqueda
   searchQuery = '';
-  
+
   // Votos del admin
   adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
-  
+
+   
+  // Estadísticas
+  totalVotes: number = 0;
+  uniqueVoters: number = 0;
+
   // Timers
   private refreshTimer: any;
   private currentSongTimer: any;
@@ -52,11 +58,17 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private queueService: QueueService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadInitialData();
     this.setupAutoRefresh();
+    this.calculateStats();
+  }
+
+  calculateStats(): void {
+    this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0), 0);
+    this.uniqueVoters = Math.floor(this.totalVotes * 0.7);
   }
 
   ngOnDestroy() {
@@ -92,7 +104,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   setActiveSection(section: string) {
     this.activeSection = section;
-    
+
     // Cargar datos específicos de la sección si es necesario
     if (section === 'queue') {
       this.loadQueue();
@@ -123,6 +135,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       next: (songs) => {
         this.songs = songs;
         this.filterRecentlyAdded();
+        
+        // Calculate total votes and unique voters
+        this.calculateVotingStats();
+        
         this.isLoading = false;
       },
       error: (error) => {
@@ -132,11 +148,16 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     });
   }
 
+  calculateVotingStats() {
+    this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0) + (song.dislikes || 0), 0);
+    this.uniqueVoters = Math.floor(this.totalVotes / 2);
+  }
+
   // Filtrar canciones recientemente agregadas (últimas 6 horas)
   filterRecentlyAdded() {
     const sixHoursAgo = new Date();
     sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
-    
+
     this.recentlyAddedSongs = this.songs.filter(song => {
       const songDate = new Date(song.createdat);
       return songDate > sixHoursAgo;
@@ -160,11 +181,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Obtener estado de Spotify
   getSpotifyStatus() {
-    this.spotifyService.getStatus().subscribe({
-      next: (status) => {
+    this.spotifyNowPlaying.getAdminSpotifyStatus().subscribe({
+      next: (status: any) => {
         this.spotifyStatus = status;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error getting Spotify status:', error);
       }
     });
@@ -225,13 +246,13 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Conectar Spotify
   connectSpotify() {
-    this.spotifyService.connectSpotify().subscribe({
-      next: (data) => {
-        if (data.url) {
-          window.location.href = data.url;
+    this.spotifyNowPlaying.startAdminSpotifyAuth().subscribe({
+      next: (data: any) => {
+        if (data.authUrl) {
+          window.location.href = data.authUrl;
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error connecting to Spotify:', error);
       }
     });
@@ -239,11 +260,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Desconectar Spotify
   disconnectSpotify() {
-    this.spotifyService.disconnectSpotify().subscribe({
+    this.spotifyNowPlaying.disconnectAdminSpotify().subscribe({
       next: () => {
         this.getSpotifyStatus();
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error disconnecting from Spotify:', error);
       }
     });
@@ -254,10 +275,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     if (!this.searchQuery.trim()) return;
     
     this.spotifyService.searchTracks(this.searchQuery).subscribe({
-      next: (results) => {
-        this.searchResults = results.tracks.items;
+      next: (results: any[]) => {
+        this.searchResults = results;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error searching Spotify:', error);
       }
     });
@@ -271,7 +292,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       artists: track.artists.map((artist: any) => artist.name),
       image: track.album.images[0]?.url || 'assets/default-song.png'
     };
-    
+
     this.votingService.vote(songData, isDislike, true).subscribe({
       next: () => {
         this.loadSongs();
@@ -287,7 +308,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   adminVote(song: any, isDislike: boolean) {
     // Guardar el voto del admin localmente para feedback inmediato
     this.adminVotes[song.id] = isDislike;
-    
+
     this.votingService.vote(song, isDislike, true).subscribe({
       next: () => {
         this.loadSongs();
@@ -337,13 +358,13 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Reproducir una pista
   playTrack(trackUri: string) {
-    this.spotifyService.playTrack(trackUri).subscribe({
+    this.queueService.addToQueue(trackUri).subscribe({
       next: () => {
         setTimeout(() => {
           this.getAdminCurrentlyPlaying();
         }, 1000);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error playing track:', error);
       }
     });
@@ -351,7 +372,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Siguiente canción
   nextTrack() {
-    this.spotifyService.nextTrack().subscribe({
+    this.spotifyNowPlaying.nextTrack().subscribe({
       next: () => {
         setTimeout(() => {
           this.getAdminCurrentlyPlaying();
@@ -365,7 +386,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Canción anterior
   previousTrack() {
-    this.spotifyService.previousTrack().subscribe({
+    this.spotifyNowPlaying.previousTrack().subscribe({
       next: () => {
         setTimeout(() => {
           this.getAdminCurrentlyPlaying();
@@ -380,7 +401,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Pausar/Reanudar reproducción
   togglePlayback() {
     if (this.isPlaying) {
-      this.spotifyService.pausePlayback().subscribe({
+      this.spotifyNowPlaying.pausePlayback().subscribe({
         next: () => {
           this.isPlaying = false;
         },
@@ -389,7 +410,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.spotifyService.resumePlayback().subscribe({
+      this.spotifyNowPlaying.resumePlayback().subscribe({
         next: () => {
           this.isPlaying = true;
         },
@@ -443,16 +464,15 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Agregar al histórico
   addToHistory() {
-    if (this.adminCurrentlyPlaying) {
-      this.spotifyNowPlaying.addToHistory(this.adminCurrentlyPlaying.id).subscribe({
-        next: () => {
-          // Mostrar mensaje de éxito
-        },
-        error: (error) => {
-          console.error('Error adding to history:', error);
-        }
-      });
-    }
+    this.spotifyNowPlaying.addToHistory().subscribe({
+      next: () => {
+        // Mostrar mensaje de éxito
+        console.log('Canción agregada al histórico');
+      },
+      error: (error: any) => {
+        console.error('Error adding to history:', error);
+      }
+    });
   }
 
   // Verificar en ranking
@@ -478,7 +498,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
         artists: this.adminCurrentlyPlaying.artists,
         image: this.adminCurrentlyPlaying.image
       };
-      
+
       this.votingService.vote(songData, false, true).subscribe({
         next: () => {
           this.loadSongs();
@@ -507,7 +527,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return 'Ahora mismo';
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} h`;
@@ -518,12 +538,12 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Convertir a formato AM/PM
   convertToAmPm(timeString: string): string {
     if (!timeString) return '';
-    
+
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
-    
+
     return `${formattedHour}:${minutes} ${ampm}`;
   }
 

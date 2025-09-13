@@ -34,4 +34,7 @@ export class SpotifyService {
   getCurrentlyPlaying(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/api/spotify/currently-playing`);
   }
+  getStatus(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/api/spotify/admin/status`);
+  }
 }

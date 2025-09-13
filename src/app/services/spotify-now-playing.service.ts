@@ -38,6 +38,51 @@ export class SpotifyNowPlayingService {
     }, intervalMs);
   }
 
+  playTrack(trackUri: string): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/play`,
+      { uri: trackUri },
+      { headers }
+    );
+  }
+
+  pausePlayback(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put(
+      `${this.apiUrl}/api/spotify/admin/pause`,
+      {},
+      { headers }
+    );
+  }
+
+  resumePlayback(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put(
+      `${this.apiUrl}/api/spotify/admin/resume`,
+      {},
+      { headers }
+    );
+  }
+
+  nextTrack(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/next`,
+      {},
+      { headers }
+    );
+  }
+
+  previousTrack(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/previous`,
+      {},
+      { headers }
+    );
+  }
+  
   stopAutomaticPlayingSongCheck(): void {
     if (this.automaticCheckInterval) {
       clearInterval(this.automaticCheckInterval);
