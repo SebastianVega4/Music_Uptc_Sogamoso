@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { VotingService } from '../../services/voting';
 import { SpotifyService } from '../../services/spotify';
@@ -11,7 +12,9 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
-  styleUrls: ['./admin-panel.scss']
+  styleUrls: ['./admin-panel.scss'],
+  standalone: true,
+  imports: [FormsModule, CommonModule]
 })
 export class AdminPanelComponent implements OnInit, OnDestroy {
   // Estados de la UI

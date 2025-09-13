@@ -17,7 +17,8 @@
     <div class="admin-sidebar">
       <div class="sidebar-section">
         <h3>Navegación</h3>
-        <button class="sidebar-btn" [class.active]="activeSection === 'dashboard'" (click)="setActiveSection('dashboard')">
+        <button class="sidebar-btn" [class.active]="activeSection === 'dashboard'"
+          (click)="setActiveSection('dashboard')">
           <i class="fas fa-tachometer-alt me-2"></i>Dashboard
         </button>
         <button class="sidebar-btn" [class.active]="activeSection === 'playing'" (click)="setActiveSection('playing')">
@@ -29,7 +30,8 @@
         <button class="sidebar-btn" [class.active]="activeSection === 'ranking'" (click)="setActiveSection('ranking')">
           <i class="fas fa-trophy me-2"></i>Ranking
         </button>
-        <button class="sidebar-btn" [class.active]="activeSection === 'schedules'" (click)="setActiveSection('schedules')">
+        <button class="sidebar-btn" [class.active]="activeSection === 'schedules'"
+          (click)="setActiveSection('schedules')">
           <i class="fas fa-clock me-2"></i>Horarios
         </button>
       </div>
@@ -130,7 +132,9 @@
               <p class="artists">{{ adminCurrentlyPlaying.artists.join(', ') }}</p>
               <div class="progress-container">
                 <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="(adminCurrentlyPlaying.progress_ms / adminCurrentlyPlaying.duration_ms) * 100"></div>
+                  <div class="progress-fill"
+                    [style.width.%]="(adminCurrentlyPlaying.progress_ms / adminCurrentlyPlaying.duration_ms) * 100">
+                  </div>
                 </div>
                 <div class="time-display">
                   <span>{{ formatTime(adminCurrentlyPlaying.progress_ms) }}</span>
@@ -238,11 +242,11 @@
               </div>
             </div>
             <div class="rank-actions">
-              <button class="vote-btn like" (click)="adminVote(song, false)" 
-                [class.active]="hasAdminLiked(song.id)" title="Me gusta">
+              <button class="vote-btn like" (click)="adminVote(song, false)" [class.active]="hasAdminLiked(song.id)"
+                title="Me gusta">
                 <i class="fas fa-thumbs-up"></i>
               </button>
-              <button class="vote-btn dislike" (click)="adminVote(song, true)" 
+              <button class="vote-btn dislike" (click)="adminVote(song, true)"
                 [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
                 <i class="fas fa-thumbs-down"></i>
               </button>
@@ -280,16 +284,17 @@
               <div class="schedule-times">
                 <div class="time-block">
                   <span class="time-label">Almuerzo:</span>
-                  <span class="time-value">{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</span>
+                  <span class="time-value">{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{
+                    convertToAmPm(schedule.lunch_end) || '-' }}</span>
                 </div>
                 <div class="time-block">
                   <span class="time-label">Cena:</span>
-                  <span class="time-value">{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</span>
+                  <span class="time-value">{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{
+                    convertToAmPm(schedule.dinner_end) || '-' }}</span>
                 </div>
               </div>
               <div class="schedule-status">
-                <span class="status-badge" [class.active]="schedule.is_active" 
-                  [class.inactive]="!schedule.is_active">
+                <span class="status-badge" [class.active]="schedule.is_active" [class.inactive]="!schedule.is_active">
                   {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
                 </span>
               </div>
@@ -352,11 +357,11 @@
                 </div>
               </div>
               <div class="recent-actions">
-                <button class="vote-btn like" (click)="adminVote(song, false)" 
-                  [class.active]="hasAdminLiked(song.id)" title="Me gusta">
+                <button class="vote-btn like" (click)="adminVote(song, false)" [class.active]="hasAdminLiked(song.id)"
+                  title="Me gusta">
                   <i class="fas fa-thumbs-up"></i>
                 </button>
-                <button class="vote-btn dislike" (click)="adminVote(song, true)" 
+                <button class="vote-btn dislike" (click)="adminVote(song, true)"
                   [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
                   <i class="fas fa-thumbs-down"></i>
                 </button>
@@ -384,7 +389,7 @@
 
         <div class="search-content" *ngIf="showSearch">
           <div class="search-bar">
-            <input type="text" placeholder="Buscar canciones en Spotify..." [(ngModel)]="searchQuery" 
+            <input type="text" placeholder="Buscar canciones en Spotify..." [(ngModel)]="searchQuery"
               (keyup.enter)="searchSpotify()">
             <button class="search-btn" (click)="searchSpotify()">
               <i class="fas fa-search"></i>
@@ -393,7 +398,8 @@
 
           <div class="search-results" *ngIf="searchResults.length > 0">
             <div class="result-item" *ngFor="let track of searchResults">
-              <img [src]="track.album.images[0]?.url || 'assets/default-song.png'" alt="Album cover" class="result-image">
+              <img [src]="track.album.images[0]?.url || 'assets/default-song.png'" alt="Album cover"
+                class="result-image">
               <div class="result-info">
                 <h4>{{ track.name }}</h4>
                 <p>{{ track.artists[0]?.name }}</p>
