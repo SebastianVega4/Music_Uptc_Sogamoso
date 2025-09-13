@@ -123,7 +123,7 @@ export class RankingComponent implements OnInit, OnDestroy {
     this.rankingService.voteFromHistory(song.track_id)
       .subscribe({
         next: (response) => {
-          this.voteMessage = '¡Voto registrado! La canción ha sido agregada a la lista de votación.';
+          this.voteMessage = '¡Voto registrado! Agregada a Resproduccion';
           this.isVoting = false;
           
           // Actualizar contador de votos localmente
@@ -140,7 +140,7 @@ export class RankingComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error voting:', err);
-          this.voteMessage = err.error?.error || 'Error al votar. Intenta nuevamente.';
+          this.voteMessage = err.error?.error || 'Error al votar';
           this.isVoting = false;
           
           // Cerrar automáticamente el mensaje de error después de 3 segundos
