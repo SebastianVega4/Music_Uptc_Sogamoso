@@ -23,7 +23,7 @@ export class SpotifyNowPlayingService {
 
   startAutomaticPlayingSongCheck(intervalMs: number = 30000): void {
     this.stopAutomaticPlayingSongCheck();
-    
+
     this.automaticCheckInterval = setInterval(() => {
       this.checkAndRemovePlayingSongFromRanking().subscribe({
         next: (response: any) => {
@@ -82,7 +82,7 @@ export class SpotifyNowPlayingService {
       { headers }
     );
   }
-  
+
   stopAutomaticPlayingSongCheck(): void {
     if (this.automaticCheckInterval) {
       clearInterval(this.automaticCheckInterval);
@@ -175,13 +175,13 @@ export class SpotifyNowPlayingService {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(`${this.apiUrl}/api/spotify/admin/check-playing-song`, {}, { headers });
   }
-  
+
   // Obtener la cola de reproducción actual
   getQueue(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
   }
-  
+
   addToHistory(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history`, {}, { headers });

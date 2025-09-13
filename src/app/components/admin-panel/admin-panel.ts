@@ -44,7 +44,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Votos del admin
   adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
 
-   
+
   // Estadísticas
   totalVotes: number = 0;
   uniqueVoters: number = 0;
@@ -134,26 +134,24 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Cargar canciones del ranking
   loadSongs() {
     this.isLoading = true;
-    this.votingService.getSongs().subscribe({
+    this.votingService.getRankedSongs().subscribe({
       next: (songs) => {
         this.songs = songs;
         this.filterRecentlyAdded();
-        
-        // Calculate total votes and unique voters
         this.calculateVotingStats();
-        
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading songs:', error);
         this.isLoading = false;
+        // Mostrar mensaje de error al usuario
+        alert('Error al cargar las canciones. Intenta nuevamente.');
       }
     });
   }
-
   calculateVotingStats() {
-    this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0) + (song.dislikes || 0), 0);
-    this.uniqueVoters = Math.floor(this.totalVotes / 2);
+    this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0), 0);
+    this.uniqueVoters = Math.floor(this.totalVotes * 0.7); // Estimación
   }
 
   // Filtrar canciones recientemente agregadas (últimas 6 horas)
@@ -171,13 +169,14 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   loadQueue() {
     this.isLoadingQueue = true;
     this.queueService.getQueue().subscribe({
-      next: (queue) => {
-        this.queue = queue;
+      next: (queue: any) => {
+        this.queue = queue.queue || [];
         this.isLoadingQueue = false;
       },
       error: (error) => {
         console.error('Error loading queue:', error);
         this.isLoadingQueue = false;
+        alert('Error al cargar la cola de reproducción.');
       }
     });
   }
@@ -197,26 +196,20 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Obtener canción actualmente en reproducción
   getAdminCurrentlyPlaying() {
     this.isLoadingCurrent = true;
-    this.spotifyNowPlaying.getCurrentlyPlaying().subscribe({
-      next: (data) => {
-        if (data && data.item) {
-          this.adminCurrentlyPlaying = {
-            id: data.item.id,
-            name: data.item.name,
-            artists: data.item.artists.map((artist: any) => artist.name),
-            image: data.item.album.images[0]?.url || 'assets/default-song.png',
-            progress_ms: data.progress_ms || 0,
-            duration_ms: data.item.duration_ms,
-            uri: data.item.uri
-          };
+    this.spotifyNowPlaying.getAdminCurrentlyPlaying().subscribe({
+      next: (data: any) => {
+        if (data && data.is_playing) {
+          this.adminCurrentlyPlaying = data;
           this.isPlaying = data.is_playing;
         } else {
           this.adminCurrentlyPlaying = null;
+          this.isPlaying = false;
         }
         this.isLoadingCurrent = false;
       },
       error: (error) => {
         console.error('Error getting currently playing:', error);
+        this.adminCurrentlyPlaying = null;
         this.isLoadingCurrent = false;
       }
     });
@@ -276,50 +269,52 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Buscar en Spotify
   searchSpotify() {
     if (!this.searchQuery.trim()) return;
-    
+
     this.spotifyService.searchTracks(this.searchQuery).subscribe({
       next: (results: any[]) => {
         this.searchResults = results;
       },
       error: (error: any) => {
         console.error('Error searching Spotify:', error);
+        alert('Error al buscar en Spotify. Intenta nuevamente.');
       }
     });
   }
 
   // Votar desde la búsqueda
   voteFromSearch(track: any, isDislike: boolean) {
-    const songData = {
+    const trackInfo = {
       id: track.id,
       name: track.name,
-      artists: track.artists.map((artist: any) => artist.name),
-      image: track.album.images[0]?.url || 'assets/default-song.png'
+      artists: track.artists,
+      image: track.image,
+      preview_url: track.preview_url
     };
 
-    this.votingService.vote(songData, isDislike, true).subscribe({
-      next: () => {
+    this.votingService.voteForSong(track.id, trackInfo, isDislike).subscribe({
+      next: (response: any) => {
         this.loadSongs();
-        // Mostrar feedback visual
+        alert(isDislike ? 'Dislike registrado' : 'Like registrado');
       },
       error: (error) => {
         console.error('Error voting from search:', error);
+        alert('Error al votar. Intenta nuevamente.');
       }
     });
   }
 
   // Voto del administrador
   adminVote(song: any, isDislike: boolean) {
-    // Guardar el voto del admin localmente para feedback inmediato
     this.adminVotes[song.id] = isDislike;
 
-    this.votingService.vote(song, isDislike, true).subscribe({
-      next: () => {
+    this.votingService.voteForSong(song.id, song, isDislike).subscribe({
+      next: (response: any) => {
         this.loadSongs();
       },
       error: (error) => {
         console.error('Error with admin vote:', error);
-        // Revertir el cambio visual en caso de error
         delete this.adminVotes[song.id];
+        alert('Error al votar. Intenta nuevamente.');
       }
     });
   }

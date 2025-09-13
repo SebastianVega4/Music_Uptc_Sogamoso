@@ -59,7 +59,7 @@ export class VotingService {
     // Esto se manejará automáticamente en el backend basado en el voto existente
     return this.voteForSong(trackid, trackInfo, newIsDislike);
   }
-  
+
   // Sondeo para obtener el ranking de canciones cada 60 segundos
   getRankedSongsPolling(): Observable<any[]> {
     return interval(60000).pipe(
@@ -99,10 +99,9 @@ export class VotingService {
     );
   }
 
-  getSongs() {
-    return this.http.get<any[]>(`${this.apiUrl}/songs`);
+  getSongs(): Observable<any[]> {
+    return this.getRankedSongs();
   }
-  
   addToHistory(trackId: string) {
     return this.http.post(`${this.apiUrl}/spotify/history`, { trackId });
   }
