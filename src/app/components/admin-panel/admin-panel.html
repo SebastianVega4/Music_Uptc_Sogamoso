@@ -1,248 +1,419 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>Panel de Administración</h2>
-  <button class="btn btn-outline-danger" (click)="logout()">
-    <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
-  </button>
-</div>
-
-<!-- Sección de Horarios -->
-<div class="card mb-4" (click)="hideAnnouncement()">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Horarios de Música</h5>
-    <button class="btn btn-sm" [class.btn-outline-primary]="!isEditingSchedules"
-      [class.btn-primary]="isEditingSchedules" (click)="isEditingSchedules = !isEditingSchedules">
-      <i class="fas" [class.fa-edit]="!isEditingSchedules" [class.fa-times]="isEditingSchedules"></i>
-      {{ isEditingSchedules ? 'Cancelar' : 'Editar' }}
+<div class="admin-panel-container">
+  <!-- Header -->
+  <div class="admin-header">
+    <div class="header-content">
+      <h1>
+        <i class="fab fa-spotify me-2"></i>Panel de Administración
+      </h1>
+      <p class="header-subtitle">Gestiona la música y votaciones del restaurante</p>
+    </div>
+    <button class="btn-logout" (click)="logout()">
+      <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
     </button>
   </div>
-  <div class="card-body" *ngIf="!isHidden">
-    <div *ngIf="!isEditingSchedules">
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Día</th>
-              <th>Almuerzo</th>
-              <th>Cena</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let schedule of schedules; let i = index">
-              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][i] }}</strong></td>
-              <td>{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</td>
-              <td>{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}
-              </td>
-              <td>
-                <span class="badge" [class.bg-success]="schedule.is_active" [class.bg-secondary]="!schedule.is_active">
-                  {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+  <div class="admin-content">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+      <div class="sidebar-section">
+        <h3>Navegación</h3>
+        <button class="sidebar-btn" [class.active]="activeSection === 'dashboard'" (click)="setActiveSection('dashboard')">
+          <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </button>
+        <button class="sidebar-btn" [class.active]="activeSection === 'playing'" (click)="setActiveSection('playing')">
+          <i class="fas fa-play-circle me-2"></i>Reproduciendo
+        </button>
+        <button class="sidebar-btn" [class.active]="activeSection === 'queue'" (click)="setActiveSection('queue')">
+          <i class="fas fa-list-ol me-2"></i>Cola de Reproducción
+        </button>
+        <button class="sidebar-btn" [class.active]="activeSection === 'ranking'" (click)="setActiveSection('ranking')">
+          <i class="fas fa-trophy me-2"></i>Ranking
+        </button>
+        <button class="sidebar-btn" [class.active]="activeSection === 'schedules'" (click)="setActiveSection('schedules')">
+          <i class="fas fa-clock me-2"></i>Horarios
+        </button>
       </div>
-    </div>
 
-    <div *ngIf="isEditingSchedules">
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Día</th>
-              <th>Almuerzo (Inicio - Fin)</th>
-              <th>Cena (Inicio - Fin)</th>
-              <th>Activo</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let schedule of schedules; let i = index">
-              <td><strong>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</strong>
-              </td>
-              <td>
-                <div class="row g-2">
-                  <div class="col">
-                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.lunch_start">
-                  </div>
-                  <div class="col">
-                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.lunch_end">
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="row g-2">
-                  <div class="col">
-                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.dinner_start">
-                  </div>
-                  <div class="col">
-                    <input type="time" class="form-control form-control-sm" [(ngModel)]="schedule.dinner_end">
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [(ngModel)]="schedule.is_active">
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="sidebar-section">
+        <h3>Acciones Rápidas</h3>
+        <button class="sidebar-btn" (click)="forceRefresh()">
+          <i class="fas fa-sync-alt me-2"></i>Actualizar Todo
+        </button>
+        <button class="sidebar-btn" (click)="toggleSearch()">
+          <i class="fas fa-search me-2"></i>Buscar Canciones
+        </button>
       </div>
-      <button class="btn btn-success mt-2" (click)="saveSchedules()">
-        <i class="fas fa-save me-1"></i>Guardar Horarios
-      </button>
-    </div>
-  </div>
-</div>
 
-<!-- Sección de Cola de Reproducción -->
-<div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Cola de Reproducción</h5>
-    <button class="btn btn-sm btn-outline-secondary" (click)="toggleQueue()">
-      <i class="fas" [class.fa-eye]="!showQueue" [class.fa-eye-slash]="showQueue"></i>
-      {{ showQueue ? 'Ocultar' : 'Mostrar' }} Cola
-    </button>
-  </div>
-  <div class="card-body" *ngIf="showQueue">
-    <div *ngIf="isLoadingQueue" class="text-center py-3">
-      <i class="fas fa-spinner fa-spin fa-2x"></i>
-      <p class="mt-2">Cargando cola de reproducción...</p>
-    </div>
-
-    <div *ngIf="!isLoadingQueue && queue.length === 0" class="alert alert-info">
-      No hay canciones en la cola de reproducción.
-    </div>
-
-    <div *ngFor="let item of queue; let i = index" class="card mb-2">
-      <div class="card-body">
-        <div class="row align-items-center">
-          <div class="col-1 text-center">
-            <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
-          </div>
-          <div class="col-2">
-            <img [src]="item.album?.images[0]?.url || 'https://placehold.co/60x60?text=No+Image'"
-              class="img-fluid rounded" [alt]="item.name">
-          </div>
-          <div class="col-9">
-            <h6 class="mb-1">{{ item.name }}</h6>
-          </div>
+      <div class="spotify-status" *ngIf="spotifyStatus">
+        <div class="status-indicator" [class.connected]="spotifyStatus.authenticated && spotifyStatus.token_valid"
+          [class.disconnected]="!spotifyStatus.authenticated || !spotifyStatus.token_valid">
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Sección de Spotify Admin -->
-<div class="card mb-4">
-  <div class="card-header">
-    <h5 class="mb-0">Configuración de Spotify</h5>
-    <div class="update-button-container">
-      <button class="btn btn-icon" (click)="getAdminCurrentlyPlaying()" title="Actualizar">
-        <i class="fas fa-sync-alt"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body">
-    <div *ngIf="spotifyStatus">
-      <div *ngIf="spotifyStatus.authenticated && spotifyStatus.token_valid" class="alert alert-success">
-        <i class="fab fa-spotify me-2"></i> Spotify conectado correctamente
-        <button class="btn btn-sm btn-outline-danger ms-3" (click)="disconnectSpotify()">
-          Desconectar
-        </button>
-      </div>
-
-      <div *ngIf="!spotifyStatus.authenticated || !spotifyStatus.token_valid" class="alert alert-warning">
-        <i class="fab fa-spotify me-2"></i> Spotify no conectado
-        <button class="btn btn-sm btn-success ms-3" (click)="connectSpotify()">
-          Conectar Spotify
+        <span class="status-text">
+          {{ spotifyStatus.authenticated && spotifyStatus.token_valid ? 'Spotify Conectado' : 'Spotify Desconectado' }}
+        </span>
+        <button class="status-action" (click)="spotifyStatus.authenticated ? disconnectSpotify() : connectSpotify()">
+          {{ spotifyStatus.authenticated ? 'Desconectar' : 'Conectar' }}
         </button>
       </div>
     </div>
 
-    <!-- Mostrar lo que se está reproduciendo actualmente en el admin -->
-    <div *ngIf="adminCurrentlyPlaying && adminCurrentlyPlaying.is_playing" class="mt-3">
-      <h6>Reproduciendo ahora (visible para todos):</h6>
-      <div class="d-flex align-items-center">
-        <img [src]="adminCurrentlyPlaying.image" class="img-thumbnail me-3" style="width: 60px; height: 60px;"
-          [alt]="adminCurrentlyPlaying.name">
-        <div>
-          <strong>{{ adminCurrentlyPlaying.name }}</strong><br>
-          <small class="text-muted">{{ adminCurrentlyPlaying.artists.join(', ') }}</small>
-        </div>
-      </div>
-      
-      <div class="btn-group mt-2">
-        <button class="btn btn-warning btn-sm" (click)="checkPlayingSong()">
-          <i class="fas fa-search me-1"></i>Verificar en ranking
-        </button>
-        <button class="btn btn-info btn-sm" (click)="addToHistory()">
-          <i class="fas fa-history me-1"></i>Agregar al histórico
-        </button>
-      </div>
-    </div>
-
-    <div *ngIf="adminCurrentlyPlaying && !adminCurrentlyPlaying.is_playing" class="mt-3">
-      <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i> No se está reproduciendo nada en Spotify
-      </div>
-    </div>
-  </div>
-</div>
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Canciones más votadas</h5>
-    <div>
-      <button class="btn btn-sm btn-outline-danger me-2" (click)="deleteAllVotes()">
-        <i class="fas fa-trash me-1"></i>Eliminar Todos los Votos
-      </button>
-      <button class="btn btn-sm btn-outline-secondary" (click)="loadSongs()">
-        <i class="fas fa-sync-alt"></i> Actualizar
-      </button>
-    </div>
-  </div>
-  
-  <div class="card-body">
-    <div *ngIf="isLoading" class="text-center py-3">
-      <i class="fas fa-spinner fa-spin fa-2x"></i>
-      <p class="mt-2">Cargando canciones...</p>
-    </div>
-
-    <div *ngIf="!isLoading && songs.length === 0" class="alert alert-info">
-      No hay canciones votadas todavía.
-    </div>
-
-    <div *ngFor="let song of songs; let i = index" class="card mb-2">
-      <div class="card-body">
-        <div class="row align-items-center">
-          <div class="col-1 text-center">
-            <span class="badge bg-primary rounded-pill">{{ i + 1 }}</span>
-          </div>
-          <div class="col-2">
-            <img [src]="song.image" class="img-fluid rounded" [alt]="song.name">
-          </div>
-          <div class="col-5">
-            <h6 class="mb-1">{{ song.name }}</h6>
-            <p class="text-muted mb-1 small">{{ song.artists.join(', ') }}</p>
-            <div class="d-flex gap-2">
-              <span class="badge bg-success">
-                <i class="fas fa-thumbs-up me-1"></i>{{ song.votes || 0 }}
-              </span>
-              <span class="badge bg-danger">
-                <i class="fas fa-thumbs-down me-1"></i>{{ song.dislikes || 0 }}
-              </span>
+    <!-- Main Content -->
+    <div class="admin-main">
+      <!-- Dashboard Section -->
+      <div class="section" *ngIf="activeSection === 'dashboard'">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-music"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ songs.length }}</h3>
+              <p>Canciones en ranking</p>
             </div>
           </div>
-          <div class="col-2">
-            <small class="text-muted">Agregada: {{ formatTimeAgo(song.createdat) }}</small>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-thumbs-up"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ totalVotes }}</h3>
+              <p>Total de votos</p>
+            </div>
           </div>
-          <div class="col-2 text-end">
-            <button class="btn btn-success btn-sm me-1" (click)="addToQueue('spotify:track:' + song.id)">
-              <i class="fas fa-plus"></i> Cola
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ uniqueVoters }}</h3>
+              <p>Votantes únicos</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-history"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ queue.length }}</h3>
+              <p>En cola</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-actions">
+          <button class="action-btn primary" (click)="loadSongs()">
+            <i class="fas fa-sync-alt me-1"></i>Actualizar Ranking
+          </button>
+          <button class="action-btn secondary" (click)="toggleQueue()">
+            <i class="fas fa-list-ol me-1"></i>Ver Cola
+          </button>
+          <button class="action-btn warning" (click)="getAdminCurrentlyPlaying()">
+            <i class="fas fa-play-circle me-1"></i>Actualizar Reproducción
+          </button>
+        </div>
+      </div>
+
+      <!-- Currently Playing Section -->
+      <div class="section" *ngIf="activeSection === 'playing'">
+        <div class="section-header">
+          <h2>Reproduciendo Ahora</h2>
+          <button class="btn-refresh" (click)="getAdminCurrentlyPlaying()">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingCurrent"></i>
+          </button>
+        </div>
+
+        <div class="currently-playing-card" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
+          <div class="playing-content">
+            <img [src]="adminCurrentlyPlaying.image" alt="Album cover" class="album-art-large">
+            <div class="track-info">
+              <h3>{{ adminCurrentlyPlaying.name }}</h3>
+              <p class="artists">{{ adminCurrentlyPlaying.artists.join(', ') }}</p>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="(adminCurrentlyPlaying.progress_ms / adminCurrentlyPlaying.duration_ms) * 100"></div>
+                </div>
+                <div class="time-display">
+                  <span>{{ formatTime(adminCurrentlyPlaying.progress_ms) }}</span>
+                  <span>{{ formatTime(adminCurrentlyPlaying.duration_ms) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="playing-actions">
+              <button class="control-btn" (click)="addToHistory()" title="Agregar al histórico">
+                <i class="fas fa-history"></i>
+              </button>
+              <button class="control-btn" (click)="checkPlayingSong()" title="Verificar en ranking">
+                <i class="fas fa-search"></i>
+              </button>
+              <button class="control-btn" (click)="forceRankSong()" title="Forzar en ranking">
+                <i class="fas fa-trophy"></i>
+              </button>
+            </div>
+          </div>
+          <div class="player-controls">
+            <button class="player-btn" (click)="previousTrack()">
+              <i class="fas fa-step-backward"></i>
             </button>
-            <button class="btn btn-danger btn-sm me-1" (click)="deleteSong(song.id)">
-              <i class="fas fa-trash me-1"></i>Eliminar
+            <button class="player-btn play-pause" (click)="togglePlayback()">
+              <i class="fas" [class.fa-play]="!isPlaying" [class.fa-pause]="isPlaying"></i>
             </button>
+            <button class="player-btn" (click)="nextTrack()">
+              <i class="fas fa-step-forward"></i>
+            </button>
+          </div>
+        </div>
+
+        <ng-template #noSongPlaying>
+          <div class="empty-state">
+            <i class="fas fa-music-slash"></i>
+            <p>No se está reproduciendo ninguna canción</p>
+            <button class="btn-spotify" (click)="connectSpotify()" *ngIf="!spotifyStatus?.authenticated">
+              Conectar Spotify
+            </button>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Queue Section -->
+      <div class="section" *ngIf="activeSection === 'queue'">
+        <div class="section-header">
+          <h2>Cola de Reproducción</h2>
+          <button class="btn-refresh" (click)="loadQueue()" [disabled]="isLoadingQueue">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingQueue"></i>
+          </button>
+        </div>
+
+        <div class="queue-container" *ngIf="queue.length > 0; else emptyQueue">
+          <div class="queue-item" *ngFor="let item of queue; let i = index">
+            <span class="queue-position">{{ i + 1 }}</span>
+            <img [src]="item.album?.images[0]?.url || 'assets/default-song.png'" alt="Album cover" class="queue-image">
+            <div class="queue-info">
+              <h4>{{ item.name }}</h4>
+              <p>{{ item.artists[0]?.name }}</p>
+            </div>
+            <div class="queue-actions">
+              <button class="queue-btn" (click)="playTrack(item.uri)" title="Reproducir ahora">
+                <i class="fas fa-play"></i>
+              </button>
+              <button class="queue-btn remove" (click)="removeFromQueue(item.uri)" title="Quitar de la cola">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyQueue>
+          <div class="empty-state">
+            <i class="fas fa-list-ol"></i>
+            <p>No hay canciones en la cola de reproducción</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Ranking Section -->
+      <div class="section" *ngIf="activeSection === 'ranking'">
+        <div class="section-header">
+          <h2>Ranking de Canciones</h2>
+          <div class="header-actions">
+            <button class="btn-refresh" (click)="loadSongs()" [disabled]="isLoading">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+            </button>
+            <button class="btn-danger" (click)="deleteAllVotes()">
+              <i class="fas fa-trash me-1"></i>Eliminar Todos
+            </button>
+          </div>
+        </div>
+
+        <div class="ranking-container" *ngIf="songs.length > 0; else emptyRanking">
+          <div class="ranking-item" *ngFor="let song of songs; let i = index">
+            <div class="rank-number">{{ i + 1 }}</div>
+            <img [src]="song.image" alt="Album cover" class="rank-image">
+            <div class="rank-info">
+              <h4>{{ song.name }}</h4>
+              <p>{{ song.artists.join(', ') }}</p>
+              <div class="rank-stats">
+                <span class="votes"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
+                <span class="dislikes"><i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}</span>
+                <span class="time">{{ formatTimeAgo(song.createdat) }}</span>
+              </div>
+            </div>
+            <div class="rank-actions">
+              <button class="vote-btn like" (click)="adminVote(song, false)" 
+                [class.active]="hasAdminLiked(song.id)" title="Me gusta">
+                <i class="fas fa-thumbs-up"></i>
+              </button>
+              <button class="vote-btn dislike" (click)="adminVote(song, true)" 
+                [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
+                <i class="fas fa-thumbs-down"></i>
+              </button>
+              <button class="action-btn" (click)="addToQueue('spotify:track:' + song.id)" title="Agregar a cola">
+                <i class="fas fa-plus"></i>
+              </button>
+              <button class="action-btn danger" (click)="deleteSong(song.id)" title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyRanking>
+          <div class="empty-state">
+            <i class="fas fa-trophy"></i>
+            <p>No hay canciones en el ranking</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Schedules Section -->
+      <div class="section" *ngIf="activeSection === 'schedules'">
+        <div class="section-header">
+          <h2>Horarios de Música</h2>
+          <button class="btn-toggle" (click)="isEditingSchedules = !isEditingSchedules">
+            {{ isEditingSchedules ? 'Cancelar' : 'Editar' }}
+          </button>
+        </div>
+
+        <div class="schedules-container">
+          <div *ngIf="!isEditingSchedules">
+            <div class="schedule-card" *ngFor="let schedule of schedules; let i = index">
+              <h4>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</h4>
+              <div class="schedule-times">
+                <div class="time-block">
+                  <span class="time-label">Almuerzo:</span>
+                  <span class="time-value">{{ convertToAmPm(schedule.lunch_start) || '-' }} - {{ convertToAmPm(schedule.lunch_end) || '-' }}</span>
+                </div>
+                <div class="time-block">
+                  <span class="time-label">Cena:</span>
+                  <span class="time-value">{{ convertToAmPm(schedule.dinner_start) || '-' }} - {{ convertToAmPm(schedule.dinner_end) || '-' }}</span>
+                </div>
+              </div>
+              <div class="schedule-status">
+                <span class="status-badge" [class.active]="schedule.is_active" 
+                  [class.inactive]="!schedule.is_active">
+                  {{ schedule.is_active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="isEditingSchedules">
+            <div class="schedule-edit-card" *ngFor="let schedule of schedules; let i = index">
+              <h4>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'][schedule.day_of_week] }}</h4>
+              <div class="edit-fields">
+                <div class="field-group">
+                  <label>Almuerzo Inicio</label>
+                  <input type="time" [(ngModel)]="schedule.lunch_start">
+                </div>
+                <div class="field-group">
+                  <label>Almuerzo Fin</label>
+                  <input type="time" [(ngModel)]="schedule.lunch_end">
+                </div>
+                <div class="field-group">
+                  <label>Cena Inicio</label>
+                  <input type="time" [(ngModel)]="schedule.dinner_start">
+                </div>
+                <div class="field-group">
+                  <label>Cena Fin</label>
+                  <input type="time" [(ngModel)]="schedule.dinner_end">
+                </div>
+                <div class="field-group toggle">
+                  <label>Activo</label>
+                  <label class="switch">
+                    <input type="checkbox" [(ngModel)]="schedule.is_active">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <button class="btn-save" (click)="saveSchedules()">
+              <i class="fas fa-save me-1"></i>Guardar Horarios
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Added Section (Collapsible) -->
+      <div class="section recently-added-section">
+        <div class="section-header collapsible" (click)="toggleRecentlyAdded()">
+          <h2>Recién Agregadas</h2>
+          <i class="fas" [class.fa-chevron-down]="!showRecentlyAdded" [class.fa-chevron-up]="showRecentlyAdded"></i>
+        </div>
+
+        <div class="recently-added-content" *ngIf="showRecentlyAdded">
+          <div class="recent-grid" *ngIf="recentlyAddedSongs.length > 0; else emptyRecent">
+            <div class="recent-card" *ngFor="let song of recentlyAddedSongs">
+              <img [src]="song.image" alt="Album cover" class="recent-image">
+              <div class="recent-info">
+                <h5>{{ song.name }}</h5>
+                <p>{{ song.artists.join(', ') }}</p>
+                <div class="recent-stats">
+                  <span class="votes"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
+                  <span class="dislikes"><i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}</span>
+                </div>
+              </div>
+              <div class="recent-actions">
+                <button class="vote-btn like" (click)="adminVote(song, false)" 
+                  [class.active]="hasAdminLiked(song.id)" title="Me gusta">
+                  <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="vote-btn dislike" (click)="adminVote(song, true)" 
+                  [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
+                  <i class="fas fa-thumbs-down"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #emptyRecent>
+            <div class="empty-state">
+              <i class="fas fa-clock"></i>
+              <p>No hay canciones recientes</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Search Section (Always visible) -->
+      <div class="search-section">
+        <div class="search-header">
+          <h3>Buscar en Spotify</h3>
+          <button class="btn-toggle" (click)="showSearch = !showSearch">
+            {{ showSearch ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+
+        <div class="search-content" *ngIf="showSearch">
+          <div class="search-bar">
+            <input type="text" placeholder="Buscar canciones en Spotify..." [(ngModel)]="searchQuery" 
+              (keyup.enter)="searchSpotify()">
+            <button class="search-btn" (click)="searchSpotify()">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <div class="search-results" *ngIf="searchResults.length > 0">
+            <div class="result-item" *ngFor="let track of searchResults">
+              <img [src]="track.album.images[0]?.url || 'assets/default-song.png'" alt="Album cover" class="result-image">
+              <div class="result-info">
+                <h4>{{ track.name }}</h4>
+                <p>{{ track.artists[0]?.name }}</p>
+                <span class="album-name">{{ track.album.name }}</span>
+              </div>
+              <div class="result-actions">
+                <button class="vote-btn like" (click)="voteFromSearch(track, false)" title="Votar positivo">
+                  <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="vote-btn dislike" (click)="voteFromSearch(track, true)" title="Votar negativo">
+                  <i class="fas fa-thumbs-down"></i>
+                </button>
+                <button class="action-btn" (click)="addToQueue(track.uri)" title="Agregar a cola">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button class="action-btn" (click)="playTrack(track.uri)" title="Reproducir ahora">
+                  <i class="fas fa-play"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

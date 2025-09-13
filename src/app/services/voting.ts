@@ -99,6 +99,22 @@ export class VotingService {
     );
   }
 
+  getSongs() {
+    return this.http.get<any[]>(`${this.apiUrl}/songs`);
+  }
+  
+  addToHistory(trackId: string) {
+    return this.http.post(`${this.apiUrl}/spotify/history`, { trackId });
+  }
+
+  vote(song: any, isDislike: boolean, isAdmin: boolean = false) {
+    return this.http.post(`${this.apiUrl}/vote`, {
+      song,
+      isDislike,
+      isAdmin
+    });
+  }
+
   deleteSong(trackid: string): Observable<any> {
     // Usar autenticación básica en lugar de Bearer token
     const headers = this.authService.getAuthHeaders();

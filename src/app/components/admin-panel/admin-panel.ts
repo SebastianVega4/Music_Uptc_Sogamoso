@@ -1,360 +1,533 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { VotingService } from '../../services/voting';
-import { AuthService } from '../../services/auth';
-import { ScheduleService } from '../../services/schedule.service';
-import { RankingService } from '../../services/ranking.service';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
-import { ActivatedRoute } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { VotingService } from '../../services/voting';
+import { SpotifyService } from '../../services/spotify';
+import { ScheduleService } from '../../services/schedule.service';
+import { AuthService } from '../../services/auth';
 
 @Component({
-  standalone: true,
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
-  styleUrls: ['./admin-panel.scss'],
-  imports: [CommonModule, FormsModule]
+  styleUrls: ['./admin-panel.scss']
 })
-export class AdminPanelComponent implements OnInit {
+export class AdminPanelComponent implements OnInit, OnDestroy {
+  // Estados de la UI
+  activeSection = 'dashboard';
+  showSearch = false;
+  showRecentlyAdded = true;
+  isEditingSchedules = false;
+  
+  // Datos
   songs: any[] = [];
-  isLoading: boolean = true;
+  queue: any[] = [];
+  recentlyAddedSongs: any[] = [];
+  searchResults: any[] = [];
+  schedules: any[] = [];
   spotifyStatus: any = null;
   adminCurrentlyPlaying: any = null;
-  queue: any[] = [];
-  showQueue: boolean = false;
-  isLoadingQueue: boolean = false;
-  schedules: any[] = [];
-  isEditingSchedules = false;
-  isHidden = true;
+  
+  // Estados de carga
+  isLoading = false;
+  isLoadingQueue = false;
+  isLoadingCurrent = false;
+  isPlaying = false;
+  
+  // Búsqueda
+  searchQuery = '';
+  
+  // Votos del admin
+  adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
+  
+  // Timers
+  private refreshTimer: any;
+  private currentSongTimer: any;
 
   constructor(
+    private spotifyNowPlaying: SpotifyNowPlayingService,
     private votingService: VotingService,
-    private authService: AuthService,
-    private router: Router,
-    private spotifyService: SpotifyNowPlayingService,
-    private route: ActivatedRoute,
+    private spotifyService: SpotifyService,
     private scheduleService: ScheduleService,
-    private rankingService: RankingService
-  ) { }
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  checkPlayingSong(): void {
-    this.spotifyService.checkAndRemovePlayingSongFromRanking().subscribe({
-      next: (response: any) => {
-        if (response.deleted) {
-          this.showMessage(`Canción "${response.song.name}" eliminada del ranking por estar en reproducción`);
-          this.loadSongs(); // Recargar la lista
-        } else if (response.in_ranking === false) {
-          this.showMessage(`"${response.song.name}" no está en el ranking. Usa "Agregar al histórico" si es necesario.`, 'info');
-        } else if (response.recently_added) {
-          this.showMessage(`"${response.song.name}" ya fue agregada al histórico recientemente.`, 'info');
-        } else {
-          this.showMessage(response.message || "Operación completada", 'info');
-        }
-      },
-      error: (error: any) => {
-        console.error('Error al verificar canción en reproducción:', error);
-        this.showMessage('Error al verificar la canción en reproducción', 'error');
-      }
-    });
+  ngOnInit() {
+    this.loadInitialData();
+    this.setupAutoRefresh();
   }
 
-  hideAnnouncement() {
-    if (this.isHidden) {
-      this.isHidden = false;
-      localStorage.setItem('announcementHidden', 'false');
-    } else {
-      this.isHidden = true;
-      localStorage.setItem('announcementHidden', 'true');
+  ngOnDestroy() {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
+    if (this.currentSongTimer) {
+      clearInterval(this.currentSongTimer);
     }
   }
 
-  ngOnInit(): void {
+  loadInitialData() {
     this.loadSongs();
-    this.checkSpotifyStatus();
+    this.loadQueue();
+    this.getSpotifyStatus();
+    this.getAdminCurrentlyPlaying();
     this.loadSchedules();
+  }
 
-    this.route.queryParams.subscribe(params => {
-      if (params['spotify_connected'] === 'true') {
-        this.showMessage('Spotify conectado correctamente');
-        setTimeout(() => {
-          this.checkSpotifyStatus();
-          this.getAdminCurrentlyPlaying();
-        }, 2000);
+  setupAutoRefresh() {
+    // Actualizar cada 30 segundos
+    this.refreshTimer = setInterval(() => {
+      this.loadSongs();
+      this.loadQueue();
+      this.getSpotifyStatus();
+    }, 30000);
+
+    // Actualizar la canción actual cada 5 segundos
+    this.currentSongTimer = setInterval(() => {
+      this.getAdminCurrentlyPlaying();
+    }, 5000);
+  }
+
+  setActiveSection(section: string) {
+    this.activeSection = section;
+    
+    // Cargar datos específicos de la sección si es necesario
+    if (section === 'queue') {
+      this.loadQueue();
+    } else if (section === 'playing') {
+      this.getAdminCurrentlyPlaying();
+    } else if (section === 'ranking') {
+      this.loadSongs();
+    } else if (section === 'schedules') {
+      this.loadSchedules();
+    }
+  }
+
+  toggleSearch() {
+    this.showSearch = !this.showSearch;
+    if (this.showSearch) {
+      this.activeSection = 'dashboard';
+    }
+  }
+
+  toggleRecentlyAdded() {
+    this.showRecentlyAdded = !this.showRecentlyAdded;
+  }
+
+  // Cargar canciones del ranking
+  loadSongs() {
+    this.isLoading = true;
+    this.votingService.getSongs().subscribe({
+      next: (songs) => {
+        this.songs = songs;
+        this.filterRecentlyAdded();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading songs:', error);
+        this.isLoading = false;
       }
     });
   }
 
-  loadSongs(): void {
-    this.isLoading = true;
-    this.votingService.getRankedSongs().subscribe({
-      next: (data) => {
-        this.songs = data;
-        this.isLoading = false;
+  // Filtrar canciones recientemente agregadas (últimas 6 horas)
+  filterRecentlyAdded() {
+    const sixHoursAgo = new Date();
+    sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
+    
+    this.recentlyAddedSongs = this.songs.filter(song => {
+      const songDate = new Date(song.createdat);
+      return songDate > sixHoursAgo;
+    }).slice(0, 8); // Limitar a 8 canciones
+  }
+
+  // Cargar cola de reproducción
+  loadQueue() {
+    this.isLoadingQueue = true;
+    this.queueService.getQueue().subscribe({
+      next: (queue) => {
+        this.queue = queue;
+        this.isLoadingQueue = false;
       },
       error: (error) => {
-        console.error('Error al cargar canciones:', error);
-        this.isLoading = false;
-        this.showMessage('Error al cargar la lista de canciones.', 'error');
-      },
+        console.error('Error loading queue:', error);
+        this.isLoadingQueue = false;
+      }
     });
   }
 
-  checkSpotifyStatus(): void {
-    this.spotifyService.getAdminSpotifyStatus().subscribe({
+  // Obtener estado de Spotify
+  getSpotifyStatus() {
+    this.spotifyService.getStatus().subscribe({
       next: (status) => {
         this.spotifyStatus = status;
-
-        // Si está autenticado, obtener la canción actual
-        if (status.authenticated && status.token_valid) {
-          this.getAdminCurrentlyPlaying();
-        }
       },
       error: (error) => {
-        console.error('Error al verificar estado de Spotify:', error);
+        console.error('Error getting Spotify status:', error);
       }
     });
   }
 
-  getAdminCurrentlyPlaying(): void {
-    this.spotifyService.getAdminCurrentlyPlaying().subscribe({
+  // Obtener canción actualmente en reproducción
+  getAdminCurrentlyPlaying() {
+    this.isLoadingCurrent = true;
+    this.spotifyNowPlaying.getCurrentlyPlaying().subscribe({
       next: (data) => {
-        this.adminCurrentlyPlaying = data;
-      },
-      error: (error) => {
-        console.error('Error al obtener reproducción actual:', error);
-      }
-    });
-  }
-
-  connectSpotify(): void {
-    this.spotifyService.startAdminSpotifyAuth().subscribe({
-      next: (response) => {
-        // Redirigir a la URL de autenticación de Spotify
-        window.location.href = response.authUrl;
-      },
-      error: (error) => {
-        console.error('Error al iniciar autenticación de Spotify:', error);
-        this.showMessage('Error al conectar con Spotify. Verifica la configuración.', 'error');
-      }
-    });
-  }
-
-  disconnectSpotify(): void {
-    if (!confirm('¿Estás seguro de que quieres desconectar Spotify?')) {
-      return;
-    }
-
-    this.spotifyService.disconnectAdminSpotify().subscribe({
-      next: () => {
-        this.showMessage('Spotify desconectado correctamente');
-        this.spotifyStatus = { authenticated: false };
-        this.adminCurrentlyPlaying = null;
-      },
-      error: (error) => {
-        console.error('Error al desconectar Spotify:', error);
-        this.showMessage('Error al desconectar Spotify', 'error');
-      }
-    });
-  }
-
-  deleteSong(trackId: string): void {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta canción?')) {
-      return;
-    }
-
-    this.votingService.deleteSong(trackId).subscribe({
-      next: () => {
-        this.showMessage('Canción eliminada correctamente.');
-        this.loadSongs(); // Recargar la lista
-      },
-      error: (error) => {
-        console.error('Error al eliminar canción:', error);
-
-        if (error.status === 401) {
-          this.showMessage('Error de autenticación. Vuelve a iniciar sesión.', 'error');
-          this.authService.logout();
-          this.router.navigate(['/admin-login']);
+        if (data && data.item) {
+          this.adminCurrentlyPlaying = {
+            id: data.item.id,
+            name: data.item.name,
+            artists: data.item.artists.map((artist: any) => artist.name),
+            image: data.item.album.images[0]?.url || 'assets/default-song.png',
+            progress_ms: data.progress_ms || 0,
+            duration_ms: data.item.duration_ms,
+            uri: data.item.uri
+          };
+          this.isPlaying = data.is_playing;
         } else {
-          this.showMessage('Error al eliminar la canción.', 'error');
+          this.adminCurrentlyPlaying = null;
         }
-      },
-    });
-  }
-
-  deleteAllVotes(): void {
-    if (!confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
-    this.votingService.deleteAllVotes().subscribe({
-      next: () => {
-        this.showMessage('Todos los votos han sido eliminados correctamente.');
-        this.loadSongs(); // Recargar la lista
+        this.isLoadingCurrent = false;
       },
       error: (error) => {
-        console.error('Error al eliminar todos los votos:', error);
-
-        if (error.status === 401) {
-          this.showMessage('Error de autenticación. Vuelve a iniciar sesión.', 'error');
-          this.authService.logout();
-          this.router.navigate(['/admin-login']);
-        } else {
-          this.showMessage('Error al eliminar todos los votos.', 'error');
-        }
-      },
-    });
-  }
-
-  addToHistory(): void {
-    if (!this.adminCurrentlyPlaying) {
-      this.showMessage('No hay ninguna canción reproduciéndose actualmente', 'error');
-      return;
-    }
-  
-    this.spotifyService.addToHistory().subscribe({
-      next: (response: any) => {
-        this.showMessage(`"${response.song.name}" agregada al histórico correctamente`);
-      },
-      error: (error: any) => {
-        console.error('Error al agregar al histórico:', error);
-        this.showMessage('Error al agregar al histórico', 'error');
-      }
-    });
-  }
-  
-  // Método para agregar canción a la cola
-  addToQueue(trackUri: string): void {
-    this.spotifyService.addToQueue(trackUri).subscribe({
-      next: () => {
-        this.showMessage('Canción agregada a la cola correctamente');
-        this.loadQueue(); // Recargar la cola
-      },
-      error: (error) => {
-        console.error('Error al agregar a la cola:', error);
-        this.showMessage('Error al agregar a la cola: ' + (error.error?.error || 'Error desconocido'), 'error');
+        console.error('Error getting currently playing:', error);
+        this.isLoadingCurrent = false;
       }
     });
   }
 
-  // Método para cargar la cola de reproducción
-  loadQueue(): void {
-    this.isLoadingQueue = true;
-    this.spotifyService.getQueue().subscribe({
-      next: (data) => {
-        this.queue = data;
-        this.isLoadingQueue = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar la cola:', error);
-        this.isLoadingQueue = false;
-        this.showMessage('Error al cargar la cola de reproducción', 'error');
-      }
-    });
-  }
-
-  // Alternar visibilidad de la cola
-  toggleQueue(): void {
-    this.showQueue = !this.showQueue;
-    if (this.showQueue) {
-      this.loadQueue();
-    }
-  }
-
-  // Método para cargar horarios
-  loadSchedules(): void {
+  // Cargar horarios
+  loadSchedules() {
     this.scheduleService.getSchedules().subscribe({
-      next: (data) => {
-        this.schedules = data;
+      next: (schedules) => {
+        this.schedules = schedules;
       },
-      error: (error: any) => {
-        console.error('Error al cargar horarios:', error);
-        this.showMessage('Error al cargar los horarios', 'error');
+      error: (error) => {
+        console.error('Error loading schedules:', error);
       }
     });
   }
 
-  // Método para guardar horarios
-  saveSchedules(): void {
+  // Guardar horarios
+  saveSchedules() {
     this.scheduleService.updateSchedules(this.schedules).subscribe({
       next: () => {
-        this.showMessage('Horarios guardados correctamente');
         this.isEditingSchedules = false;
+        // Mostrar mensaje de éxito
       },
-      error: (error: any) => {
-        console.error('Error al guardar horarios:', error);
-        this.showMessage('Error al guardar los horarios', 'error');
+      error: (error) => {
+        console.error('Error saving schedules:', error);
       }
     });
   }
 
-  // Convertir formato de hora
-  convertToAmPm(timeString: string): string {
-    if (!timeString) return '';
-
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-
-    return `${hour12}:${minutes} ${ampm}`;
+  // Conectar Spotify
+  connectSpotify() {
+    this.spotifyService.connectSpotify().subscribe({
+      next: (data) => {
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      },
+      error: (error) => {
+        console.error('Error connecting to Spotify:', error);
+      }
+    });
   }
 
-  // Formatear tiempo transcurrido
-  formatTimeAgo(dateString: string): string {
-    if (!dateString) return 'Fecha desconocida';
+  // Desconectar Spotify
+  disconnectSpotify() {
+    this.spotifyService.disconnectSpotify().subscribe({
+      next: () => {
+        this.getSpotifyStatus();
+      },
+      error: (error) => {
+        console.error('Error disconnecting from Spotify:', error);
+      }
+    });
+  }
 
+  // Buscar en Spotify
+  searchSpotify() {
+    if (!this.searchQuery.trim()) return;
+    
+    this.spotifyService.searchTracks(this.searchQuery).subscribe({
+      next: (results) => {
+        this.searchResults = results.tracks.items;
+      },
+      error: (error) => {
+        console.error('Error searching Spotify:', error);
+      }
+    });
+  }
+
+  // Votar desde la búsqueda
+  voteFromSearch(track: any, isDislike: boolean) {
+    const songData = {
+      id: track.id,
+      name: track.name,
+      artists: track.artists.map((artist: any) => artist.name),
+      image: track.album.images[0]?.url || 'assets/default-song.png'
+    };
+    
+    this.votingService.vote(songData, isDislike, true).subscribe({
+      next: () => {
+        this.loadSongs();
+        // Mostrar feedback visual
+      },
+      error: (error) => {
+        console.error('Error voting from search:', error);
+      }
+    });
+  }
+
+  // Voto del administrador
+  adminVote(song: any, isDislike: boolean) {
+    // Guardar el voto del admin localmente para feedback inmediato
+    this.adminVotes[song.id] = isDislike;
+    
+    this.votingService.vote(song, isDislike, true).subscribe({
+      next: () => {
+        this.loadSongs();
+      },
+      error: (error) => {
+        console.error('Error with admin vote:', error);
+        // Revertir el cambio visual en caso de error
+        delete this.adminVotes[song.id];
+      }
+    });
+  }
+
+  // Verificar si el admin ha dado like
+  hasAdminLiked(songId: string): boolean {
+    return this.adminVotes[songId] === false;
+  }
+
+  // Verificar si el admin ha dado dislike
+  hasAdminDisliked(songId: string): boolean {
+    return this.adminVotes[songId] === true;
+  }
+
+  // Agregar a la cola
+  addToQueue(trackUri: string) {
+    this.queueService.addToQueue(trackUri).subscribe({
+      next: () => {
+        this.loadQueue();
+        // Mostrar mensaje de éxito
+      },
+      error: (error) => {
+        console.error('Error adding to queue:', error);
+      }
+    });
+  }
+
+  // Quitar de la cola
+  removeFromQueue(trackUri: string) {
+    this.queueService.removeFromQueue(trackUri).subscribe({
+      next: () => {
+        this.loadQueue();
+      },
+      error: (error) => {
+        console.error('Error removing from queue:', error);
+      }
+    });
+  }
+
+  // Reproducir una pista
+  playTrack(trackUri: string) {
+    this.spotifyService.playTrack(trackUri).subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.getAdminCurrentlyPlaying();
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('Error playing track:', error);
+      }
+    });
+  }
+
+  // Siguiente canción
+  nextTrack() {
+    this.spotifyService.nextTrack().subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.getAdminCurrentlyPlaying();
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('Error skipping to next track:', error);
+      }
+    });
+  }
+
+  // Canción anterior
+  previousTrack() {
+    this.spotifyService.previousTrack().subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.getAdminCurrentlyPlaying();
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('Error going to previous track:', error);
+      }
+    });
+  }
+
+  // Pausar/Reanudar reproducción
+  togglePlayback() {
+    if (this.isPlaying) {
+      this.spotifyService.pausePlayback().subscribe({
+        next: () => {
+          this.isPlaying = false;
+        },
+        error: (error) => {
+          console.error('Error pausing playback:', error);
+        }
+      });
+    } else {
+      this.spotifyService.resumePlayback().subscribe({
+        next: () => {
+          this.isPlaying = true;
+        },
+        error: (error) => {
+          console.error('Error resuming playback:', error);
+        }
+      });
+    }
+  }
+
+  // Eliminar canción
+  deleteSong(songId: string) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta canción?')) {
+      this.votingService.deleteSong(songId).subscribe({
+        next: () => {
+          this.loadSongs();
+        },
+        error: (error) => {
+          console.error('Error deleting song:', error);
+        }
+      });
+    }
+  }
+
+  // Eliminar todos los votos
+  deleteAllVotes() {
+    if (confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.')) {
+      this.votingService.deleteAllVotes().subscribe({
+        next: () => {
+          this.loadSongs();
+        },
+        error: (error) => {
+          console.error('Error deleting all votes:', error);
+        }
+      });
+    }
+  }
+
+  // Forzar refresco
+  forceRefresh() {
+    this.loadSongs();
+    this.loadQueue();
+    this.getSpotifyStatus();
+    this.getAdminCurrentlyPlaying();
+  }
+
+  // Alternar vista de cola
+  toggleQueue() {
+    this.activeSection = 'queue';
+  }
+
+  // Agregar al histórico
+  addToHistory() {
+    if (this.adminCurrentlyPlaying) {
+      this.spotifyNowPlaying.addToHistory(this.adminCurrentlyPlaying.id).subscribe({
+        next: () => {
+          // Mostrar mensaje de éxito
+        },
+        error: (error) => {
+          console.error('Error adding to history:', error);
+        }
+      });
+    }
+  }
+
+  // Verificar en ranking
+  checkPlayingSong() {
+    if (this.adminCurrentlyPlaying) {
+      const found = this.songs.find(song => song.id === this.adminCurrentlyPlaying.id);
+      if (found) {
+        // Resaltar la canción en el ranking
+        this.activeSection = 'ranking';
+        // Podría implementarse scroll a la canción
+      } else {
+        alert('Esta canción no está en el ranking.');
+      }
+    }
+  }
+
+  // Forzar en ranking
+  forceRankSong() {
+    if (this.adminCurrentlyPlaying) {
+      const songData = {
+        id: this.adminCurrentlyPlaying.id,
+        name: this.adminCurrentlyPlaying.name,
+        artists: this.adminCurrentlyPlaying.artists,
+        image: this.adminCurrentlyPlaying.image
+      };
+      
+      this.votingService.vote(songData, false, true).subscribe({
+        next: () => {
+          this.loadSongs();
+          this.activeSection = 'ranking';
+        },
+        error: (error) => {
+          console.error('Error forcing song to rank:', error);
+        }
+      });
+    }
+  }
+
+  // Formatear tiempo (mm:ss)
+  formatTime(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  }
+
+  // Formatear tiempo relativo (hace x tiempo)
+  formatTimeAgo(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Hace un momento';
-    if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins !== 1 ? 's' : ''}`;
-    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    if (diffDays < 7) return `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
-
-    return date.toLocaleDateString();
+    
+    if (diffMins < 1) return 'Ahora mismo';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays === 1) return 'Ayer';
+    return `Hace ${diffDays} días`;
   }
 
-  // Método para mostrar mensajes
-  showMessage(message: string, type: string = 'success'): void {
-    // Usar alertas nativas por simplicidad
-    if (type === 'success') {
-      alert('✅ ' + message);
-    } else if (type === 'error') {
-      alert('❌ ' + message);
-    } else {
-      alert('ℹ️ ' + message);
-    }
+  // Convertir a formato AM/PM
+  convertToAmPm(timeString: string): string {
+    if (!timeString) return '';
+    
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    
+    return `${formattedHour}:${minutes} ${ampm}`;
   }
 
-  // Método para forzar el ranking de la canción actual
-  forceRankSong(): void {
-    if (!this.adminCurrentlyPlaying || !this.adminCurrentlyPlaying.id) {
-      this.showMessage('No hay ninguna canción reproduciéndose actualmente', 'error');
-      return;
-    }
-
-    if (!confirm('¿Agregar la canción actual al ranking histórico?')) {
-      return;
-    }
-
-    this.rankingService.forceRankCurrentSong().subscribe({
-      next: (response: any) => {
-        this.showMessage('Canción agregada al ranking histórico correctamente');
-      },
-      error: (err: any) => {
-        console.error('Error forcing rank:', err);
-        this.showMessage('Error al agregar al ranking: ' + (err.error?.error || 'Error desconocido'), 'error');
-      }
-    });
-  }
-
-  logout(): void {
+  // Cerrar sesión
+  logout() {
     this.authService.logout();
-    this.router.navigate(['/admin-login']);
+    this.router.navigate(['/login']);
   }
 }
