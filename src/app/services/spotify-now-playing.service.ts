@@ -136,4 +136,9 @@ export class SpotifyNowPlayingService {
     const headers = this.authService.getAuthHeaders();
     return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
   }
+  
+  addToHistory(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history`, {}, { headers });
+  }
 }

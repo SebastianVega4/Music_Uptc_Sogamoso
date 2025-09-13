@@ -171,9 +171,15 @@
           <small class="text-muted">{{ adminCurrentlyPlaying.artists.join(', ') }}</small>
         </div>
       </div>
-      <button class="btn btn-warning btn-sm mt-2" (click)="checkPlayingSong()">
-        <i class="fas fa-trash-alt me-1"></i>Eliminar del ranking si existe
-      </button>
+      
+      <div class="btn-group mt-2">
+        <button class="btn btn-warning btn-sm" (click)="checkPlayingSong()">
+          <i class="fas fa-search me-1"></i>Verificar en ranking
+        </button>
+        <button class="btn btn-info btn-sm" (click)="addToHistory()">
+          <i class="fas fa-history me-1"></i>Agregar al histórico
+        </button>
+      </div>
     </div>
 
     <div *ngIf="adminCurrentlyPlaying && !adminCurrentlyPlaying.is_playing" class="mt-3">

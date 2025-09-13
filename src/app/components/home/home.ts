@@ -100,16 +100,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private startProgressBar(progressMs: number, durationMs: number): void {
-    this.stopProgressBar(); // Clear any existing interval
+    this.stopProgressBar();
     this.syncProgressBar(progressMs, durationMs);
     
-    // Start an interval to update the UI every 500ms
     this.progressInterval = setInterval(() => {
       this.updateProgress();
     }, 500);
-    
-    // Verificar si debemos eliminar esta canción del ranking
-    this.checkAndRemovePlayingSong();
   }
 
   private syncProgressBar(progressMs: number, durationMs: number): void {

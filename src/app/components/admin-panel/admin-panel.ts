@@ -44,8 +44,12 @@ export class AdminPanelComponent implements OnInit {
         if (response.deleted) {
           this.showMessage(`Canción "${response.song.name}" eliminada del ranking por estar en reproducción`);
           this.loadSongs(); // Recargar la lista
+        } else if (response.in_ranking === false) {
+          this.showMessage(`"${response.song.name}" no está en el ranking. Usa "Agregar al histórico" si es necesario.`, 'info');
+        } else if (response.recently_added) {
+          this.showMessage(`"${response.song.name}" ya fue agregada al histórico recientemente.`, 'info');
         } else {
-          this.showMessage(response.message || "La canción en reproducción no está en el ranking", 'info');
+          this.showMessage(response.message || "Operación completada", 'info');
         }
       },
       error: (error: any) => {
@@ -202,6 +206,23 @@ export class AdminPanelComponent implements OnInit {
     });
   }
 
+  addToHistory(): void {
+    if (!this.adminCurrentlyPlaying) {
+      this.showMessage('No hay ninguna canción reproduciéndose actualmente', 'error');
+      return;
+    }
+  
+    this.spotifyService.addToHistory().subscribe({
+      next: (response: any) => {
+        this.showMessage(`"${response.song.name}" agregada al histórico correctamente`);
+      },
+      error: (error: any) => {
+        console.error('Error al agregar al histórico:', error);
+        this.showMessage('Error al agregar al histórico', 'error');
+      }
+    });
+  }
+  
   // Método para agregar canción a la cola
   addToQueue(trackUri: string): void {
     this.spotifyService.addToQueue(trackUri).subscribe({
