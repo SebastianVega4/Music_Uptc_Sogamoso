@@ -184,7 +184,8 @@ export class RankingComponent implements OnInit, OnDestroy {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     }).format(date);
   }
 

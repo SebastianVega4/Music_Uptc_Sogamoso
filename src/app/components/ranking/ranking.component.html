@@ -152,7 +152,7 @@
             </div>
             <span class="approval-text">{{ getVotePercentage(song) }}% aprobación</span>
           </div>
-          <p class="last-played">Última vez: {{ formatDate(song.last_played_at) }}</p>
+          <p class="last-played">{{ formatDate(song.last_played_at) }}</p>
           <button class="btn btn-primary w-100 mb-2" (click)="onVote(song)" [disabled]="isVoting">
             <i class="fas fa-vote-yea me-1" *ngIf="!isVoting"></i>
             <i class="fas fa-spinner fa-spin me-1" *ngIf="isVoting"></i>
