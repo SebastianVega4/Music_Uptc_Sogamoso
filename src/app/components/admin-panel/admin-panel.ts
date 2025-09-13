@@ -5,6 +5,7 @@ import { VotingService } from '../../services/voting';
 import { SpotifyService } from '../../services/spotify';
 import { ScheduleService } from '../../services/schedule.service';
 import { AuthService } from '../../services/auth';
+import { QueueService } from '../../services/queue.service'; // ✅ Agregar esta importación
 
 @Component({
   selector: 'app-admin-panel',
@@ -49,7 +50,8 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     private spotifyService: SpotifyService,
     private scheduleService: ScheduleService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private queueService: QueueService
   ) {}
 
   ngOnInit() {
