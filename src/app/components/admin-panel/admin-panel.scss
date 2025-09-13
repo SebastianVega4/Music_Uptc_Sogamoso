@@ -1206,3 +1206,88 @@ $spotify-card-bg: #181818;
     grid-template-columns: 1fr !important;
   }
 }
+
+.message-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.success-message, .error-message, .progress-message {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  animation: slideIn 0.3s ease;
+}
+
+.success-message {
+  background-color: rgba(29, 185, 84, 0.9);
+  color: #000;
+  border-left: 4px solid #1DB954;
+}
+
+.error-message {
+  background-color: rgba(231, 76, 60, 0.9);
+  color: white;
+  border-left: 4px solid #e74c3c;
+}
+
+.progress-message {
+  background-color: rgba(52, 152, 219, 0.9);
+  color: white;
+  border-left: 4px solid #3498db;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Mejoras para botones de acción
+.action-btn {
+  transition: all 0.2s ease;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none !important;
+    }
+  }
+}
+
+// Indicador de carga en botones
+.btn-loading {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

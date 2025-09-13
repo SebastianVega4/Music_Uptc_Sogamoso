@@ -143,6 +143,23 @@ export class VotingService {
   // Método para forzar la actualización del caché
   forceRefresh(): Observable<any[]> {
     this.invalidateCache();
-    return this.getRankedSongs();
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
+    
+    return this.http.get<any[]>(url).pipe(
+      map(songs => {
+        const processedSongs = this.processSongs(songs || []);
+        this.cachedSongs = processedSongs;
+        this.lastFetchTime = Date.now();
+        return processedSongs;
+      })
+    );
+  }
+
+  // Obtener ranking sin caché - NUEVO MÉTODO para admin
+  getRankedSongsImmediate(): Observable<any[]> {
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/votes`);
+    return this.http.get<any[]>(url).pipe(
+      map(songs => this.processSongs(songs || []))
+    );
   }
 }

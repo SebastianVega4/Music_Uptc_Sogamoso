@@ -1,4 +1,15 @@
 <div class="admin-panel-container">
+  <div class="message-container">
+    <div class="success-message" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i> {{ successMessage }}
+    </div>
+    <div class="error-message" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+    <div class="progress-message" *ngIf="actionInProgress">
+      <i class="fas fa-spinner fa-spin"></i> {{ actionInProgress }}
+    </div>
+  </div>
   <!-- Header -->
   <div class="admin-header">
     <div class="header-content">
@@ -196,9 +207,6 @@
               <button class="queue-btn" (click)="playTrack(item.uri)" title="Reproducir ahora">
                 <i class="fas fa-play"></i>
               </button>
-              <button class="queue-btn remove" (click)="removeFromQueue(item.uri)" title="Quitar de la cola">
-                <i class="fas fa-times"></i>
-              </button>
             </div>
           </div>
         </div>
@@ -247,7 +255,7 @@
                 [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
                 <i class="fas fa-thumbs-down"></i>
               </button>
-              <button class="action-btn" (click)="addToQueue('spotify:track:' + song.id)" title="Agregar a cola">
+              <button class="action-btn" (click)="addToQueueFromRanking(song.id)" title="Agregar a cola">
                 <i class="fas fa-plus"></i>
               </button>
               <button class="action-btn danger" (click)="deleteSong(song.id)" title="Eliminar">
@@ -409,10 +417,11 @@
                 <button class="vote-btn dislike" (click)="voteFromSearch(track, true)" title="Votar negativo">
                   <i class="fas fa-thumbs-down"></i>
                 </button>
-                <button class="action-btn" (click)="addToQueue(track.uri)" title="Agregar a cola">
+                <!-- BOTONES CORREGIDOS -->
+                <button class="action-btn" (click)="addToQueueFromSearch(track.uri)" title="Agregar a cola">
                   <i class="fas fa-plus"></i>
                 </button>
-                <button class="action-btn" (click)="playTrack(track.uri)" title="Reproducir ahora">
+                <button class="action-btn" (click)="playNowFromSearch(track.uri)" title="Reproducir ahora">
                   <i class="fas fa-play"></i>
                 </button>
               </div>

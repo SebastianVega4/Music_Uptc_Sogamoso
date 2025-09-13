@@ -17,45 +17,45 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule, CommonModule]
 })
 export class AdminPanelComponent implements OnInit, OnDestroy {
-  // Estados de la UI
-  activeSection = 'dashboard';
-  showSearch = false;
-  showRecentlyAdded = true;
-  isEditingSchedules = false;
-
-  // Datos
-  songs: any[] = [];
-  queue: any[] = [];
-  recentlyAddedSongs: any[] = [];
-  searchResults: any[] = [];
-  schedules: any[] = [];
-  spotifyStatus: any = null;
-  adminCurrentlyPlaying: any = null;
-
-  // Estados de carga
-  isLoading = false;
-  isLoadingQueue = false;
-  isLoadingCurrent = false;
-  isPlaying = false;
-
-  // Búsqueda
-  searchQuery = '';
-
-  // Votos del admin
-  adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
-
-
-  // Estadísticas
-  totalVotes: number = 0;
-  uniqueVoters: number = 0;
-
-  // Agregar propiedad para mensajes
-  successMessage: string = '';
-  errorMessage: string = '';
-
-  // Timers
-  private refreshTimer: any;
-  private currentSongTimer: any;
+   // Estados de la UI
+   activeSection = 'dashboard';
+   showSearch = false;
+   showRecentlyAdded = true;
+   isEditingSchedules = false;
+ 
+   // Datos
+   songs: any[] = [];
+   queue: any[] = [];
+   recentlyAddedSongs: any[] = [];
+   searchResults: any[] = [];
+   schedules: any[] = [];
+   spotifyStatus: any = null;
+   adminCurrentlyPlaying: any = null;
+ 
+   // Estados de carga
+   isLoading = false;
+   isLoadingQueue = false;
+   isLoadingCurrent = false;
+   isPlaying = false;
+ 
+   // Búsqueda
+   searchQuery = '';
+ 
+   // Votos del admin
+   adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
+ 
+   // Estadísticas
+   totalVotes: number = 0;
+   uniqueVoters: number = 0;
+ 
+   // Mensajes
+   successMessage: string = '';
+   errorMessage: string = '';
+   actionInProgress: string = '';
+ 
+   // Timers
+   private refreshTimer: any;
+   private currentSongTimer: any;
 
   constructor(
     private spotifyNowPlaying: SpotifyNowPlayingService,
@@ -155,21 +155,23 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Cargar canciones del ranking
   loadSongs() {
     this.isLoading = true;
-    this.votingService.getRankedSongs().subscribe({
+    // Forzar actualización sin caché
+    this.votingService.forceRefresh().subscribe({
       next: (songs) => {
         this.songs = songs;
         this.filterRecentlyAdded();
         this.calculateVotingStats();
         this.isLoading = false;
+        this.showMessage('Ranking actualizado correctamente');
       },
       error: (error) => {
         console.error('Error loading songs:', error);
         this.isLoading = false;
-        // Mostrar mensaje de error al usuario
-        alert('Error al cargar las canciones. Intenta nuevamente.');
+        this.showMessage('Error al cargar las canciones', false);
       }
     });
   }
+
   calculateVotingStats() {
     this.totalVotes = this.songs.reduce((sum, song) => sum + (song.votes || 0), 0);
     this.uniqueVoters = Math.floor(this.totalVotes * 0.7); // Estimación
@@ -197,7 +199,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error loading queue:', error);
         this.isLoadingQueue = false;
-        alert('Error al cargar la cola de reproducción.');
+        this.showMessage('Error al cargar la cola de reproducción', false);
       }
     });
   }
@@ -377,14 +379,43 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Quitar de la cola
-  removeFromQueue(trackUri: string) {
-    this.queueService.removeFromQueue(trackUri).subscribe({
-      next: () => {
+  addToQueueFromSearch(trackUri: string) {
+    this.actionInProgress = 'Agregando a la cola...';
+    this.queueService.addToQueue(trackUri).subscribe({
+      next: (response: any) => {
         this.loadQueue();
+        this.showMessage('Canción agregada a la cola correctamente');
+        this.actionInProgress = '';
       },
       error: (error) => {
-        console.error('Error removing from queue:', error);
+        console.error('Error adding to queue:', error);
+        this.showMessage('Error al agregar a la cola: ' + (error.error?.message || 'Error desconocido'), false);
+        this.actionInProgress = '';
+      }
+    });
+  }
+
+  addToQueueFromRanking(songId: string) {
+    if (confirm('¿Agregar esta canción a la cola de reproducción?')) {
+      const trackUri = `spotify:track:${songId}`;
+      this.addToQueueFromSearch(trackUri);
+    }
+  }
+
+  playNowFromSearch(trackUri: string) {
+    this.actionInProgress = 'Reproduciendo...';
+    this.spotifyNowPlaying.playTrack(trackUri).subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.getAdminCurrentlyPlaying();
+        }, 1000);
+        this.showMessage('Reproduciendo canción');
+        this.actionInProgress = '';
+      },
+      error: (error: any) => {
+        console.error('Error playing track:', error);
+        this.showMessage('Error al reproducir: ' + (error.error?.message || 'Error desconocido'), false);
+        this.actionInProgress = '';
       }
     });
   }
@@ -457,13 +488,15 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Eliminar canción
   deleteSong(songId: string) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta canción?')) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta canción del ranking?')) {
       this.votingService.deleteSong(songId).subscribe({
         next: () => {
           this.loadSongs();
+          this.showMessage('Canción eliminada correctamente');
         },
         error: (error) => {
           console.error('Error deleting song:', error);
+          this.showMessage('Error al eliminar la canción', false);
         }
       });
     }
@@ -475,9 +508,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       this.votingService.deleteAllVotes().subscribe({
         next: () => {
           this.loadSongs();
+          this.showMessage('Todos los votos han sido eliminados');
         },
         error: (error) => {
           console.error('Error deleting all votes:', error);
+          this.showMessage('Error al eliminar todos los votos', false);
         }
       });
     }
@@ -485,10 +520,19 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Forzar refresco
   forceRefresh() {
-    this.loadSongs();
-    this.loadQueue();
-    this.getSpotifyStatus();
-    this.getAdminCurrentlyPlaying();
+    this.showMessage('Actualizando todos los datos...');
+
+    // Cargar todo simultáneamente
+    Promise.all([
+      new Promise(resolve => this.loadSongs()),
+      new Promise(resolve => this.loadQueue()),
+      new Promise(resolve => this.getSpotifyStatus()),
+      new Promise(resolve => this.getAdminCurrentlyPlaying())
+    ]).then(() => {
+      this.showMessage('Todos los datos han sido actualizados');
+    }).catch(error => {
+      this.showMessage('Error al actualizar los datos', false);
+    });
   }
 
   // Alternar vista de cola

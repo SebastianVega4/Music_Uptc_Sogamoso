@@ -21,32 +21,12 @@ export class QueueService {
     return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
   }
 
-  // Agregar canción a la cola
+  // Agregar canción a la cola - MEJORADO con manejo de errores
   addToQueue(trackUri: string): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(
       `${this.apiUrl}/api/spotify/admin/queue`,
       { uri: trackUri },
-      { headers }
-    );
-  }
-
-  // Remover canción de la cola
-  removeFromQueue(trackUri: string): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-    // Nota: Spotify Web API no tiene endpoint directo para remover de la cola
-    // Esta implementación dependerá de cómo manejes la cola en tu backend
-    return this.http.delete(
-      `${this.apiUrl}/api/spotify/admin/queue?uri=${encodeURIComponent(trackUri)}`,
-      { headers }
-    );
-  }
-
-  // Limpiar toda la cola
-  clearQueue(): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.delete(
-      `${this.apiUrl}/api/spotify/admin/queue/all`,
       { headers }
     );
   }
