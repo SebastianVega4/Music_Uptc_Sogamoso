@@ -56,6 +56,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
    // Timers
    private refreshTimer: any;
    private currentSongTimer: any;
+   private recentlyAddedTimer: any;
 
   constructor(
     private spotifyNowPlaying: SpotifyNowPlayingService,
@@ -64,7 +65,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     private scheduleService: ScheduleService,
     private authService: AuthService,
     private router: Router,
-    private queueService: QueueService
+    private queueService: QueueService,
   ) { }
 
   ngOnInit() {
@@ -102,6 +103,9 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     if (this.currentSongTimer) {
       clearInterval(this.currentSongTimer);
     }
+    if (this.recentlyAddedTimer) {
+      clearInterval(this.recentlyAddedTimer);
+    }
   }
 
   loadInitialData() {
@@ -119,11 +123,16 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       this.loadQueue();
       this.getSpotifyStatus();
     }, 30000);
-
+  
     // Actualizar la canción actual cada 5 segundos
     this.currentSongTimer = setInterval(() => {
       this.getAdminCurrentlyPlaying();
     }, 5000);
+  
+    // Actualizar recién agregadas cada 15 segundos
+    this.recentlyAddedTimer = setInterval(() => {
+      this.filterRecentlyAdded();
+    }, 15000);
   }
 
   setActiveSection(section: string) {
@@ -181,11 +190,19 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   filterRecentlyAdded() {
     const sixHoursAgo = new Date();
     sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
+  
+    this.recentlyAddedSongs = this.songs
+      .filter(song => {
+        const songDate = new Date(song.createdat);
+        return songDate > sixHoursAgo;
+      })
+      .sort((a, b) => new Date(b.createdat).getTime() - new Date(a.createdat).getTime())
+      .slice(0, 8); // Limitar a 8 canciones
+  }
 
-    this.recentlyAddedSongs = this.songs.filter(song => {
-      const songDate = new Date(song.createdat);
-      return songDate > sixHoursAgo;
-    }).slice(0, 8); // Limitar a 8 canciones
+  addToQueueFromRecent(song: any) {
+    const trackUri = `spotify:track:${song.id}`;
+    this.addToQueueFromSearch(trackUri);
   }
 
   // Cargar cola de reproducción
@@ -389,7 +406,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error adding to queue:', error);
-        this.showMessage('Error al agregar a la cola: ' + (error.error?.message || 'Error desconocido'), false);
+        this.showMessage('Error al agregar a la cola: ' + error.message, false);
         this.actionInProgress = '';
       }
     });

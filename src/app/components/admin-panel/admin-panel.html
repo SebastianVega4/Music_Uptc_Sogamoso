@@ -370,6 +370,9 @@
                   [class.active]="hasAdminDisliked(song.id)" title="No me gusta">
                   <i class="fas fa-thumbs-down"></i>
                 </button>
+                <button class="action-btn" (click)="addToQueueFromRecent(song)" title="Agregar a cola">
+                  <i class="fas fa-plus"></i>
+                </button>
               </div>
             </div>
           </div>
