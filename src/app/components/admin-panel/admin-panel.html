@@ -342,6 +342,51 @@
         </div>
       </div>
 
+      <!-- Search Section (Always visible) -->
+      <div class="search-section">
+        <div class="search-header">
+          <h3>Buscar en Spotify</h3>
+          <button class="btn-toggle" (click)="showSearch = !showSearch">
+            {{ showSearch ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+        <div class="search-content" *ngIf="showSearch">
+          <div class="search-bar">
+            <input type="text" placeholder="Buscar canciones en Spotify..." [(ngModel)]="searchQuery"
+              (keyup.enter)="searchSpotify()">
+            <button class="search-btn" (click)="searchSpotify()">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <div class="search-results" *ngIf="searchResults.length > 0">
+            <div class="result-item" *ngFor="let track of searchResults">
+              <img [src]="track.image" alt="Album cover" class="result-image"
+                onerror="this.src='assets/default-song.png'">
+              <div class="result-info">
+                <h4>{{ track.name }}</h4>
+                <p>{{ track.artists[0]?.name }}</p>
+                <span class="album-name">{{ track.album.name }}</span>
+              </div>
+              <div class="result-actions">
+                <button class="vote-btn like" (click)="voteFromSearch(track, false)" title="Votar positivo">
+                  <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="vote-btn dislike" (click)="voteFromSearch(track, true)" title="Votar negativo">
+                  <i class="fas fa-thumbs-down"></i>
+                </button>
+                <!-- BOTONES CORREGIDOS -->
+                <button class="action-btn" (click)="addToQueueFromSearch(track.uri)" title="Agregar a cola">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button class="action-btn" (click)="playNowFromSearch(track.uri)" title="Reproducir ahora">
+                  <i class="fas fa-play"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Recently Added Section (Collapsible) -->
       <div class="section recently-added-section">
         <div class="section-header collapsible" (click)="toggleRecentlyAdded()">
@@ -383,53 +428,6 @@
               <p>No hay canciones recientes</p>
             </div>
           </ng-template>
-        </div>
-      </div>
-
-      <!-- Search Section (Always visible) -->
-      <div class="search-section">
-        <div class="search-header">
-          <h3>Buscar en Spotify</h3>
-          <button class="btn-toggle" (click)="showSearch = !showSearch">
-            {{ showSearch ? 'Ocultar' : 'Mostrar' }}
-          </button>
-        </div>
-
-        <div class="search-content" *ngIf="showSearch">
-          <div class="search-bar">
-            <input type="text" placeholder="Buscar canciones en Spotify..." [(ngModel)]="searchQuery"
-              (keyup.enter)="searchSpotify()">
-            <button class="search-btn" (click)="searchSpotify()">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-
-          <div class="search-results" *ngIf="searchResults.length > 0">
-            <div class="result-item" *ngFor="let track of searchResults">
-              <img [src]="track.image" alt="Album cover" class="result-image"
-                onerror="this.src='assets/default-song.png'">
-              <div class="result-info">
-                <h4>{{ track.name }}</h4>
-                <p>{{ track.artists[0]?.name }}</p>
-                <span class="album-name">{{ track.album.name }}</span>
-              </div>
-              <div class="result-actions">
-                <button class="vote-btn like" (click)="voteFromSearch(track, false)" title="Votar positivo">
-                  <i class="fas fa-thumbs-up"></i>
-                </button>
-                <button class="vote-btn dislike" (click)="voteFromSearch(track, true)" title="Votar negativo">
-                  <i class="fas fa-thumbs-down"></i>
-                </button>
-                <!-- BOTONES CORREGIDOS -->
-                <button class="action-btn" (click)="addToQueueFromSearch(track.uri)" title="Agregar a cola">
-                  <i class="fas fa-plus"></i>
-                </button>
-                <button class="action-btn" (click)="playNowFromSearch(track.uri)" title="Reproducir ahora">
-                  <i class="fas fa-play"></i>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -197,7 +197,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
         return songDate > sixHoursAgo;
       })
       .sort((a, b) => new Date(b.createdat).getTime() - new Date(a.createdat).getTime())
-      .slice(0, 8); // Limitar a 8 canciones
+      .slice(0, 15); // Limitar a 15 canciones mostradas
   }
 
   addToQueueFromRecent(song: any) {
