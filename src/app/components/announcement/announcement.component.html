@@ -1,59 +1,62 @@
 <div class="announcement-container card">
-    <div class="card-header d-flex justify-content-between align-items-center" >
-      <div>
-        <i class="fas fa-info-circle me-2"></i>Información Importante
-      </div>
-      <button class="btn-close" (click)="hideAnnouncement()" title="Abrir" *ngIf="!isHidden">
-        <i>Cerrar</i>
-      </button>
-      <button class="btn-close" (click)="nohideAnnouncement()" title="Cerrar" *ngIf="isHidden">
-        <i>Abrir</i>
-      </button>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <i class="fas fa-info-circle me-2"></i>Información Importante
     </div>
-    <div class="card-body" *ngIf="!isHidden">
-      <div class="announcement-content">
-        <div class="alert alert-info">
-          <h4><i class="fas fa-exclamation-triangle me-2"></i>A nuestros queridos usuarios:</h4>
-          <p>-Una cancion es eliminada automaticamente al completar <strong>10 Dislikes </strong></p>
-
-          <p>-Cancion que entre en reproducion se eliminara automaticamente del Ranking</p>
-
-          <p>-Solo se puede votar una vez por cancion </p>
-
-          <p>-Toda Cacion Reproducida va para Ranking Historico</p>
-
-          <p>-Cancion con menos de 10 votos no se tiene en cuenta para ser reproducidas</p>
-
-          <p>-Cada semana se eliminaran todas las canciones del Ranking </p>
-          
-          <p>-El administrador tiene la potestad de evaluar cada sugerencia y decidir si es apropiada para el momento o ambiente.</p>
-          
-          <p><strong>Agradecemos enormemente su entusiasmo y participación. ¡Sigan votando por su música favorita!</strong></p>
-
-          <p><strong> UPTC Music - V2.3 </strong></p>
-        </div>
-        
-        <div class="developer-info">
-          <div class="d-flex align-items-start">
-            <div class="me-3 mt-1">
-              <i class="fas fa-laptop-code text-primary"></i>
-            </div>
-            <div>
-              <p class="mb-1">Desarrollado por <b href="https://www.instagram.com/sebastian.vegar/">Sebastian Vega</b>:</p>
-              <div class="social-links">
-                <a href="https://github.com/SebastianVega4" target="_blank">
-                  <i class="fab fa-github me-1"></i>GitHub
-                </a>
-                <a href="https://www.linkedin.com/in/johan-sebastian-vega-ruiz-b1292011b/" target="_blank">
-                  <i class="fab fa-linkedin me-1"></i>LinkedIn
-                </a>
-                <a href="https://www.instagram.com/sebastian.vegar/" target="_blank">
-                  <i class="fab fa-instagram me-1"></i>Instagram
-                </a>
-              </div>
+    <button class="btn-close" (click)="hideAnnouncement()" title="Abrir" *ngIf="!isHidden">
+      <i>Cerrar</i>
+    </button>
+    <button class="btn-close" (click)="nohideAnnouncement()" title="Cerrar" *ngIf="isHidden">
+      <i>Abrir</i>
+    </button>
+  </div>
+  <div class="card-body" *ngIf="!isHidden">
+    <div class="announcement-content">
+      <div class="developer-info">
+        <div class="d-flex align-items-start">
+          <div class="me-3 mt-1">
+            <i class="fas fa-laptop-code text-primary"></i>
+          </div>
+          <div>
+            <p class="mb-1">Desarrollado por <b href="https://www.instagram.com/sebastian.vegar/">Sebastian Vega</b>:
+            </p>
+            <div class="social-links">
+              <a href="https://github.com/SebastianVega4" target="_blank">
+                <i class="fab fa-github me-1"></i>GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/johan-sebastian-vega-ruiz-b1292011b/" target="_blank">
+                <i class="fab fa-linkedin me-1"></i>LinkedIn
+              </a>
+              <a href="https://www.instagram.com/sebastian.vegar/" target="_blank">
+                <i class="fab fa-instagram me-1"></i>Instagram
+              </a>
             </div>
           </div>
         </div>
       </div>
+      <div class="developer-info">     </div>
+        UptcMusic.com 2025 - V2.5
+ 
+      <div class="alert alert-info">
+        <h4><i class="fas fa-exclamation-triangle me-2"></i>A nuestros queridos usuarios:</h4>
+        <p>-Una cancion es eliminada automaticamente al completar <strong>10 Dislikes </strong></p>
+
+        <p>-Cancion que entre en reproducion se eliminara automaticamente del Ranking</p>
+
+        <p>-Solo se puede votar una vez por cancion </p>
+
+        <p>-Toda Cacion Reproducida va para Ranking Historico</p>
+
+        <p>-Cancion con menos de 10 votos no se tiene en cuenta para ser reproducidas</p>
+
+        <p>-Cada semana se eliminaran todas las canciones del Ranking </p>
+
+        <p>-El administrador tiene la potestad de evaluar cada sugerencia y decidir si es apropiada para el momento o
+          ambiente.</p>
+
+        <p><strong>Agradecemos enormemente su entusiasmo y participación. ¡Sigan votando por su música
+            favorita!</strong></p>
+      </div>
     </div>
   </div>
+</div>
