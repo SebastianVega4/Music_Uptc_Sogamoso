@@ -68,20 +68,19 @@ export class VotingComponent implements OnInit, OnDestroy {
 
   vote(voteType: string): void {
     if (this.hasVoted(voteType)) {
-      return; // Ya votó por esta opción
+      this.showNotification('Ya has votado por esta opción', 'warning');
+      return;
     }
-
+  
     this.votingService.submitVote(voteType).subscribe({
       next: (response) => {
-        // Agregar a la lista de votos del usuario
         this.userVotes.push(voteType);
         this.lastVoteType = voteType;
         this.votingStatus = response.status;
+        this.showNotification(`Voto registrado: ${this.getVoteTypeName(voteType)}`, 'success');
         
-        // Forzar detección de cambios
         this.cdr.detectChanges();
         
-        // Mostrar mensaje temporal
         setTimeout(() => {
           this.lastVoteType = '';
           this.cdr.detectChanges();
@@ -89,12 +88,52 @@ export class VotingComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error submitting vote:', error);
+        let errorMessage = 'Error al votar';
+        
         if (error.error?.error) {
-          alert(error.error.error);
+          errorMessage = error.error.error;
+        } else if (error.status === 409) {
+          errorMessage = 'Ya has votado en esta sesión';
+        } else if (error.status === 400) {
+          errorMessage = 'Solicitud incorrecta';
         }
+        
+        this.showNotification(errorMessage, 'error');
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private showNotification(message: string, type: 'success' | 'error' | 'warning'): void {
+    // Puedes implementar un sistema de notificaciones o usar alertas nativas
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+      toast.style.background = 'linear-gradient(135deg, #1ed760, #19a34a)';
+    } else if (type === 'error') {
+      toast.style.background = 'linear-gradient(135deg, #ff4d4d, #cc0000)';
+    } else {
+      toast.style.background = 'linear-gradient(135deg, #ff9a00, #e67e00)';
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
   }
 
   hasVoted(voteType: string): boolean {
