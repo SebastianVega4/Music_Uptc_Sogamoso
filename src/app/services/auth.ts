@@ -48,12 +48,19 @@ export class AuthService {
   }
 
   getAuthHeaders(): HttpHeaders {
-    const token = this.getAuthToken();
+    const token = this.getToken(); // Obtener el token JWT
     if (token) {
       return new HttpHeaders({
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       });
     }
-    return new HttpHeaders();
+    return new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+  }
+  
+  getToken(): string | null {
+    return localStorage.getItem('adminToken');
   }
 }
