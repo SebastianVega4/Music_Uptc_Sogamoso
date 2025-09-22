@@ -7,62 +7,62 @@
     border: 1px solid rgba(30, 215, 96, 0.3);
     width: 100%;
     max-width: 100%;
-    box-shadow: 
-      0 0 20px rgba(30, 215, 96, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 0 20px rgba(30, 215, 96, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
-    
+
     &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(30, 215, 96, 0.8), 
-        transparent);
-      animation: neonGlow 3s ease-in-out infinite;
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(30, 215, 96, 0.8),
+                transparent);
+        animation: neonGlow 3s ease-in-out infinite;
     }
-  }
-  
-  .voting-header {
+}
+
+.voting-header {
     margin-bottom: 1rem;
     text-align: center;
-    
+
     h2 {
-      color: #1ed760;
-      margin: 0 0 0.5rem 0;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-shadow: 0 0 10px rgba(30, 215, 96, 0.5);
-      letter-spacing: 0.5px;
+        color: #1ed760;
+        margin: 0 0 0.5rem 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-shadow: 0 0 10px rgba(30, 215, 96, 0.5);
+        letter-spacing: 0.5px;
     }
-  }
-  
-  .total-votes {
+}
+
+.total-votes {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.85rem;
-    
+
     i {
-      color: #1ed760;
+        color: #1ed760;
     }
-  }
-  
-  .voting-options {
+}
+
+.voting-options {
     display: flex;
     justify-content: space-between;
     gap: 0.8rem;
     margin-bottom: 1rem;
-  }
-  
-  .vote-btn {
+}
+
+.vote-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -78,109 +78,118 @@
     min-width: 0;
     min-height: 80px;
     position: relative;
-    
+
     &:hover:not(:disabled) {
-      background: rgba(30, 215, 96, 0.2);
-      border-color: #1ed760;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(30, 215, 96, 0.3);
+        background: rgba(30, 215, 96, 0.2);
+        border-color: #1ed760;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 215, 96, 0.3);
     }
-    
+
     &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
+        opacity: 0.7;
+        cursor: not-allowed;
     }
-    
+
     &.voted {
-      background: rgba(30, 215, 96, 0.25);
-      border-color: #1ed760;
-      
-      .btn-content {
-        i, span, .vote-count {
-          color: #1ed760;
-          text-shadow: 0 0 8px rgba(30, 215, 96, 0.6);
+        background: rgba(30, 215, 96, 0.25);
+        border-color: #1ed760;
+
+        .btn-content {
+
+            i,
+            span,
+            .vote-count {
+                color: #1ed760;
+                text-shadow: 0 0 8px rgba(30, 215, 96, 0.6);
+            }
         }
-      }
     }
-    
+
     // Estilos específicos para cada tipo de botón
     &.next {
-      border-color: rgba(30, 215, 96, 0.4);
-      
-      &:hover:not(:disabled) {
-        border-color: #1ed760;
-      }
+        border-color: rgba(30, 215, 96, 0.4);
+
+        &:hover:not(:disabled) {
+            border-color: #1ed760;
+        }
     }
-    
+
     &.genre {
-      border-color: rgba(86, 154, 247, 0.4);
-      
-      &:hover:not(:disabled) {
-        border-color: #569af7;
-      }
-      
-      &.voted {
-        background: rgba(86, 154, 247, 0.25);
-        border-color: #569af7;
-        
-        .btn-content {
-          i, span, .vote-count {
-            color: #569af7;
-            text-shadow: 0 0 8px rgba(86, 154, 247, 0.6);
-          }
+        border-color: rgba(86, 154, 247, 0.4);
+
+        &:hover:not(:disabled) {
+            border-color: #569af7;
         }
-      }
+
+        &.voted {
+            background: rgba(86, 154, 247, 0.25);
+            border-color: #569af7;
+
+            .btn-content {
+
+                i,
+                span,
+                .vote-count {
+                    color: #569af7;
+                    text-shadow: 0 0 8px rgba(86, 154, 247, 0.6);
+                }
+            }
+        }
     }
-    
+
     &.repeat {
-      border-color: rgba(255, 154, 0, 0.4);
-      
-      &:hover:not(:disabled) {
-        border-color: #ff9a00;
-      }
-      
-      &.voted {
-        background: rgba(255, 154, 0, 0.25);
-        border-color: #ff9a00;
-        
-        .btn-content {
-          i, span, .vote-count {
-            color: #ff9a00;
-            text-shadow: 0 0 8px rgba(255, 154, 0, 0.6);
-          }
+        border-color: rgba(255, 154, 0, 0.4);
+
+        &:hover:not(:disabled) {
+            border-color: #ff9a00;
         }
-      }
+
+        &.voted {
+            background: rgba(255, 154, 0, 0.25);
+            border-color: #ff9a00;
+
+            .btn-content {
+
+                i,
+                span,
+                .vote-count {
+                    color: #ff9a00;
+                    text-shadow: 0 0 8px rgba(255, 154, 0, 0.6);
+                }
+            }
+        }
     }
-  }
-  
-  .btn-content {
+}
+
+.btn-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
     z-index: 2;
-    
+
     i {
-      font-size: 1.2rem;
-      transition: all 0.3s ease;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
     }
-    
+
     span {
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-align: center;
-      transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-align: center;
+        transition: all 0.3s ease;
     }
-    
+
     .vote-count {
-      font-weight: 700;
-      font-size: 1rem;
-      color: white;
-      transition: all 0.3s ease;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+        transition: all 0.3s ease;
     }
-  }
-  
-  .pulse-ring {
+}
+
+.pulse-ring {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -191,9 +200,9 @@
     border-radius: 50%;
     animation: pulse 2s infinite;
     opacity: 0.6;
-  }
-  
-  .voting-feedback {
+}
+
+.voting-feedback {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -203,111 +212,226 @@
     color: #1ed760;
     font-weight: 600;
     font-size: 0.9rem;
+
+    i {
+        animation: bounce 0.5s ease-in-out;
+    }
+}
+
+// Animaciones
+@keyframes neonGlow {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.3;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.6;
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+    .voting-container {
+        padding: 0.8rem;
+        margin: 0.8rem 0;
+    }
+
+    .voting-options {
+        gap: 0.5rem;
+    }
+
+    .vote-btn {
+        padding: 0.6rem 0.4rem;
+        min-height: 70px;
+
+        .btn-content {
+            i {
+                font-size: 1rem;
+            }
+
+            span {
+                font-size: 0.7rem;
+            }
+
+            .vote-count {
+                font-size: 0.9rem;
+            }
+        }
+    }
+
+    .voting-header h2 {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .voting-options {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .vote-btn {
+        min-height: 60px;
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 0.8rem;
+
+        .btn-content {
+            flex-direction: row;
+            gap: 0.8rem;
+            align-items: center;
+
+            i {
+                font-size: 1.1rem;
+                margin-bottom: 0;
+            }
+
+            span {
+                font-size: 0.8rem;
+                flex-grow: 1;
+                text-align: left;
+            }
+
+            .vote-count {
+                font-size: 1rem;
+            }
+        }
+    }
+}
+
+.voting-container {
+    // Estilos existentes...
+    position: relative;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+
+    &.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(30, 215, 96, 0.3);
+        border-top: 3px solid #1ed760;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// Agregar animación de actualización a los contadores de votos
+.vote-count {
+    transition: all 0.3s ease;
+
+    &.updating {
+        animation: pulseUpdate 0.5s ease;
+        color: #1ed760;
+    }
+}
+
+@keyframes pulseUpdate {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(180deg);
+    }
     
     i {
-      animation: bounce 0.5s ease-in-out;
-    }
-  }
-  
-  // Animaciones
-  @keyframes neonGlow {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-  
-  @keyframes pulse {
-    0% {
-      transform: translate(-50%, -50%) scale(0.8);
-      opacity: 0.6;
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.1);
-      opacity: 0.3;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(0.8);
-      opacity: 0.6;
-    }
-  }
-  
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-      transform: translateY(0);
-    }
-    40% {
-      transform: translateY(-5px);
-    }
-    60% {
-      transform: translateY(-3px);
-    }
-  }
-  
-  // Estilos responsivos
-  @media (max-width: 768px) {
-    .voting-container {
-      padding: 0.8rem;
-      margin: 0.8rem 0;
-    }
-    
-    .voting-options {
-      gap: 0.5rem;
-    }
-    
-    .vote-btn {
-      padding: 0.6rem 0.4rem;
-      min-height: 70px;
-      
-      .btn-content {
-        i {
-          font-size: 1rem;
-        }
-        
-        span {
-          font-size: 0.7rem;
-        }
-        
-        .vote-count {
-          font-size: 0.9rem;
-        }
-      }
-    }
-    
-    .voting-header h2 {
-      font-size: 1rem;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .voting-options {
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-    
-    .vote-btn {
-      min-height: 60px;
-      flex-direction: row;
-      justify-content: flex-start;
-      padding: 0.8rem;
-      
-      .btn-content {
-        flex-direction: row;
-        gap: 0.8rem;
-        align-items: center;
-        
-        i {
-          font-size: 1.1rem;
-          margin-bottom: 0;
-        }
-        
-        span {
-          font-size: 0.8rem;
-          flex-grow: 1;
-          text-align: left;
-        }
-        
-        .vote-count {
-          font-size: 1rem;
-        }
-      }
+      color: white;
+      font-size: 14px;
     }
   }

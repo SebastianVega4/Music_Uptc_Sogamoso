@@ -16,8 +16,13 @@ export class VotingComponent implements OnInit, OnDestroy {
   currentSong: any = null;
   userVotes: string[] = []; // Array para trackear qué opciones ya votó
   lastVoteType: string = '';
+  isLoading: boolean = false;
+  isUpdatingNext: boolean = false;
+  isUpdatingGenre: boolean = false;
+  isUpdatingRepeat: boolean = false;
   private votingSubscription: Subscription | undefined;
   private songSubscription: Subscription | undefined;
+  private statusPollingSubscription: Subscription | undefined;
 
   constructor(
     private votingService: VotingService,
@@ -28,7 +33,7 @@ export class VotingComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadVotingStatus();
     
-    // Actualizar cada 5 segundos
+    // Polling para actualizar estadísticas cada 3 segundos
     this.votingSubscription = interval(3000).subscribe(() => {
       this.loadVotingStatus();
     });
@@ -41,9 +46,16 @@ export class VotingComponent implements OnInit, OnDestroy {
         if (song && song.id !== this.votingStatus?.current_song_id) {
           this.userVotes = [];
           this.lastVoteType = '';
+          // Forzar actualización inmediata
+          this.loadVotingStatus();
         }
       }
     );
+  }
+
+  forceRefresh(): void {
+    this.loadVotingStatus();
+    this.showNotification('Votaciones actualizadas', 'success');
   }
 
   ngOnDestroy(): void {
@@ -53,10 +65,13 @@ export class VotingComponent implements OnInit, OnDestroy {
     if (this.songSubscription) {
       this.songSubscription.unsubscribe();
     }
+    if (this.statusPollingSubscription) {
+      this.statusPollingSubscription.unsubscribe();
+    }
   }
 
   loadVotingStatus(): void {
-    this.votingService.getVotingStatus().subscribe({
+    this.votingService.getVotingStatusImmediate().subscribe({
       next: (status) => {
         this.votingStatus = status;
       },
@@ -79,6 +94,9 @@ export class VotingComponent implements OnInit, OnDestroy {
         this.votingStatus = response.status;
         this.showNotification(`Voto registrado: ${this.getVoteTypeName(voteType)}`, 'success');
         
+        // Actualizar estadísticas inmediatamente después de votar
+        this.loadVotingStatus();
+        
         this.cdr.detectChanges();
         
         setTimeout(() => {
@@ -94,6 +112,8 @@ export class VotingComponent implements OnInit, OnDestroy {
           // Si ya votó por esta categoría específica, agregarla a userVotes
           this.userVotes.push(voteType);
           errorMessage = error.message;
+          // Actualizar estadísticas para reflejar el voto existente
+          this.loadVotingStatus();
         }
         
         this.showNotification(errorMessage, 'warning');
@@ -103,7 +123,7 @@ export class VotingComponent implements OnInit, OnDestroy {
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'warning'): void {
-    // Puedes implementar un sistema de notificaciones o usar alertas nativas
+    // Implementación existente de notificaciones...
     const toast = document.createElement('div');
     toast.style.cssText = `
       position: fixed;
@@ -130,7 +150,11 @@ export class VotingComponent implements OnInit, OnDestroy {
     
     setTimeout(() => {
       toast.style.animation = 'slideOut 0.3s ease';
-      setTimeout(() => document.body.removeChild(toast), 300);
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
     }, 3000);
   }
 

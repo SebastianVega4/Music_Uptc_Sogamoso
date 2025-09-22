@@ -12,7 +12,10 @@ export class VotingService {
   private apiUrl = environment.apiUrl;
   private cachedSongs: any[] = [];
   private lastFetchTime: number = 0;
-  private readonly CACHE_DURATION = 30000;
+  private readonly CACHE_DURATION = 5000;
+  private cachedVotingStatus: any = null;
+  private lastVotingStatusFetch: number = 0;
+  private readonly VOTING_STATUS_CACHE_DURATION = 2000; // 2 segundos
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -26,6 +29,11 @@ export class VotingService {
   private invalidateCache(): void {
     this.cachedSongs = [];
     this.lastFetchTime = 0;
+  }
+
+  invalidateVotingStatusCache(): void {
+    this.cachedVotingStatus = null;
+    this.lastVotingStatusFetch = 0;
   }
 
   // Procesar y ordenar las canciones (método reusable)
@@ -164,11 +172,16 @@ export class VotingService {
   }
 
   getVotingStatus(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/api/voting/status`);
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/voting/status`);
+    return this.http.get(url);
   }
   
   submitVote(voteType: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/api/voting/vote`, { vote_type: voteType }).pipe(
+      tap(() => {
+        // Invalidar caché después de un voto exitoso
+        this.invalidateVotingStatusCache();
+      }),
       catchError(error => {
         let errorMessage = 'Error al votar';
         
@@ -184,9 +197,15 @@ export class VotingService {
           errorMessage = 'Error de conexión';
         }
         
-        // Lanzar un error con un mensaje más descriptivo
+        // Invalidar caché también en caso de error (por si acaso)
+        this.invalidateVotingStatusCache();
+        
         return throwError(() => new Error(errorMessage));
       })
     );
+  }
+  getVotingStatusImmediate(): Observable<any> {
+    const url = this.getCacheBustedUrl(`${this.apiUrl}/api/voting/status`);
+    return this.http.get(url);
   }
 }

@@ -11,11 +11,15 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment'; // ← Asegúrate de tener esto
 
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(), // ← Para HttpClient
-    provideClientHydration(), // ← Para SSR/hydration
+
+    provideClientHydration(),
+    // Firebase providers
+
     // Firebase providers
     importProvidersFrom(
       provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
