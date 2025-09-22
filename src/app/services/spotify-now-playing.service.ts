@@ -173,7 +173,11 @@ export class SpotifyNowPlayingService {
 
   checkAndRemovePlayingSongFromRanking(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/api/spotify/admin/check-playing-song`, {}, { headers });
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/check-playing-song`, 
+      {}, 
+      { headers }
+    );
   }
 
   // Obtener la cola de reproducción actual

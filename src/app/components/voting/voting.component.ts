@@ -34,7 +34,7 @@ export class VotingComponent implements OnInit, OnDestroy {
     this.loadVotingStatus();
     
     // Polling para actualizar estadísticas cada 3 segundos
-    this.votingSubscription = interval(3000).subscribe(() => {
+    this.votingSubscription = interval(2000).subscribe(() => {
       this.loadVotingStatus();
     });
     
@@ -73,10 +73,17 @@ export class VotingComponent implements OnInit, OnDestroy {
   loadVotingStatus(): void {
     this.votingService.getVotingStatusImmediate().subscribe({
       next: (status) => {
-        this.votingStatus = status;
+        // Verificar que los datos sean válidos
+        if (status && status.votes) {
+          this.votingStatus = status;
+        } else {
+          console.warn('Datos de votación inválidos recibidos:', status);
+        }
       },
       error: (error) => {
         console.error('Error loading voting status:', error);
+        // Intentar recargar después de un breve delay
+        setTimeout(() => this.loadVotingStatus(), 1000);
       }
     });
   }

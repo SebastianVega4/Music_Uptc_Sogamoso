@@ -12,10 +12,10 @@ export class VotingService {
   private apiUrl = environment.apiUrl;
   private cachedSongs: any[] = [];
   private lastFetchTime: number = 0;
-  private readonly CACHE_DURATION = 5000;
+  private readonly CACHE_DURATION = 2000;
   private cachedVotingStatus: any = null;
   private lastVotingStatusFetch: number = 0;
-  private readonly VOTING_STATUS_CACHE_DURATION = 2000; // 2 segundos
+  private readonly VOTING_STATUS_CACHE_DURATION = 1000;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
