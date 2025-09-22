@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, interval, of } from 'rxjs';
+import { Observable, interval, of, throwError } from 'rxjs';
 import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
@@ -176,11 +176,16 @@ export class VotingService {
           errorMessage = error.error.error;
         } else if (error.status === 400) {
           errorMessage = 'Solicitud incorrecta';
+        } else if (error.status === 409) {
+          errorMessage = error.error?.error || 'Ya has votado por esta opción';
         } else if (error.status === 500) {
           errorMessage = 'Error del servidor';
+        } else if (error.status === 0) {
+          errorMessage = 'Error de conexión';
         }
         
-        throw new Error(errorMessage);
+        // Lanzar un error con un mensaje más descriptivo
+        return throwError(() => new Error(errorMessage));
       })
     );
   }

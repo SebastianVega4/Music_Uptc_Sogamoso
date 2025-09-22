@@ -88,17 +88,15 @@ export class VotingComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error submitting vote:', error);
-        let errorMessage = 'Error al votar';
         
-        if (error.error?.error) {
-          errorMessage = error.error.error;
-        } else if (error.status === 409) {
-          errorMessage = 'Ya has votado en esta sesión';
-        } else if (error.status === 400) {
-          errorMessage = 'Solicitud incorrecta';
+        let errorMessage = 'Error al votar';
+        if (error.message.includes('Ya has votado por')) {
+          // Si ya votó por esta categoría específica, agregarla a userVotes
+          this.userVotes.push(voteType);
+          errorMessage = error.message;
         }
         
-        this.showNotification(errorMessage, 'error');
+        this.showNotification(errorMessage, 'warning');
         this.cdr.detectChanges();
       }
     });
