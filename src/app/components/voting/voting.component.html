@@ -1,30 +1,39 @@
 <div class="voting-container" *ngIf="votingStatus && currentSong?.is_playing">
     <div class="voting-header">
-      <h4>Votación Actual</h4>
+      <h5>¿Qué te gustaría escuchar después?</h5>
+      <small>Total votos: {{ votingStatus.total_votes }}</small>
     </div>
     
     <div class="voting-options">
-      <button class="vote-btn next" (click)="vote('next')" [disabled]="hasVoted">
+      <button class="vote-btn next" 
+              (click)="vote('next')" 
+              [class.voted]="hasVoted('next')"
+              [disabled]="hasVoted('next')">
         <i class="fas fa-forward"></i>
-        <span>Siguiente canción</span>
-        <small>{{ votingStatus.votes.next }} votos</small>
+        <span>Siguiente</span>
+        <small>{{ votingStatus.votes.next }}</small>
       </button>
       
-      <button class="vote-btn genre" (click)="vote('genre_change')" [disabled]="hasVoted">
-        <i class="fas fa-music"></i>
-        <span>Cambiar de género</span>
-        <small>{{ votingStatus.votes.genre_change }} votos</small>
+      <button class="vote-btn genre" 
+              (click)="vote('genre_change')"
+              [class.voted]="hasVoted('genre_change')"
+              [disabled]="hasVoted('genre_change')">
+        <i class="fas fa-random"></i>
+        <span>Cambiar género</span>
+        <small>{{ votingStatus.votes.genre_change }}</small>
       </button>
       
-      <button class="vote-btn repeat" (click)="vote('repeat')" [disabled]="hasVoted">
+      <button class="vote-btn repeat" 
+              (click)="vote('repeat')"
+              [class.voted]="hasVoted('repeat')"
+              [disabled]="hasVoted('repeat')">
         <i class="fas fa-redo"></i>
-        <span>Repetir género</span>
-        <small>{{ votingStatus.votes.repeat }} votos</small>
+        <span>Mismo género</span>
+        <small>{{ votingStatus.votes.repeat }}</small>
       </button>
     </div>
     
-    <div class="voting-stats">
-      <p>Total de votos: {{ votingStatus.total_votes }}</p>
-      <p *ngIf="hasVoted" class="voted-message">¡Ya has votado en esta sesión!</p>
+    <div class="voting-feedback" *ngIf="lastVoteType">
+      <small>Votaste por: {{ getVoteTypeName(lastVoteType) }}</small>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, interval, of } from 'rxjs';
-import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 
@@ -168,6 +168,20 @@ export class VotingService {
   }
   
   submitVote(voteType: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/voting/vote`, { vote_type: voteType });
+    return this.http.post(`${this.apiUrl}/api/voting/vote`, { vote_type: voteType }).pipe(
+      catchError(error => {
+        let errorMessage = 'Error al votar';
+        
+        if (error.error?.error) {
+          errorMessage = error.error.error;
+        } else if (error.status === 400) {
+          errorMessage = 'Solicitud incorrecta';
+        } else if (error.status === 500) {
+          errorMessage = 'Error del servidor';
+        }
+        
+        throw new Error(errorMessage);
+      })
+    );
   }
 }

@@ -2,32 +2,34 @@
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1rem;
     margin: 1rem 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 400px;
   }
   
   .voting-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     text-align: center;
     
-    h4 {
+    h5 {
       color: var(--text-primary);
-      margin-bottom: 0.5rem;
-      font-weight: 700;
+      margin: 0 0 0.25rem 0;
+      font-weight: 600;
+      font-size: 0.95rem;
     }
     
-    p {
+    small {
       color: var(--text-secondary);
-      margin: 0;
+      font-size: 0.8rem;
     }
   }
   
   .voting-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
   }
   
   .vote-btn {
@@ -35,75 +37,107 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.2rem 1rem;
+    padding: 0.6rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     background: rgba(42, 42, 42, 0.6);
     color: var(--text-primary);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     cursor: pointer;
+    flex: 1;
+    min-width: 0;
     
     i {
-      font-size: 1.5rem;
-      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
     }
     
     span {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
     }
     
     small {
       color: var(--text-secondary);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 600;
     }
     
     &:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     }
     
     &.next:hover:not(:disabled) {
-      background: rgba(29, 185, 84, 0.2);
-      border: 1px solid rgba(29, 185, 84, 0.3);
+      background: rgba(29, 185, 84, 0.15);
     }
     
     &.genre:hover:not(:disabled) {
-      background: rgba(141, 103, 171, 0.2);
-      border: 1px solid rgba(141, 103, 171, 0.3);
+      background: rgba(141, 103, 171, 0.15);
     }
     
     &.repeat:hover:not(:disabled) {
-      background: rgba(240, 55, 165, 0.2);
-      border: 1px solid rgba(240, 55, 165, 0.3);
+      background: rgba(240, 55, 165, 0.15);
     }
     
-    &:disabled {
-      opacity: 0.6;
+    &.voted {
+      background: rgba(29, 185, 84, 0.25);
+      color: var(--primary-color);
+      cursor: not-allowed;
+      
+      small {
+        color: var(--primary-color);
+      }
+    }
+    
+    &:disabled:not(.voted) {
+      opacity: 0.5;
       cursor: not-allowed;
     }
   }
   
-  .voting-stats {
+  .voting-feedback {
     text-align: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     
-    p {
-      margin: 0.5rem 0;
-      color: var(--text-secondary);
-    }
-    
-    .voted-message {
+    small {
       color: var(--primary-color);
-      font-weight: 600;
+      font-size: 0.75rem;
     }
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: 480px) {
+    .voting-container {
+      padding: 0.75rem;
+    }
+    
     .voting-options {
-      grid-template-columns: 1fr;
+      flex-direction: column;
+      gap: 0.5rem;
     }
     
     .vote-btn {
-      padding: 1rem;
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 0.5rem 0.75rem;
+      
+      i {
+        margin-bottom: 0;
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+      }
+      
+      span {
+        margin-bottom: 0;
+        margin-right: auto;
+        font-size: 0.8rem;
+      }
+      
+      small {
+        margin-left: 0.5rem;
+      }
     }
   }

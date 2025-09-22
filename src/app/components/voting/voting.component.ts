@@ -14,7 +14,8 @@ import { CommonModule } from '@angular/common';
 export class VotingComponent implements OnInit, OnDestroy {
   votingStatus: any = null;
   currentSong: any = null;
-  hasVoted: boolean = false;
+  userVotes: string[] = []; // Array para trackear qué opciones ya votó
+  lastVoteType: string = '';
   private votingSubscription: Subscription | undefined;
   private songSubscription: Subscription | undefined;
 
@@ -26,8 +27,8 @@ export class VotingComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadVotingStatus();
     
-    // Actualizar cada 15 segundos
-    this.votingSubscription = interval(15000).subscribe(() => {
+    // Actualizar cada 10 segundos
+    this.votingSubscription = interval(10000).subscribe(() => {
       this.loadVotingStatus();
     });
     
@@ -35,9 +36,10 @@ export class VotingComponent implements OnInit, OnDestroy {
     this.songSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe(
       (song: any) => {
         this.currentSong = song;
-        // Si la canción cambia, resetear el estado de voto
+        // Si la canción cambia, resetear los votos del usuario
         if (song && song.id !== this.votingStatus?.current_song_id) {
-          this.hasVoted = false;
+          this.userVotes = [];
+          this.lastVoteType = '';
         }
       }
     );
@@ -64,16 +66,41 @@ export class VotingComponent implements OnInit, OnDestroy {
   }
 
   vote(voteType: string): void {
+    if (this.hasVoted(voteType)) {
+      return; // Ya votó por esta opción
+    }
+
     this.votingService.submitVote(voteType).subscribe({
       next: (response) => {
-        this.hasVoted = true;
+        // Agregar a la lista de votos del usuario
+        this.userVotes.push(voteType);
+        this.lastVoteType = voteType;
         this.votingStatus = response.status;
-        // Mostrar mensaje de éxito
+        
+        // Mostrar mensaje temporal
+        setTimeout(() => {
+          this.lastVoteType = '';
+        }, 3000);
       },
       error: (error) => {
         console.error('Error submitting vote:', error);
-        // Mostrar mensaje de error
+        if (error.error?.error) {
+          alert(error.error.error); // Mostrar mensaje de error al usuario
+        }
       }
     });
+  }
+
+  hasVoted(voteType: string): boolean {
+    return this.userVotes.includes(voteType);
+  }
+
+  getVoteTypeName(voteType: string): string {
+    const names: {[key: string]: string} = {
+      'next': 'siguiente canción',
+      'genre_change': 'cambiar de género',
+      'repeat': 'mantener género'
+    };
+    return names[voteType] || voteType;
   }
 }
