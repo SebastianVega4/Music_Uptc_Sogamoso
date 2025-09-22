@@ -1,0 +1,30 @@
+<div class="voting-container" *ngIf="votingStatus && currentSong?.is_playing">
+    <div class="voting-header">
+      <h4>Votación Actual</h4>
+    </div>
+    
+    <div class="voting-options">
+      <button class="vote-btn next" (click)="vote('next')" [disabled]="hasVoted">
+        <i class="fas fa-forward"></i>
+        <span>Siguiente canción</span>
+        <small>{{ votingStatus.votes.next }} votos</small>
+      </button>
+      
+      <button class="vote-btn genre" (click)="vote('genre_change')" [disabled]="hasVoted">
+        <i class="fas fa-music"></i>
+        <span>Cambiar de género</span>
+        <small>{{ votingStatus.votes.genre_change }} votos</small>
+      </button>
+      
+      <button class="vote-btn repeat" (click)="vote('repeat')" [disabled]="hasVoted">
+        <i class="fas fa-redo"></i>
+        <span>Repetir género</span>
+        <small>{{ votingStatus.votes.repeat }} votos</small>
+      </button>
+    </div>
+    
+    <div class="voting-stats">
+      <p>Total de votos: {{ votingStatus.total_votes }}</p>
+      <p *ngIf="hasVoted" class="voted-message">¡Ya has votado en esta sesión!</p>
+    </div>
+  </div>

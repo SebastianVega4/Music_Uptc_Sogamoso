@@ -162,4 +162,12 @@ export class VotingService {
       map(songs => this.processSongs(songs || []))
     );
   }
+
+  getVotingStatus(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/voting/status`);
+  }
+  
+  submitVote(voteType: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/voting/vote`, { vote_type: voteType });
+  }
 }

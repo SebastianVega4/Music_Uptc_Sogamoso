@@ -8,13 +8,15 @@ import { ScheduleService } from '../../services/schedule.service';
 import { AuthService } from '../../services/auth';
 import { QueueService } from '../../services/queue.service';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-admin-panel',
   templateUrl: './admin-panel.html',
   styleUrls: ['./admin-panel.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule]
+  imports: [FormsModule, CommonModule, HttpClientModule]
 })
 export class AdminPanelComponent implements OnInit, OnDestroy {
    // Estados de la UI
@@ -58,7 +60,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
    private currentSongTimer: any;
    private recentlyAddedTimer: any;
 
+  apiUrl = environment.apiUrl;
+
   constructor(
+    private http: HttpClient,
     private spotifyNowPlaying: SpotifyNowPlayingService,
     private votingService: VotingService,
     private spotifyService: SpotifyService,
@@ -419,6 +424,35 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     }
   }
 
+  async confirmAddToHistory() {
+    // Primero verificar si se puede agregar
+    try {
+      const response: any = await this.spotifyNowPlaying.addToHistory().toPromise();
+      
+      if (response.can_add) {
+        // Mostrar diálogo de confirmación
+        const confirmed = confirm(`¿Estás seguro de que quieres agregar "${response.song.name}" al histórico?`);
+        
+        if (confirmed) {
+          // Usar el endpoint de confirmación
+          this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history-confirmed`, {}).subscribe({
+            next: (result: any) => {
+              this.showMessage(result.message || 'Canción agregada al histórico');
+              this.loadSongs(); // Recargar ranking
+            },
+            error: (error) => {
+              this.showMessage('Error al agregar al histórico: ' + error.error?.error, false);
+            }
+          });
+        }
+      } else {
+        this.showMessage(response.message, false);
+      }
+    } catch (error) {
+      this.showMessage('Error al verificar histórico', false);
+    }
+  }
+  
   playNowFromSearch(trackUri: string) {
     this.actionInProgress = 'Reproduciendo...';
     this.spotifyNowPlaying.playTrack(trackUri).subscribe({

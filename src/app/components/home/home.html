@@ -27,6 +27,7 @@
       </button>
     </div>
   </div>
+  <app-voting *ngIf="adminCurrentlyPlaying"></app-voting>
 
   <!-- Mensaje cuando no hay canción -->
   <ng-template #noSongPlaying>
