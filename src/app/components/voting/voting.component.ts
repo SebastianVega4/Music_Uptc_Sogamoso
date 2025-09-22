@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { VotingService } from '../../services/voting';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { Subscription, interval } from 'rxjs';
@@ -21,14 +21,15 @@ export class VotingComponent implements OnInit, OnDestroy {
 
   constructor(
     private votingService: VotingService,
-    private spotifyService: SpotifyNowPlayingService
+    private spotifyService: SpotifyNowPlayingService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.loadVotingStatus();
     
-    // Actualizar cada 10 segundos
-    this.votingSubscription = interval(10000).subscribe(() => {
+    // Actualizar cada 5 segundos
+    this.votingSubscription = interval(3000).subscribe(() => {
       this.loadVotingStatus();
     });
     
@@ -77,16 +78,21 @@ export class VotingComponent implements OnInit, OnDestroy {
         this.lastVoteType = voteType;
         this.votingStatus = response.status;
         
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
         // Mostrar mensaje temporal
         setTimeout(() => {
           this.lastVoteType = '';
+          this.cdr.detectChanges();
         }, 3000);
       },
       error: (error) => {
         console.error('Error submitting vote:', error);
         if (error.error?.error) {
-          alert(error.error.error); // Mostrar mensaje de error al usuario
+          alert(error.error.error);
         }
+        this.cdr.detectChanges();
       }
     });
   }

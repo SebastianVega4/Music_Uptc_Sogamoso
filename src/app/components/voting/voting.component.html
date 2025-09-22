@@ -1,7 +1,10 @@
 <div class="voting-container" *ngIf="votingStatus && currentSong?.is_playing">
     <div class="voting-header">
-      <h5>¿Qué te gustaría escuchar después?</h5>
-      <small>Total votos: {{ votingStatus.total_votes }}</small>
+      <h2>¿Qué te gustaría escuchar después?</h2>
+      <div class="total-votes">
+        <i class="fas fa-users"></i>
+        <span>{{ votingStatus.total_votes }} votos</span>
+      </div>
     </div>
     
     <div class="voting-options">
@@ -9,31 +12,41 @@
               (click)="vote('next')" 
               [class.voted]="hasVoted('next')"
               [disabled]="hasVoted('next')">
-        <i class="fas fa-forward"></i>
-        <span>Siguiente</span>
-        <small>{{ votingStatus.votes.next }}</small>
+        <div class="btn-content">
+          <i class="fas fa-forward"></i>
+          <span>Siguiente</span>
+          <div class="vote-count">{{ votingStatus.votes.next }}</div>
+        </div>
+        <div class="pulse-ring" *ngIf="hasVoted('next')"></div>
       </button>
       
       <button class="vote-btn genre" 
               (click)="vote('genre_change')"
               [class.voted]="hasVoted('genre_change')"
               [disabled]="hasVoted('genre_change')">
-        <i class="fas fa-random"></i>
-        <span>Cambiar género</span>
-        <small>{{ votingStatus.votes.genre_change }}</small>
+        <div class="btn-content">
+          <i class="fas fa-random"></i>
+          <span>Cambiar género</span>
+          <div class="vote-count">{{ votingStatus.votes.genre_change }}</div>
+        </div>
+        <div class="pulse-ring" *ngIf="hasVoted('genre_change')"></div>
       </button>
       
       <button class="vote-btn repeat" 
               (click)="vote('repeat')"
               [class.voted]="hasVoted('repeat')"
               [disabled]="hasVoted('repeat')">
-        <i class="fas fa-redo"></i>
-        <span>Mismo género</span>
-        <small>{{ votingStatus.votes.repeat }}</small>
+        <div class="btn-content">
+          <i class="fas fa-redo"></i>
+          <span>Mismo género</span>
+          <div class="vote-count">{{ votingStatus.votes.repeat }}</div>
+        </div>
+        <div class="pulse-ring" *ngIf="hasVoted('repeat')"></div>
       </button>
     </div>
     
     <div class="voting-feedback" *ngIf="lastVoteType">
-      <small>Votaste por: {{ getVoteTypeName(lastVoteType) }}</small>
+      <i class="fas fa-check-circle"></i>
+      <span>Votaste por: {{ getVoteTypeName(lastVoteType) }}</span>
     </div>
   </div>

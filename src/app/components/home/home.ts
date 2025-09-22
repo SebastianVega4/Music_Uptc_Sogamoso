@@ -46,20 +46,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   startAdminSpotifyPolling(): void {
-    // The service observable will poll every 3 seconds
     this.pollingSubscription = this.spotifyService.getAdminCurrentlyPlayingPolling().subscribe({
       next: (data) => {
         if (data && data.is_playing) {
-          // If song changed or wasn't playing before, reset the progress bar
           if (!this.adminCurrentlyPlaying || this.adminCurrentlyPlaying.id !== data.id) {
             this.adminCurrentlyPlaying = data;
             this.startProgressBar(data.progress_ms, data.duration_ms);
+            // Verificar inmediatamente si esta canción está en el ranking
+            this.checkAndRemovePlayingSong();
           } else {
-            // If it's the same song, just re-sync the progress to correct any drift
             this.syncProgressBar(data.progress_ms, data.duration_ms);
           }
         } else {
-          // Nothing is playing
           this.adminCurrentlyPlaying = null;
           this.stopProgressBar();
         }

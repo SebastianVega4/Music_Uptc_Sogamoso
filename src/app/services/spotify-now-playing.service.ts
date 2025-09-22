@@ -13,7 +13,7 @@ export class SpotifyNowPlayingService {
   private automaticCheckInterval: any = null;
 
   constructor(private http: HttpClient, private authService: AuthService) {
-    this.startAutomaticPlayingSongCheck(30000); // Verificar cada 30 segundos
+    this.startAutomaticPlayingSongCheck(5000); // Verificar cada 30 segundos
   }
 
   // Helper to get a cache-busting URL
