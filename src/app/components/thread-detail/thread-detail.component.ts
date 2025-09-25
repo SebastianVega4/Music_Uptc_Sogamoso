@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DiscussionService, Thread, Comment } from '../../services/discussion.service';
+import { tap } from 'rxjs/operators';
 
 @Component({
   standalone: true,
   selector: 'app-thread-detail',
   templateUrl: './thread-detail.component.html',
   styleUrls: ['./thread-detail.component.scss'],
-  imports: [CommonModule, FormsModule, RouterModule] // Agregar RouterModule aquí
+  imports: [CommonModule, FormsModule, RouterModule]
 })
 export class ThreadDetailComponent implements OnInit {
   thread!: Thread;
@@ -17,7 +18,8 @@ export class ThreadDetailComponent implements OnInit {
   newComment = '';
   replyingTo: string | null = null;
   replyContent = '';
-  error: string | null = null; // Agregar propiedad error
+  error: string | null = null;
+  isLoading = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -32,15 +34,33 @@ export class ThreadDetailComponent implements OnInit {
   }
 
   loadThread(threadId: string) {
+    this.isLoading = true;
+    this.error = null;
+    
     this.discussionService.getThread(threadId).subscribe({
       next: (data) => {
-        this.thread = data.thread;
-        this.comments = this.buildCommentTree(data.comments);
+        this.thread = {
+          ...data.thread,
+          user_has_liked: this.discussionService.hasUserLiked('thread', data.thread.id)
+        };
+        
+        // Procesar comentarios con información de likes del usuario
+        this.comments = this.buildCommentTree(data.comments).map(comment => ({
+          ...comment,
+          user_has_liked: this.discussionService.hasUserLiked('comment', comment.id),
+          replies: comment.replies?.map(reply => ({
+            ...reply,
+            user_has_liked: this.discussionService.hasUserLiked('comment', reply.id)
+          }))
+        }));
+        
+        this.isLoading = false;
         this.error = null;
       },
       error: (error) => {
         console.error('Error loading thread:', error);
         this.error = 'No se pudo cargar el hilo. Por favor, intenta nuevamente.';
+        this.isLoading = false;
       }
     });
   }
@@ -68,49 +88,56 @@ export class ThreadDetailComponent implements OnInit {
     return roots;
   }
 
-  // Agregar método para añadir comentario principal
   addComment() {
     if (!this.newComment.trim()) return;
 
     this.discussionService.addComment(this.thread.id, this.newComment).subscribe({
       next: (comment) => {
-        this.comments.push(comment);
+        const newCommentWithLike = {
+          ...comment,
+          user_has_liked: false,
+          replies: []
+        };
+        this.comments.push(newCommentWithLike);
         this.newComment = '';
         this.thread.comments_count++;
+        this.error = null;
       },
       error: (error) => {
         console.error('Error adding comment:', error);
-        this.error = 'Error al agregar el comentario';
+        this.error = 'Error al agregar el comentario. Por favor, intenta nuevamente.';
       }
     });
   }
 
-  // Agregar método para añadir respuesta
   addReply() {
     if (!this.replyContent.trim() || !this.replyingTo) return;
 
     this.discussionService.addComment(this.thread.id, this.replyContent, this.replyingTo).subscribe({
       next: (comment) => {
-        // Encontrar el comentario padre y agregar la respuesta
         const parentComment = this.findCommentById(this.replyingTo!);
         if (parentComment) {
           if (!parentComment.replies) {
             parentComment.replies = [];
           }
-          parentComment.replies.push(comment);
+          const newReply = {
+            ...comment,
+            user_has_liked: false
+          };
+          parentComment.replies.push(newReply);
         }
         this.replyContent = '';
         this.replyingTo = null;
         this.thread.comments_count++;
+        this.error = null;
       },
       error: (error) => {
         console.error('Error adding reply:', error);
-        this.error = 'Error al agregar la respuesta';
+        this.error = 'Error al agregar la respuesta. Por favor, intenta nuevamente.';
       }
     });
   }
 
-  // Método auxiliar para encontrar comentario por ID
   private findCommentById(commentId: string): Comment | null {
     for (const comment of this.comments) {
       if (comment.id === commentId) {
@@ -127,14 +154,15 @@ export class ThreadDetailComponent implements OnInit {
     return null;
   }
 
-  // Agregar método para dar like a un hilo
   likeThread(thread: Thread) {
     this.discussionService.likeThread(thread.id).subscribe({
       next: (response: any) => {
         thread.likes_count = response.new_count;
+        thread.user_has_liked = response.action === 'liked';
       },
       error: (error) => {
         console.error('Error liking thread:', error);
+        this.error = 'Error al dar like. Por favor, intenta nuevamente.';
       }
     });
   }
@@ -143,14 +171,15 @@ export class ThreadDetailComponent implements OnInit {
     this.discussionService.likeComment(comment.id).subscribe({
       next: (response: any) => {
         comment.likes_count = response.new_count;
+        comment.user_has_liked = response.action === 'liked';
       },
       error: (error) => {
         console.error('Error liking comment:', error);
+        this.error = 'Error al dar like. Por favor, intenta nuevamente.';
       }
     });
   }
 
-  // Agregar método formatTimeAgo
   formatTimeAgo(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
@@ -163,6 +192,13 @@ export class ThreadDetailComponent implements OnInit {
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} h`;
     if (diffDays === 1) return 'Ayer';
-    return `Hace ${diffDays} días`;
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} sem`;
+    return `Hace ${Math.floor(diffDays / 30)} mes`;
+  }
+
+  cancelReply() {
+    this.replyingTo = null;
+    this.replyContent = '';
   }
 }
