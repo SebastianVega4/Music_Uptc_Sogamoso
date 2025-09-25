@@ -1,0 +1,140 @@
+<div class="discussion-container">
+    <!-- Header del foro -->
+    <div class="discussion-header">
+      <div class="header-content">
+        <h1>
+          <i class="fas fa-comments me-2"></i>Foro Musical
+        </h1>
+        <p class="header-subtitle">Comparte, discute y conecta con otros amantes de la música</p>
+      </div>
+      
+      <button class="btn-create-thread" (click)="showCreateForm = !showCreateForm">
+        <i class="fas fa-plus me-1"></i>
+        {{ showCreateForm ? 'Cancelar' : 'Nuevo Hilo' }}
+      </button>
+    </div>
+  
+    <!-- Formulario para crear nuevo hilo -->
+    <div class="create-thread-form" *ngIf="showCreateForm">
+      <div class="form-card">
+        <h3>Crear Nuevo Hilo</h3>
+        <div class="form-group">
+          <label for="threadTitle">Título</label>
+          <input 
+            type="text" 
+            id="threadTitle"
+            [(ngModel)]="newThread.title" 
+            placeholder="Escribe un título interesante..."
+            maxlength="200"
+          >
+          <small>{{ newThread.title.length }}/200 caracteres</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="threadContent">Contenido</label>
+          <textarea 
+            id="threadContent"
+            [(ngModel)]="newThread.content" 
+            placeholder="Comparte tus pensamientos, preguntas o temas musicales..."
+            rows="6"
+          ></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="showCreateForm = false; newThread = { title: '', content: '' }">
+            Cancelar
+          </button>
+          <button 
+            class="btn-submit" 
+            (click)="createThread()"
+            [disabled]="!newThread.title.trim() || !newThread.content.trim()"
+          >
+            <i class="fas fa-paper-plane me-1"></i>Publicar Hilo
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Controles de ordenamiento -->
+    <div class="sort-controls">
+      <div class="sort-options">
+        <span>Ordenar por:</span>
+        <select [(ngModel)]="sortBy" (change)="loadThreads()">
+          <option value="updated_at">Más reciente</option>
+          <option value="likes_count">Más populares</option>
+          <option value="comments_count">Más comentados</option>
+          <option value="created_at">Más antiguos</option>
+        </select>
+      </div>
+      
+      <div class="threads-count">
+        <span>{{ threads.length }} hilo{{ threads.length !== 1 ? 's' : '' }}</span>
+      </div>
+    </div>
+  
+    <!-- Lista de hilos -->
+    <div class="threads-list">
+      <div class="loader" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando hilos...</p>
+      </div>
+  
+      <div class="empty-state" *ngIf="!isLoading && threads.length === 0">
+        <i class="fas fa-comments-slash"></i>
+        <h3>¡Sé el primero en empezar una conversación!</h3>
+        <p>Aún no hay hilos de discusión. Crea el primero para hablar sobre música.</p>
+        <button class="btn-create-thread" (click)="showCreateForm = true">
+          <i class="fas fa-plus me-1"></i>Crear Primer Hilo
+        </button>
+      </div>
+  
+      <div class="thread-card" *ngFor="let thread of threads">
+        <div class="thread-header">
+          <h3 class="thread-title">
+            <a [routerLink]="['/discussion/thread', thread.id]">{{ thread.title }}</a>
+          </h3>
+          <span class="thread-date">{{ formatTimeAgo(thread.updated_at) }}</span>
+        </div>
+        
+        <div class="thread-content">
+          <p>{{ thread.content.length > 300 ? (thread.content.substring(0, 300) + '...') : thread.content }}</p>
+        </div>
+        
+        <div class="thread-stats">
+          <div class="stat">
+            <button class="like-btn" (click)="likeThread(thread)" [class.liked]="false">
+              <i class="fas fa-heart"></i>
+              <span>{{ thread.likes_count }}</span>
+            </button>
+          </div>
+          
+          <div class="stat">
+            <i class="fas fa-comment"></i>
+            <span>{{ thread.comments_count }} comentario{{ thread.comments_count !== 1 ? 's' : '' }}</span>
+          </div>
+          
+          <div class="stat">
+            <i class="fas fa-user"></i>
+            <span>Usuario {{ thread.author_fingerprint.substring(0, 8) }}</span>
+          </div>
+        </div>
+        
+        <div class="thread-actions">
+          <a [routerLink]="['/discussion/thread', thread.id]" class="btn-read-more">
+            <i class="fas fa-eye me-1"></i>Ver discusión
+          </a>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Paginación (para futura implementación) -->
+    <div class="pagination" *ngIf="threads.length > 0">
+      <button class="page-btn" disabled>
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+      <span class="page-info">Página 1 de 1</span>
+      <button class="page-btn" disabled>
+        Siguiente <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>

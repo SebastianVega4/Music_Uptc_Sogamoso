@@ -1,0 +1,191 @@
+<div class="thread-detail-container">
+    <!-- Botón de volver -->
+    <div class="back-nav">
+      <a [routerLink]="['/discussion']" class="back-link">
+        <i class="fas fa-arrow-left me-1"></i>Volver al foro
+      </a>
+    </div>
+  
+    <!-- Hilo principal -->
+    <div class="thread-main" *ngIf="thread">
+      <div class="thread-card detailed">
+        <div class="thread-header">
+          <h1 class="thread-title">{{ thread.title }}</h1>
+          <div class="thread-meta">
+            <span class="thread-date">Publicado {{ formatTimeAgo(thread.created_at) }}</span>
+            <span class="thread-author">por Usuario {{ thread.author_fingerprint.substring(0, 8) }}</span>
+          </div>
+        </div>
+        
+        <div class="thread-content detailed">
+          <p>{{ thread.content }}</p>
+        </div>
+        
+        <div class="thread-stats detailed">
+          <button class="like-btn" (click)="likeThread(thread)" [class.liked]="false">
+            <i class="fas fa-heart"></i>
+            <span>{{ thread.likes_count }}</span>
+            <span class="label">Me gusta</span>
+          </button>
+          
+          <div class="stat">
+            <i class="fas fa-comment"></i>
+            <span>{{ thread.comments_count }}</span>
+            <span class="label">Comentario{{ thread.comments_count !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Formulario de comentario -->
+      <div class="comment-form-section">
+        <h3>
+          <i class="fas fa-reply me-1"></i>
+          {{ replyingTo ? 'Respondiendo a comentario...' : 'Agregar comentario' }}
+        </h3>
+        
+        <div class="comment-form">
+          <textarea 
+            [(ngModel)]="replyingTo ? replyContent : newComment" 
+            placeholder="{{ replyingTo ? 'Escribe tu respuesta...' : 'Comparte tu opinión sobre este tema...' }}"
+            rows="4"
+          ></textarea>
+          
+          <div class="comment-actions" *ngIf="replyingTo">
+            <button class="btn-cancel-reply" (click)="replyingTo = null; replyContent = ''">
+              Cancelar respuesta
+            </button>
+            <button 
+              class="btn-submit" 
+              (click)="addReply()"
+              [disabled]="!replyContent.trim()"
+            >
+              <i class="fas fa-reply me-1"></i>Responder
+            </button>
+          </div>
+          
+          <div class="comment-actions" *ngIf="!replyingTo">
+            <button 
+              class="btn-submit" 
+              (click)="addComment()"
+              [disabled]="!newComment.trim()"
+            >
+              <i class="fas fa-paper-plane me-1"></i>Publicar comentario
+            </button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Sección de comentarios -->
+      <div class="comments-section">
+        <div class="comments-header">
+          <h3>
+            <i class="fas fa-comments me-1"></i>
+            {{ thread.comments_count }} Comentario{{ thread.comments_count !== 1 ? 's' : '' }}
+          </h3>
+          
+          <div class="comments-sort">
+            <span>Ordenar por:</span>
+            <select>
+              <option>Más recientes</option>
+              <option>Más antiguos</option>
+              <option>Más populares</option>
+            </select>
+          </div>
+        </div>
+  
+        <div class="empty-comments" *ngIf="comments.length === 0">
+          <div class="empty-state">
+            <i class="fas fa-comment-slash"></i>
+            <h4>¡Sé el primero en comentar!</h4>
+            <p>Aún no hay comentarios en este hilo. Comparte tu opinión.</p>
+          </div>
+        </div>
+  
+        <div class="comments-list" *ngIf="comments.length > 0">
+          <div class="comment-item" *ngFor="let comment of comments" [class.has-replies]="comment.replies && comment.replies.length > 0">
+            <!-- Comentario principal -->
+            <div class="comment-main">
+              <div class="comment-avatar">
+                <i class="fas fa-user"></i>
+              </div>
+              
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="comment-author">Usuario {{ comment.author_fingerprint.substring(0, 8) }}</span>
+                  <span class="comment-date">{{ formatTimeAgo(comment.created_at) }}</span>
+                </div>
+                
+                <div class="comment-text">
+                  <p>{{ comment.content }}</p>
+                </div>
+                
+                <div class="comment-actions">
+                  <button class="comment-like-btn" (click)="likeComment(comment)">
+                    <i class="fas fa-heart"></i>
+                    <span>{{ comment.likes_count }}</span>
+                  </button>
+                  
+                  <button class="comment-reply-btn" (click)="replyingTo = comment.id; replyContent = ''">
+                    <i class="fas fa-reply"></i>
+                    <span>Responder</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Respuestas al comentario -->
+            <div class="comment-replies" *ngIf="comment.replies && comment.replies.length > 0">
+              <div class="reply-item" *ngFor="let reply of comment.replies">
+                <div class="comment-avatar small">
+                  <i class="fas fa-user"></i>
+                </div>
+                
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-author">Usuario {{ reply.author_fingerprint.substring(0, 8) }}</span>
+                    <span class="comment-date">{{ formatTimeAgo(reply.created_at) }}</span>
+                  </div>
+                  
+                  <div class="comment-text">
+                    <p>{{ reply.content }}</p>
+                  </div>
+                  
+                  <div class="comment-actions">
+                    <button class="comment-like-btn" (click)="likeComment(reply)">
+                      <i class="fas fa-heart"></i>
+                      <span>{{ reply.likes_count }}</span>
+                    </button>
+                    
+                    <button class="comment-reply-btn" (click)="replyingTo = comment.id; replyContent = '@' + reply.author_fingerprint.substring(0, 8) + ' '">
+                      <i class="fas fa-reply"></i>
+                      <span>Responder</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Loading state -->
+    <div class="loading-state" *ngIf="!thread">
+      <div class="loader">
+        <div class="spinner"></div>
+        <p>Cargando hilo...</p>
+      </div>
+    </div>
+  
+    <!-- Error state -->
+    <div class="error-state" *ngIf="error">
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Error al cargar el hilo</h3>
+        <p>{{ error }}</p>
+        <a [routerLink]="['/discussion']" class="btn-retry">
+          <i class="fas fa-arrow-left me-1"></i>Volver al foro
+        </a>
+      </div>
+    </div>
+  </div>
