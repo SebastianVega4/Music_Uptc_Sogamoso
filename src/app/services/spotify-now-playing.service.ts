@@ -188,6 +188,20 @@ export class SpotifyNowPlayingService {
 
   addToHistory(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history`, {}, { headers });
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/add-to-history`, 
+      {}, 
+      { headers }
+    );
   }
+
+  addToHistoryConfirmed(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post(
+      `${this.apiUrl}/api/spotify/admin/add-to-history-confirmed`, 
+      {}, 
+      { headers }
+    );
+  }
+  
 }

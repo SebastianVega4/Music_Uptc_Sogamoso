@@ -19,46 +19,46 @@ import { environment } from '../../../environments/environment';
   imports: [FormsModule, CommonModule, HttpClientModule]
 })
 export class AdminPanelComponent implements OnInit, OnDestroy {
-   // Estados de la UI
-   activeSection = 'dashboard';
-   showSearch = false;
-   showRecentlyAdded = true;
-   isEditingSchedules = false;
- 
-   // Datos
-   songs: any[] = [];
-   queue: any[] = [];
-   recentlyAddedSongs: any[] = [];
-   searchResults: any[] = [];
-   schedules: any[] = [];
-   spotifyStatus: any = null;
-   adminCurrentlyPlaying: any = null;
- 
-   // Estados de carga
-   isLoading = false;
-   isLoadingQueue = false;
-   isLoadingCurrent = false;
-   isPlaying = false;
- 
-   // Búsqueda
-   searchQuery = '';
- 
-   // Votos del admin
-   adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
- 
-   // Estadísticas
-   totalVotes: number = 0;
-   uniqueVoters: number = 0;
- 
-   // Mensajes
-   successMessage: string = '';
-   errorMessage: string = '';
-   actionInProgress: string = '';
- 
-   // Timers
-   private refreshTimer: any;
-   private currentSongTimer: any;
-   private recentlyAddedTimer: any;
+  // Estados de la UI
+  activeSection = 'dashboard';
+  showSearch = false;
+  showRecentlyAdded = true;
+  isEditingSchedules = false;
+
+  // Datos
+  songs: any[] = [];
+  queue: any[] = [];
+  recentlyAddedSongs: any[] = [];
+  searchResults: any[] = [];
+  schedules: any[] = [];
+  spotifyStatus: any = null;
+  adminCurrentlyPlaying: any = null;
+
+  // Estados de carga
+  isLoading = false;
+  isLoadingQueue = false;
+  isLoadingCurrent = false;
+  isPlaying = false;
+
+  // Búsqueda
+  searchQuery = '';
+
+  // Votos del admin
+  adminVotes: { [key: string]: boolean } = {}; // true = dislike, false = like
+
+  // Estadísticas
+  totalVotes: number = 0;
+  uniqueVoters: number = 0;
+
+  // Mensajes
+  successMessage: string = '';
+  errorMessage: string = '';
+  actionInProgress: string = '';
+
+  // Timers
+  private refreshTimer: any;
+  private currentSongTimer: any;
+  private recentlyAddedTimer: any;
 
   apiUrl = environment.apiUrl;
 
@@ -128,12 +128,12 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       this.loadQueue();
       this.getSpotifyStatus();
     }, 30000);
-  
+
     // Actualizar la canción actual cada 5 segundos
     this.currentSongTimer = setInterval(() => {
       this.getAdminCurrentlyPlaying();
     }, 5000);
-  
+
     // Actualizar recién agregadas cada 15 segundos
     this.recentlyAddedTimer = setInterval(() => {
       this.filterRecentlyAdded();
@@ -195,7 +195,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   filterRecentlyAdded() {
     const sixHoursAgo = new Date();
     sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
-  
+
     this.recentlyAddedSongs = this.songs
       .filter(song => {
         const songDate = new Date(song.createdat);
@@ -204,6 +204,8 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       .sort((a, b) => new Date(b.createdat).getTime() - new Date(a.createdat).getTime())
       .slice(0, 15); // Limitar a 15 canciones mostradas
   }
+
+  
 
   addToQueueFromRecent(song: any) {
     const trackUri = `spotify:track:${song.id}`;
@@ -428,11 +430,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     // Primero verificar si se puede agregar
     try {
       const response: any = await this.spotifyNowPlaying.addToHistory().toPromise();
-      
+
       if (response.can_add) {
         // Mostrar diálogo de confirmación
         const confirmed = confirm(`¿Estás seguro de que quieres agregar "${response.song.name}" al histórico?`);
-        
+
         if (confirmed) {
           // Usar el endpoint de confirmación
           this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history-confirmed`, {}).subscribe({
@@ -452,7 +454,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       this.showMessage('Error al verificar histórico', false);
     }
   }
-  
+
   playNowFromSearch(trackUri: string) {
     this.actionInProgress = 'Reproduciendo...';
     this.spotifyNowPlaying.playTrack(trackUri).subscribe({
@@ -591,19 +593,80 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.activeSection = 'queue';
   }
 
-  // Agregar al histórico
-  addToHistory() {
+  async addToHistory() {
+    if (!this.adminCurrentlyPlaying || !this.adminCurrentlyPlaying.id) {
+      this.showMessage('No hay canción reproduciéndose actualmente', false);
+      return;
+    }
+  
+    this.actionInProgress = 'Verificando canción...';
+    
+    try {
+      // Primero verificar si se puede agregar al histórico
+      const checkResponse: any = await this.spotifyNowPlaying.addToHistory().toPromise();
+      
+      if (checkResponse.can_add) {
+        // Mostrar confirmación
+        const confirmed = confirm(
+          `¿Estás seguro de que quieres agregar "${this.adminCurrentlyPlaying.name}" al histórico?\n\n` +
+          `Esta acción eliminará la canción del ranking si está presente.`
+        );
+        
+        if (confirmed) {
+          this.actionInProgress = 'Agregando al histórico...';
+          
+          // Usar el endpoint de confirmación CON HEADERS DE AUTENTICACIÓN
+          const headers = this.authService.getAuthHeaders();
+          
+          const result: any = await this.http.post(
+            `${this.apiUrl}/api/spotify/admin/add-to-history-confirmed`, 
+            {},
+            { headers }
+          ).toPromise();
+          
+          this.showMessage(result.message || 'Canción agregada al histórico correctamente');
+          this.loadSongs(); // Recargar ranking
+          
+          // Actualizar la canción actual
+          setTimeout(() => {
+            this.getAdminCurrentlyPlaying();
+          }, 2000);
+        }
+      } else {
+        this.showMessage(checkResponse.message, false);
+      }
+    } catch (error: any) {
+      console.error('Error al agregar al histórico:', error);
+      this.showMessage(
+        error.error?.error || error.message || 'Error al agregar al histórico', 
+        false
+      );
+    } finally {
+      this.actionInProgress = '';
+    }
+  }
+
+  checkAddToHistory() {
+    if (!this.adminCurrentlyPlaying) {
+      this.showMessage('No hay canción reproduciéndose', false);
+      return;
+    }
+  
     this.spotifyNowPlaying.addToHistory().subscribe({
-      next: () => {
-        // Mostrar mensaje de éxito
-        console.log('Canción agregada al histórico');
+      next: (response: any) => {
+        if (response.can_add) {
+          this.addToHistory();
+        } else {
+          this.showMessage(response.message, false);
+        }
       },
-      error: (error: any) => {
-        console.error('Error adding to history:', error);
+      error: (error) => {
+        this.showMessage('Error al verificar: ' + (error.error?.message || error.message), false);
       }
     });
   }
 
+  
   // Verificar en ranking
   checkPlayingSong() {
     if (this.adminCurrentlyPlaying) {

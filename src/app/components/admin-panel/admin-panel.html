@@ -157,7 +157,8 @@
               <button class="control-btn" (click)="checkPlayingSong()" title="Verificar en ranking">
                 <i class="fas fa-search"></i>
               </button>
-              <button class="control-btn" (click)="addToHistory()" title="Agregar al histórico">
+              <button class="control-btn" (click)="checkAddToHistory()" title="Agregar al histórico"
+                [disabled]="!adminCurrentlyPlaying || actionInProgress">
                 <i class="fas fa-history"></i>
               </button>
             </div>
