@@ -4,8 +4,6 @@ import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { Subscription } from 'rxjs';
-import { AnnouncementComponent } from '../announcement/announcement.component';
-import { ScheduleComponent } from "../schedule/schedule.component";
 import { VotingService } from '../../services/voting';
 import { VotingComponent } from '../voting/voting.component';
 
@@ -14,7 +12,7 @@ import { VotingComponent } from '../voting/voting.component';
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
-  imports: [CommonModule, SearchComponent, VotingListComponent, AnnouncementComponent, ScheduleComponent, VotingComponent]
+  imports: [CommonModule, SearchComponent, VotingListComponent, VotingComponent]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   adminCurrentlyPlaying: any = null;
