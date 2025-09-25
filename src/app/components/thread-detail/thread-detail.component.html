@@ -13,7 +13,7 @@
           <h1 class="thread-title">{{ thread.title }}</h1>
           <div class="thread-meta">
             <span class="thread-date">Publicado {{ formatTimeAgo(thread.created_at) }}</span>
-            <span class="thread-author">por Usuario {{ thread.author_fingerprint.substring(0, 8) }}</span>
+            <span class="thread-author">por Usuario {{ thread.author_fingerprint?.substring(0, 8) }}</span>
           </div>
         </div>
         
@@ -45,7 +45,7 @@
         
         <div class="comment-form">
           <textarea 
-            [(ngModel)]="replyingTo ? replyContent : newComment" 
+            [ngModel]="replyingTo ? replyContent : newComment" (ngModelChange)="replyingTo ? (replyContent = $event) : (newComment = $event)" 
             placeholder="{{ replyingTo ? 'Escribe tu respuesta...' : 'Comparte tu opinión sobre este tema...' }}"
             rows="4"
           ></textarea>
@@ -82,15 +82,6 @@
             <i class="fas fa-comments me-1"></i>
             {{ thread.comments_count }} Comentario{{ thread.comments_count !== 1 ? 's' : '' }}
           </h3>
-          
-          <div class="comments-sort">
-            <span>Ordenar por:</span>
-            <select>
-              <option>Más recientes</option>
-              <option>Más antiguos</option>
-              <option>Más populares</option>
-            </select>
-          </div>
         </div>
   
         <div class="empty-comments" *ngIf="comments.length === 0">
@@ -111,7 +102,7 @@
               
               <div class="comment-content">
                 <div class="comment-header">
-                  <span class="comment-author">Usuario {{ comment.author_fingerprint.substring(0, 8) }}</span>
+                  <span class="comment-author">Usuario {{ comment.author_fingerprint?.substring(0, 8) }}</span>
                   <span class="comment-date">{{ formatTimeAgo(comment.created_at) }}</span>
                 </div>
                 
@@ -142,7 +133,7 @@
                 
                 <div class="comment-content">
                   <div class="comment-header">
-                    <span class="comment-author">Usuario {{ reply.author_fingerprint.substring(0, 8) }}</span>
+                    <span class="comment-author">Usuario {{ reply.author_fingerprint?.substring(0, 8) }}</span>
                     <span class="comment-date">{{ formatTimeAgo(reply.created_at) }}</span>
                   </div>
                   
@@ -156,7 +147,7 @@
                       <span>{{ reply.likes_count }}</span>
                     </button>
                     
-                    <button class="comment-reply-btn" (click)="replyingTo = comment.id; replyContent = '@' + reply.author_fingerprint.substring(0, 8) + ' '">
+                    <button class="comment-reply-btn" (click)="replyingTo = comment.id; replyContent = '@' + (reply.author_fingerprint?.substring(0, 8) || '') + ' '">
                       <i class="fas fa-reply"></i>
                       <span>Responder</span>
                     </button>
@@ -170,7 +161,7 @@
     </div>
   
     <!-- Loading state -->
-    <div class="loading-state" *ngIf="!thread">
+    <div class="loading-state" *ngIf="!thread && !error">
       <div class="loader">
         <div class="spinner"></div>
         <p>Cargando hilo...</p>
