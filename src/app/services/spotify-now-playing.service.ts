@@ -13,7 +13,7 @@ export class SpotifyNowPlayingService {
   private automaticCheckInterval: any = null;
 
   constructor(private http: HttpClient, private authService: AuthService) {
-    this.startAutomaticPlayingSongCheck(5000); // Verificar cada 30 segundos
+    this.startAutomaticPlayingSongCheck(5000);
   }
 
   // Helper to get a cache-busting URL
@@ -118,9 +118,9 @@ export class SpotifyNowPlayingService {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(`${this.apiUrl}/api/spotify/admin/refresh-token`, {}, { headers });
   }
-  // Polling para obtener la canción actual del admin cada 3 segundos
+  // Polling para obtener la canción actual
   getAdminCurrentlyPlayingPolling(): Observable<any> {
-    return interval(30000).pipe(  // 30 segundos en lugar de 3
+    return interval(3000).pipe(
       startWith(0),
       switchMap(() => this.getAdminCurrentlyPlaying())
     );

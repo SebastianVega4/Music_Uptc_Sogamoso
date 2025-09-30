@@ -15,7 +15,6 @@ export class VotingService {
   private readonly CACHE_DURATION = 2000;
   private cachedVotingStatus: any = null;
   private lastVotingStatusFetch: number = 0;
-  private readonly VOTING_STATUS_CACHE_DURATION = 1000;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -67,9 +66,9 @@ export class VotingService {
     return this.voteForSong(trackid, trackInfo, newIsDislike);
   }
 
-  // Sondeo para obtener el ranking de canciones cada 60 segundos
+  // Sondeo para obtener el ranking de canciones
   getRankedSongsPolling(): Observable<any[]> {
-    return interval(60000).pipe(
+    return interval(30000).pipe(
       startWith(0),
       switchMap(() => this.getRankedSongs())
     );

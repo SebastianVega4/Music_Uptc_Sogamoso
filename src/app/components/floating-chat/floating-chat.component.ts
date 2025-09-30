@@ -33,24 +33,30 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
-    // Suscribirse a mensajes
+    this.setupSubscriptions();
+    this.loadInitialMessages();
+  }
+
+  private setupSubscriptions(): void {
+    // Suscribirse a mensajes - optimizado
     this.messagesSubscription = this.chatService.messages$.subscribe(
       (messages: ChatMessage[]) => {
         this.messages = messages;
         
         // Contar mensajes no leídos cuando el chat está cerrado
         if (!this.isChatOpen && messages.length > 0) {
-          this.unreadMessages = messages.length;
+          this.unreadMessages = this.calculateUnreadMessages(messages);
         }
         
-        this.scrollToBottom();
+        // Scroll automático solo si el usuario está cerca del final
+        this.autoScrollToBottom();
       }
     );
 
     // Suscribirse a usuarios escribiendo
     this.typingSubscription = this.chatService.typingUsers$.subscribe(
       (users: string[]) => {
-        this.typingUsers = users;
+        this.typingUsers = users.filter(user => user !== this.currentUser);
       }
     );
 
@@ -65,6 +71,9 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.connectedSubscription = this.chatService.connected$.subscribe(
       (connected: boolean) => {
         this.isConnected = connected;
+        if (connected) {
+          this.loadInitialMessages();
+        }
       }
     );
 
@@ -77,9 +86,61 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
 
     // Cargar usuario actual
     this.currentUser = this.chatService.getUser();
+  }
 
-    // Cargar estadísticas
+  private loadInitialMessages(): void {
     this.chatService.loadStats();
+  }
+
+  private calculateUnreadMessages(messages: ChatMessage[]): number {
+    // Solo contar mensajes que no sean del usuario actual
+    return messages.filter(msg => 
+      msg.user !== this.currentUser && 
+      msg.type === 'message'
+    ).length;
+  }
+
+  private autoScrollToBottom(): void {
+    if (this.isChatOpen) {
+      setTimeout(() => {
+        const messagesContainer = document.querySelector('.messages-container');
+        if (messagesContainer) {
+          // Scroll automático si está cerca del final (últimos 100px)
+          const isNearBottom = 
+            messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= 100;
+          
+          if (isNearBottom) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        }
+      }, 100);
+    }
+  }
+
+  sendMessage(): void {
+    if (this.newMessage.trim() && this.isConnected) {
+      this.chatService.sendMessage(this.newMessage).subscribe({
+        next: () => {
+          this.newMessage = '';
+          this.stopTyping();
+          // Forzar scroll al fondo después de enviar
+          this.scrollToBottom();
+        },
+        error: (error: any) => {
+          console.error('Error enviando mensaje:', error);
+          alert('Error al enviar el mensaje: ' + error.message);
+        }
+      });
+    }
+  }
+
+  scrollToBottom(): void {
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 50);
   }
 
   ngOnDestroy(): void {
@@ -98,20 +159,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.isChatOpen = !this.isChatOpen;
     if (this.isChatOpen) {
       this.unreadMessages = 0; // Resetear contador al abrir
-    }
-  }
-
-  sendMessage(): void {
-    if (this.newMessage.trim() && this.isConnected) {
-      this.chatService.sendMessage(this.newMessage).subscribe({
-        next: () => {
-          this.newMessage = '';
-          this.stopTyping();
-        },
-        error: (error: any) => {
-          console.error('Error enviando mensaje:', error);
-        }
-      });
     }
   }
 
@@ -142,15 +189,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       this.chatService.setUser(this.currentUser.trim());
       this.showUserModal = false;
     }
-  }
-
-  scrollToBottom(): void {
-    setTimeout(() => {
-      const messagesContainer = document.querySelector('.messages-container');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }, 100);
   }
 
   formatTime(timestamp: string): string {

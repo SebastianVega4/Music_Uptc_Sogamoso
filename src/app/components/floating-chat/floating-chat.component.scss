@@ -467,3 +467,30 @@
       right: -10px;
     }
   }
+
+  // Mejoras para el scroll suave
+.messages-container {
+  scroll-behavior: smooth;
+  overflow-anchor: auto;
+}
+
+// Animación más rápida para nuevos mensajes
+.message {
+  animation: messageSlide 0.2s ease-out;
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Indicador de conexión más visible
+.connection-status.connected .status-dot {
+  animation: pulse 1s infinite;
+}

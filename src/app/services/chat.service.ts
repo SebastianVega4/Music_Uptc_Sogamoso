@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval } from 'rxjs';
+import { Observable, BehaviorSubject, interval, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
@@ -25,14 +25,14 @@ export interface ChatStats {
 })
 export class ChatService {
   private apiUrl = environment.apiUrl;
-  
+
   // Subjects para estado reactivo
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
-  
+
   private typingUsersSubject = new BehaviorSubject<string[]>([]);
   public typingUsers$ = this.typingUsersSubject.asObservable();
-  
+
   private statsSubject = new BehaviorSubject<ChatStats | null>(null);
   public stats$ = this.statsSubject.asObservable();
 
@@ -46,7 +46,7 @@ export class ChatService {
   private currentUser: string = 'Usuario';
   private userId: string = this.generateUserId();
   private currentRoom: string = 'general';
-  
+
   // Polling intervals
   private messagePolling: any;
   private typingPolling: any;
@@ -66,23 +66,23 @@ export class ChatService {
   }
 
   private startPolling(): void {
-    // Polling para nuevos mensajes cada 2 segundos
-    this.messagePolling = interval(2000).subscribe(() => {
+    // Polling para nuevos mensajes
+    this.messagePolling = interval(500).subscribe(() => {
       this.checkNewMessages();
     });
 
-    // Polling para usuarios escribiendo cada 1 segundo
-    this.typingPolling = interval(1000).subscribe(() => {
+    // Polling para usuarios escribiendo
+    this.typingPolling = interval(500).subscribe(() => {
       this.checkTypingUsers();
     });
 
-    // Polling para estadísticas cada 30 segundos
-    this.statsPolling = interval(30000).subscribe(() => {
+    // Polling para estadísticas cada
+    this.statsPolling = interval(15000).subscribe(() => {
       this.loadStats();
     });
 
-    // Polling para usuarios online cada 15 segundos
-    const onlinePolling = interval(15000).subscribe(() => {
+    // Polling para usuarios online
+    const onlinePolling = interval(10000).subscribe(() => {
       this.checkOnlineUsers();
     });
 
@@ -90,7 +90,7 @@ export class ChatService {
   }
 
   private loadInitialHistory(): void {
-    this.http.get<{messages: ChatMessage[]}>(`${this.apiUrl}/api/chat/messages?limit=50`)
+    this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=50`)
       .subscribe({
         next: (response) => {
           this.messagesSubject.next(response.messages.reverse());
@@ -103,19 +103,25 @@ export class ChatService {
 
   private checkNewMessages(): void {
     const currentMessages = this.messagesSubject.value;
-    const lastMessage = currentMessages[currentMessages.length - 1];
-    const lastTimestamp = lastMessage?.timestamp;
 
-    this.http.get<{messages: ChatMessage[]}>(
-      `${this.apiUrl}/api/chat/messages?limit=20${lastTimestamp ? `&since=${lastTimestamp}` : ''}`
+    // Usar timestamp del último mensaje para obtener solo los nuevos
+    const lastTimestamp = currentMessages.length > 0
+      ? currentMessages[currentMessages.length - 1].timestamp
+      : null;
+
+    this.http.get<{ messages: ChatMessage[] }>(
+      `${this.apiUrl}/api/chat/messages?limit=50${lastTimestamp ? `&since=${lastTimestamp}` : ''}`
     ).subscribe({
       next: (response) => {
-        const newMessages = response.messages.filter(newMsg => 
-          !currentMessages.find(existingMsg => existingMsg.id === newMsg.id)
-        );
+        if (response.messages && response.messages.length > 0) {
+          const newMessages = response.messages.filter(newMsg =>
+            !currentMessages.find(existingMsg => existingMsg.id === newMsg.id)
+          );
 
-        if (newMessages.length > 0) {
-          this.messagesSubject.next([...currentMessages, ...newMessages]);
+          if (newMessages.length > 0) {
+            // Agregar nuevos mensajes al final
+            this.messagesSubject.next([...currentMessages, ...newMessages]);
+          }
         }
       },
       error: (error) => {
@@ -125,7 +131,7 @@ export class ChatService {
   }
 
   private checkTypingUsers(): void {
-    this.http.get<{typing_users: string[]}>(
+    this.http.get<{ typing_users: string[] }>(
       `${this.apiUrl}/api/chat/typing-users?room=${this.currentRoom}`
     ).subscribe({
       next: (response) => {
@@ -138,7 +144,7 @@ export class ChatService {
   }
 
   private checkOnlineUsers(): void {
-    this.http.get<{online_users: number}>(`${this.apiUrl}/api/chat/online-users`)
+    this.http.get<{ online_users: number }>(`${this.apiUrl}/api/chat/online-users`)
       .subscribe({
         next: (response) => {
           this.onlineUsersSubject.next(response.online_users);
@@ -152,10 +158,9 @@ export class ChatService {
   }
 
   // === MÉTODOS PÚBLICOS ===
-
   sendMessage(message: string): Observable<any> {
     if (!message.trim()) {
-      throw new Error('El mensaje no puede estar vacío');
+      return throwError(() => new Error('El mensaje no puede estar vacío'));
     }
 
     return this.http.post(`${this.apiUrl}/api/chat/send`, {
@@ -163,7 +168,15 @@ export class ChatService {
       user: this.currentUser,
       user_id: this.userId,
       room: this.currentRoom
-    });
+    }).pipe(
+      tap((response: any) => {
+        // Agregar el mensaje inmediatamente al estado local
+        if (response.success && response.message) {
+          const currentMessages = this.messagesSubject.value;
+          this.messagesSubject.next([...currentMessages, response.message]);
+        }
+      })
+    );
   }
 
   setTyping(isTyping: boolean): void {
@@ -209,7 +222,7 @@ export class ChatService {
   private generateUserId(): string {
     const storedId = localStorage.getItem('chat_user_id');
     if (storedId) return storedId;
-    
+
     const newId = Math.random().toString(36).substr(2, 9);
     localStorage.setItem('chat_user_id', newId);
     return newId;
