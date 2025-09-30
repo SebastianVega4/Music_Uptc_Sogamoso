@@ -1,8 +1,9 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, Subscription, timer } from 'rxjs';
-import { map, tap, catchError, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, Subscription } from 'rxjs';
+import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 export interface ChatMessage {
   id: string;
@@ -26,6 +27,8 @@ export interface ChatStats {
 })
 export class ChatService implements OnDestroy {
   private apiUrl = environment.apiUrl;
+  private supabase;
+  private channel: RealtimeChannel | null = null;
 
   // Subjects for reactive state
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
@@ -49,36 +52,127 @@ export class ChatService implements OnDestroy {
   private currentRoom: string = 'general';
   private isTyping: boolean = false;
 
-  // Adaptive Polling
-  private minPollingInterval = 2000; // 2 seconds
-  private maxPollingInterval = 10000; // 10 seconds
-  private currentPollingInterval = this.minPollingInterval;
-  private noMessagesStreak = 0;
-
   // Subscriptions management
-  private pollingSubscription: Subscription | null = null;
   private subscriptions: Subscription[] = [];
 
   constructor(private http: HttpClient) {
+    // Configurar Supabase Client con Realtime
+    this.supabase = createClient(
+      environment.supabaseUrl,
+      environment.supabaseKey,
+      {
+        realtime: {
+          params: {
+            eventsPerSecond: 10
+          }
+        }
+      }
+    );
+
     this.loadUserFromStorage();
     this.loadInitialHistory().subscribe(() => {
-        this.startAdaptivePolling();
+      this.setupRealtimeSubscription();
     });
 
     this.subscriptions.push(
-      timer(0, 30000).pipe(switchMap(() => this.loadStatsObservable())).subscribe(),
-      timer(0, 3000).pipe(switchMap(() => this.checkTypingUsers())).subscribe(),
-      timer(0, 15000).pipe(switchMap(() => this.checkOnlineUsers())).subscribe()
+      this.setupPeriodicStats(),
+      this.setupOnlineUsersCheck()
     );
   }
 
   ngOnDestroy(): void {
-    // Clean up all subscriptions to prevent memory leaks
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
+    // Clean up all subscriptions and realtime connection
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    this.setTyping(false); // Notify backend that user is no longer typing
+    this.setTyping(false);
+    
+    // Desconectar canal de Supabase Realtime
+    if (this.channel) {
+      this.supabase.removeChannel(this.channel);
+    }
+  }
+
+  private setupRealtimeSubscription(): void {
+    // Configurar suscripción a cambios en tiempo real
+    this.channel = this.supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `room=eq.${this.currentRoom}`
+        },
+        (payload: RealtimePostgresChangesPayload<any>) => {
+          this.handleNewMessage(payload);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public', 
+          table: 'chat_messages',
+          filter: `message_type=eq.system`
+        },
+        (payload: RealtimePostgresChangesPayload<any>) => {
+          this.handleSystemMessage(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Canal de Supabase:', status);
+        this.connectedSubject.next(status === 'SUBSCRIBED');
+      });
+  }
+
+  private handleNewMessage(payload: RealtimePostgresChangesPayload<any>): void {
+    const newMessage: ChatMessage = {
+      id: payload.new.id,
+      user: payload.new.user_name,
+      user_id: payload.new.user_id,
+      message: payload.new.message,
+      timestamp: payload.new.created_at,
+      room: payload.new.room,
+      type: payload.new.message_type || 'message'
+    };
+
+    // Verificar que no sea un mensaje duplicado
+    const currentMessages = this.messagesSubject.value;
+    if (!currentMessages.find(msg => msg.id === newMessage.id)) {
+      const updatedMessages = [...currentMessages, newMessage]
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
+      // Mantener solo los últimos 200 mensajes
+      const limitedMessages = updatedMessages.slice(-200);
+      this.messagesSubject.next(limitedMessages);
+    }
+  }
+
+  private handleSystemMessage(payload: RealtimePostgresChangesPayload<any>): void {
+    // Manejar mensajes del sistema (usuarios conectados/desconectados, etc.)
+    this.handleNewMessage(payload);
+  }
+
+  private setupPeriodicStats(): Subscription {
+    // Actualizar stats cada 30 segundos
+    return new Subscription(() => {
+      const interval = setInterval(() => {
+        this.loadStatsObservable().subscribe();
+      }, 30000);
+      
+      return () => clearInterval(interval);
+    });
+  }
+
+  private setupOnlineUsersCheck(): Subscription {
+    // Verificar usuarios online cada 15 segundos
+    return new Subscription(() => {
+      const interval = setInterval(() => {
+        this.checkOnlineUsers().subscribe();
+      }, 15000);
+      
+      return () => clearInterval(interval);
+    });
   }
 
   private loadUserFromStorage(): void {
@@ -87,33 +181,6 @@ export class ChatService implements OnDestroy {
       this.currentUser = storedUser;
     }
   }
-
-  private startAdaptivePolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
-
-    this.pollingSubscription = timer(0, this.currentPollingInterval)
-      .pipe(switchMap(() => this.checkNewMessages()))
-      .subscribe();
-  }
-
-  private adjustPollingInterval(foundMessages: boolean): void {
-      if (foundMessages) {
-          this.noMessagesStreak = 0;
-          this.currentPollingInterval = this.minPollingInterval;
-      } else {
-          this.noMessagesStreak++;
-          // Increase interval only after a few empty checks
-          if (this.noMessagesStreak > 2) {
-              this.currentPollingInterval = Math.min(this.maxPollingInterval, this.currentPollingInterval + 1000);
-          }
-      }
-
-      // Restart polling with the new interval
-      this.startAdaptivePolling();
-  }
-
 
   public loadInitialHistory(): Observable<any> {
     return this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=100`).pipe(
@@ -132,64 +199,6 @@ export class ChatService implements OnDestroy {
           console.error('API call failed for initial history:', error);
           this.connectedSubject.next(false);
           return of(null);
-      })
-    );
-  }
-
-  private checkNewMessages(): Observable<any> {
-    const currentMessages = this.messagesSubject.value;
-    const lastTimestamp = currentMessages.length > 0
-      ? new Date(currentMessages[currentMessages.length - 1].timestamp).toISOString()
-      : new Date(0).toISOString();
-
-    const url = `${this.apiUrl}/api/chat/messages?since_iso=${lastTimestamp}`;
-
-    return this.http.get<{ messages: ChatMessage[] }>(url).pipe(
-      tap({
-        next: (response) => {
-          this.connectedSubject.next(true);
-          const newMessages = response.messages || [];
-
-          if (newMessages.length > 0) {
-            const currentMessages = this.messagesSubject.getValue();
-            const existingIds = new Set(currentMessages.map(m => m.id));
-            const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-
-            if (trulyNewMessages.length > 0) {
-              const allMessages = [...currentMessages, ...trulyNewMessages]
-                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-              const limitedMessages = allMessages.slice(-200); // Keep chat history lean
-              this.messagesSubject.next(limitedMessages);
-              this.adjustPollingInterval(true);
-            } else {
-              this.adjustPollingInterval(false);
-            }
-          } else {
-            this.adjustPollingInterval(false);
-          }
-        },
-        error: (error) => {
-          console.error('Error checking new messages:', error);
-          this.connectedSubject.next(false);
-          // Don't adjust interval on error, just wait for next attempt
-        }
-      }),
-      catchError(error => {
-        this.connectedSubject.next(false);
-        return of(null); // Continue polling loop
-      })
-    );
-  }
-
-  private checkTypingUsers(): Observable<any> {
-    return this.http.get<{ typing_users: { [key: string]: string } }>(
-      `${this.apiUrl}/api/chat/typing-users?room=${this.currentRoom}`
-    ).pipe(
-      catchError(error => of({ typing_users: {} })),
-      tap(response => {
-        const typingUsers = Object.values(response.typing_users || {}).map(String).filter(user => user !== this.currentUser);
-        this.typingUsersSubject.next(typingUsers);
       })
     );
   }
@@ -214,20 +223,14 @@ export class ChatService implements OnDestroy {
     return this.http.post<{ success: boolean, message: ChatMessage }>(`${this.apiUrl}/api/chat/send`, messageData).pipe(
       tap(response => {
         if (response.success && response.message) {
-          // Add message optimistically
-          const currentMessages = this.messagesSubject.getValue();
-          if (!currentMessages.find(m => m.id === response.message.id)) {
-            this.messagesSubject.next([...currentMessages, response.message]);
-          }
-          // Reset polling to be fast after sending a message
-          this.adjustPollingInterval(true);
+          // El mensaje se agregará automáticamente via realtime
+          this.setTyping(false);
         }
-        this.setTyping(false);
       }),
       catchError(error => {
         console.error('Error sending message:', error);
         this.connectedSubject.next(false);
-        throw error; // Re-throw to be handled by the component
+        throw error;
       })
     );
   }

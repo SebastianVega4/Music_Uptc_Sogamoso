@@ -31,6 +31,9 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   showUserModal = false;
   unreadMessages = 0;
   
+  // AGREGAR ESTA PROPIEDAD FALTANTE
+  private previousMessageCount = 0;
+  
   public messages$: Observable<ChatMessage[]>;
   public typingUsers$: Observable<string[]>;
   public onlineUsers$: Observable<number>;
@@ -56,11 +59,19 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const messagesSub = this.messages$.subscribe(messages => {
-        this.handleNewMessages(messages);
-        this.cdr.markForCheck();
-        this.autoScrollToBottom();
+        // Usar setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
+            this.handleNewMessages(messages);
+            this.cdr.detectChanges();
+            this.autoScrollToBottom();
+        });
     });
     this.subscriptions.add(messagesSub);
+
+    // Forzar una verificación inicial de mensajes
+    setTimeout(() => {
+      this.chatService.loadInitialHistory().subscribe();
+    }, 1000);
   }
 
   ngOnDestroy(): void {
@@ -71,27 +82,25 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   }
   
   private handleNewMessages(messages: ChatMessage[]): void {
-    const previousCount = this.messagesContainer?.nativeElement?.childElementCount ?? messages.length;
-    if (this.isChatOpen && messages.length > previousCount) {
-      // If chat is open, just scroll
-      this.autoScrollToBottom();
-    } else if (!this.isChatOpen && messages.length > previousCount) {
-      // If chat is closed, update unread count
-      const newMessagesCount = messages.length - previousCount;
-      this.unreadMessages += newMessagesCount;
-      this.showNewMessageNotification(this.unreadMessages);
-    }
-  }
+    if (!this.messagesContainer) return;
 
-  private autoScrollToBottom(): void {
-    if (this.isChatOpen && this.messagesContainer) {
-      setTimeout(() => {
-        const el = this.messagesContainer.nativeElement;
-        const isNearBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 250;
-        if (isNearBottom) {
-          el.scrollTop = el.scrollHeight;
-        }
-      }, 100);
+    const currentCount = messages.length;
+    const previousCount = this.previousMessageCount;
+    this.previousMessageCount = currentCount;
+
+    if (this.isChatOpen) {
+      // Si el chat está abierto, solo actualizar el contador de no leídos si hay nuevos mensajes
+      const newMessagesCount = currentCount - previousCount;
+      if (newMessagesCount > 0 && previousCount > 0) {
+        this.unreadMessages += newMessagesCount;
+      }
+    } else {
+      // Si el chat está cerrado, contar todos los mensajes nuevos
+      const newMessagesCount = currentCount - previousCount;
+      if (newMessagesCount > 0) {
+        this.unreadMessages += newMessagesCount;
+        this.showNewMessageNotification(this.unreadMessages);
+      }
     }
   }
 
@@ -119,7 +128,13 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
 
   scrollToBottom(): void {
     if(this.messagesContainer) {
-        setTimeout(() => this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight, 50);
+        setTimeout(() => {
+          try {
+            this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+          } catch (error) {
+            console.error('Error en scroll:', error);
+          }
+        }, 50);
     }
   }
 
@@ -134,10 +149,50 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     if (this.isChatOpen) {
       this.unreadMessages = 0;
       this.chatService.loadStats(); // Refresh stats on open
-      this.scrollToBottom();
+      
+      // Forzar actualización de mensajes al abrir el chat
+      setTimeout(() => {
+        this.scrollToBottom();
+        this.chatService.loadInitialHistory().subscribe();
+      }, 100);
     }
   }
   
+  private setupRealtimeMessages(): void {
+    const messagesSub = this.messages$.subscribe(messages => {
+      const wasNearBottom = this.isNearBottom();
+      
+      this.handleNewMessages(messages);
+      this.cdr.markForCheck();
+      
+      // Solo hacer scroll automático si ya estaba cerca del fondo
+      if (wasNearBottom) {
+        this.autoScrollToBottom();
+      }
+    });
+    this.subscriptions.add(messagesSub);
+  }
+  
+  private isNearBottom(): boolean {
+    if (!this.messagesContainer) return true;
+    
+    const el = this.messagesContainer.nativeElement;
+    const threshold = 150; // píxeles desde el fondo
+    const position = el.scrollTop + el.clientHeight;
+    const height = el.scrollHeight;
+    
+    return height - position <= threshold;
+  }
+  
+  private autoScrollToBottom(): void {
+    if (this.messagesContainer) {
+      setTimeout(() => {
+        const el = this.messagesContainer.nativeElement;
+        el.scrollTop = el.scrollHeight;
+      }, 100);
+    }
+  }
+
   onInputChange(): void {
     this.connected$.pipe(take(1)).subscribe(isConnected => {
       if (this.newMessage.trim() && isConnected) {
