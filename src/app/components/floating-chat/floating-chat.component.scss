@@ -627,3 +627,25 @@ button, input, .message {
     border: 1px solid rgba(16, 185, 129, 0.3);
   }
 }
+
+.validation-message {
+  margin: -0.5rem 0 1rem 0;
+  text-align: center;
+  
+  .text-danger {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+}
+
+.modal-actions .btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  
+  &:hover {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+}

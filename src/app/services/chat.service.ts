@@ -276,6 +276,15 @@ export class ChatService implements OnDestroy {
     this.loadStatsObservable().subscribe();
   }
 
+  validateUsername(username: string): Observable<{valid: boolean, error?: string, is_admin?: boolean}> {
+    return this.http.post<{valid: boolean, error?: string, is_admin?: boolean}>(
+      `${this.apiUrl}/api/chat/validate-username`,
+      { username }
+    ).pipe(
+      catchError(error => of({ valid: false, error: 'Error validando nombre' }))
+    );
+  }
+  
   private generateUserId(): string {
     let userId = localStorage.getItem('chat_user_id');
     if (!userId) {

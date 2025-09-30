@@ -21,7 +21,8 @@
       </div>
       <div class="header-right" *ngIf="onlineUsers$ | async as onlineUsers">
         <div class="online-users"><i class="fas fa-users me-1"></i> {{ onlineUsers }}</div>
-        <button class="btn-user" (click)="showUserModal = true" title="Cambiar usuario"><i class="fas fa-user-edit"></i></button>
+        <button class="btn-user" (click)="showUserModal = true" title="Cambiar usuario"><i
+            class="fas fa-user-edit"></i></button>
         <button class="btn-close" (click)="isChatOpen = false" title="Cerrar chat"><i class="fas fa-times"></i></button>
       </div>
     </div>
@@ -34,10 +35,9 @@
 
     <!-- Mensajes -->
     <div class="messages-container" #messagesContainer>
-      <div *ngFor="let message of messages$ | async; trackBy: trackByMessage" 
-           class="message" 
-           [class.system-message]="message.type === 'system'"
-           [class.own-message]="message.user === currentUser && message.type === 'message'">
+      <div *ngFor="let message of messages$ | async; trackBy: trackByMessage" class="message"
+        [class.system-message]="message.type === 'system'"
+        [class.own-message]="message.user === currentUser && message.type === 'message'">
         <div class="message-header" *ngIf="message.type === 'message'">
           <strong class="username">{{ message.user }}</strong>
           <span class="message-time">{{ formatTime(message.timestamp) }}</span>
@@ -48,25 +48,36 @@
       <div *ngIf="(typingUsers$ | async) as typingUsers" class="typing-indicator">
         <div *ngIf="typingUsers.length > 0">
           <div class="typing-dots"><span></span><span></span><span></span></div>
-          <span class="typing-text">{{ typingUsers.join(', ') }} {{ typingUsers.length === 1 ? 'está escribiendo...' : 'están escribiendo...' }}</span>
+          <span class="typing-text">{{ typingUsers.join(', ') }} {{ typingUsers.length === 1 ? 'está escribiendo...' :
+            'están escribiendo...' }}</span>
         </div>
       </div>
     </div>
 
     <!-- Input -->
     <div class="input-container" *ngIf="connected$ | async as isConnected">
-      <input #messageInput type="text" [(ngModel)]="newMessage" (input)="onInputChange()" (keyup.enter)="sendMessage()" [disabled]="!isConnected" placeholder="{{ isConnected ? 'Escribe un mensaje...' : 'Conectando...' }}" class="message-input"/>
-      <button (click)="sendMessage()" [disabled]="!newMessage.trim() || !isConnected" class="send-button"><i class="fas fa-paper-plane"></i></button>
+      <input #messageInput type="text" [(ngModel)]="newMessage" (input)="onInputChange()" (keyup.enter)="sendMessage()"
+        [disabled]="!isConnected" placeholder="{{ isConnected ? 'Escribe un mensaje...' : 'Conectando...' }}"
+        class="message-input" />
+      <button (click)="sendMessage()" [disabled]="!newMessage.trim() || !isConnected" class="send-button"><i
+          class="fas fa-paper-plane"></i></button>
     </div>
 
     <!-- Modal para cambiar usuario -->
     <div *ngIf="showUserModal" class="modal-overlay" (click)="showUserModal = false">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <h4>Cambiar Nombre</h4>
-        <input type="text" [value]="currentUser" #userInput (keyup.enter)="updateUser(userInput.value)" placeholder="Tu nombre de usuario" class="user-input" maxlength="20"/>
+        <input type="text" [value]="currentUser" #userInput (keyup)="onUsernameInput(userInput.value)"
+          (keyup.enter)="updateUser(userInput.value)" placeholder="Tu nombre de usuario" class="user-input"
+          maxlength="20" />
+        <div class="validation-message" *ngIf="usernameError">
+          <small class="text-danger">{{ usernameError }}</small>
+        </div>
         <div class="modal-actions">
           <button class="btn-cancel" (click)="showUserModal = false">Cancelar</button>
-          <button class="btn-save" (click)="updateUser(userInput.value)">Guardar</button>
+          <button class="btn-save" (click)="updateUser(userInput.value)" [disabled]="usernameError">
+            Guardar
+          </button>
         </div>
       </div>
     </div>

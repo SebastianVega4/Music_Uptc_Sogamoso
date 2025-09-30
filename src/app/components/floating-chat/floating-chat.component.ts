@@ -30,6 +30,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   newMessage = '';
   showUserModal = false;
   unreadMessages = 0;
+  usernameError: string = '';
   
   // AGREGAR ESTA PROPIEDAD FALTANTE
   private previousMessageCount = 0;
@@ -74,6 +75,25 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  onUsernameInput(username: string): void {
+    const trimmed = username.trim();
+    if (trimmed) {
+      this.chatService.validateUsername(trimmed).subscribe({
+        next: (validation) => {
+          this.usernameError = validation.valid ? '' : (validation.error || '');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.usernameError = '';
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
+      this.usernameError = '';
+      this.cdr.markForCheck();
+    }
+  }
+  
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     if (this.typingTimeout) {
@@ -110,16 +130,21 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
         const messageText = this.newMessage.trim();
         this.newMessage = '';
         this.cdr.markForCheck();
-
+  
         this.chatService.sendMessage(messageText).subscribe({
           next: () => {
             this.stopTyping();
             this.scrollToBottom();
           },
-          error: () => {
+          error: (error) => {
             // Restore message on error
             this.newMessage = messageText;
             this.cdr.markForCheck();
+            
+            // Mostrar error específico si es de validación de nombre
+            if (error.error && error.error.error) {
+              alert(error.error.error);
+            }
           }
         });
       } 
@@ -216,10 +241,23 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   updateUser(currentUser: string | null): void {
     const newName = currentUser?.trim();
     if (newName) {
-      this.chatService.setUser(newName);
-      this.currentUser$ = of(newName);
-      this.showUserModal = false;
-      this.cdr.markForCheck();
+      // Validar el nombre antes de actualizar
+      this.chatService.validateUsername(newName).subscribe({
+        next: (validation) => {
+          if (validation.valid) {
+            this.chatService.setUser(newName);
+            this.currentUser$ = of(newName);
+            this.showUserModal = false;
+            this.cdr.markForCheck();
+          } else {
+            // Mostrar error de validación
+            alert(validation.error || 'Nombre no válido');
+          }
+        },
+        error: () => {
+          alert('Error validando el nombre de usuario');
+        }
+      });
     }
   }
 
