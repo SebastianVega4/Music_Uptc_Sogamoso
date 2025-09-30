@@ -1,4 +1,4 @@
-// chat.service.ts - VERSIÓN OPTIMIZADA CON POLLING RÁPIDO
+// chat.service.ts - VERSIÓN CORREGIDA
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -79,9 +79,9 @@ export class ChatService {
       switchMap(() => this.checkTypingUsers())
     ).subscribe();
 
-    // Polling para estadísticas cada 30 segundos
+    // CORRECCIÓN: loadStats() ahora retorna un Observable
     interval(30000).pipe(
-      switchMap(() => this.loadStats())
+      switchMap(() => this.loadStatsObservable())
     ).subscribe();
 
     // Polling para usuarios online cada 10 segundos
@@ -266,17 +266,24 @@ export class ChatService {
     return this.http.get<ChatStats>(`${this.apiUrl}/api/chat/stats`);
   }
 
-  loadStats(): void {
-    this.getStats().pipe(
+  // CORRECCIÓN: Nuevo método que retorna Observable para el polling
+  private loadStatsObservable(): Observable<ChatStats | null> {
+    return this.getStats().pipe(
       catchError(error => {
         console.error('Error loading stats:', error);
         return of(null);
+      }),
+      tap(stats => {
+        if (stats) {
+          this.statsSubject.next(stats);
+        }
       })
-    ).subscribe(stats => {
-      if (stats) {
-        this.statsSubject.next(stats);
-      }
-    });
+    );
+  }
+
+  // Método original mantenido para compatibilidad
+  loadStats(): void {
+    this.loadStatsObservable().subscribe();
   }
 
   // === HELPERS PRIVADOS ===
