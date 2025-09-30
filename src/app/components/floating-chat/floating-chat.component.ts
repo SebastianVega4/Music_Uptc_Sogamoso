@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage, ChatStats } from '../../services/chat.service';
@@ -6,15 +6,13 @@ import { Subscription } from 'rxjs';
 
 @Component({
   standalone: true,
-  selector: 'app-chat',
-  templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss'],
+  selector: 'app-floating-chat',
+  templateUrl: './floating-chat.component.html',
+  styleUrls: ['./floating-chat.component.scss'],
   imports: [CommonModule, FormsModule]
 })
-export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
-  @ViewChild('messageInput') private messageInput!: ElementRef;
-  
+export class FloatingChatComponent implements OnInit, OnDestroy {
+  isChatOpen = false;
   messages: ChatMessage[] = [];
   newMessage = '';
   currentUser = 'Usuario';
@@ -23,6 +21,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
   isConnected = false;
   showUserModal = false;
   stats: ChatStats | null = null;
+  unreadMessages = 0;
   
   private messagesSubscription!: Subscription;
   private typingSubscription!: Subscription;
@@ -38,6 +37,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     this.messagesSubscription = this.chatService.messages$.subscribe(
       (messages: ChatMessage[]) => {
         this.messages = messages;
+        
+        // Contar mensajes no leídos cuando el chat está cerrado
+        if (!this.isChatOpen && messages.length > 0) {
+          this.unreadMessages = messages.length;
+        }
+        
         this.scrollToBottom();
       }
     );
@@ -74,16 +79,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentUser = this.chatService.getUser();
 
     // Cargar estadísticas
-    this.loadStats();
-  }
-
-  ngAfterViewInit(): void {
-    // Focus en el input al cargar
-    setTimeout(() => {
-      if (this.messageInput) {
-        this.messageInput.nativeElement.focus();
-      }
-    }, 500);
+    this.chatService.loadStats();
   }
 
   ngOnDestroy(): void {
@@ -95,6 +91,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
+    }
+  }
+
+  toggleChat(): void {
+    this.isChatOpen = !this.isChatOpen;
+    if (this.isChatOpen) {
+      this.unreadMessages = 0; // Resetear contador al abrir
     }
   }
 
@@ -141,22 +144,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  loadStats(): void {
-    this.chatService.getStats().subscribe({
-      next: (stats: ChatStats) => {
-        this.stats = stats;
-      },
-      error: (error: any) => {
-        console.error('Error cargando estadísticas:', error);
-      }
-    });
-  }
-
   scrollToBottom(): void {
     setTimeout(() => {
-      if (this.messagesContainer) {
-        const element = this.messagesContainer.nativeElement;
-        element.scrollTop = element.scrollHeight;
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }, 100);
   }
@@ -177,5 +169,20 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
 
   trackByMessage(index: number, message: ChatMessage): string {
     return message.id;
+  }
+
+  // Cerrar chat al hacer clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const chatContainer = document.querySelector('.floating-chat-container');
+    
+    if (this.isChatOpen && chatContainer && !chatContainer.contains(target)) {
+      // No cerrar si se hace clic en el botón flotante
+      const floatingButton = document.querySelector('.floating-chat-button');
+      if (!floatingButton?.contains(target)) {
+        this.isChatOpen = false;
+      }
+    }
   }
 }

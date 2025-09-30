@@ -36,6 +36,12 @@ export class ChatService {
   private statsSubject = new BehaviorSubject<ChatStats | null>(null);
   public stats$ = this.statsSubject.asObservable();
 
+  private connectedSubject = new BehaviorSubject<boolean>(false);
+  public connected$ = this.connectedSubject.asObservable();
+
+  private onlineUsersSubject = new BehaviorSubject<number>(0);
+  public onlineUsers$ = this.onlineUsersSubject.asObservable();
+
   // Estado del usuario
   private currentUser: string = 'Usuario';
   private userId: string = this.generateUserId();
@@ -47,8 +53,16 @@ export class ChatService {
   private statsPolling: any;
 
   constructor(private http: HttpClient) {
+    this.loadUserFromStorage();
     this.startPolling();
     this.loadInitialHistory();
+  }
+
+  private loadUserFromStorage(): void {
+    const storedUser = localStorage.getItem('chat_user_name');
+    if (storedUser) {
+      this.currentUser = storedUser;
+    }
   }
 
   private startPolling(): void {
@@ -66,13 +80,20 @@ export class ChatService {
     this.statsPolling = interval(30000).subscribe(() => {
       this.loadStats();
     });
+
+    // Polling para usuarios online cada 15 segundos
+    const onlinePolling = interval(15000).subscribe(() => {
+      this.checkOnlineUsers();
+    });
+
+    this.connectedSubject.next(true);
   }
 
   private loadInitialHistory(): void {
     this.http.get<{messages: ChatMessage[]}>(`${this.apiUrl}/api/chat/messages?limit=50`)
       .subscribe({
         next: (response) => {
-          this.messagesSubject.next(response.messages);
+          this.messagesSubject.next(response.messages.reverse());
         },
         error: (error) => {
           console.error('Error cargando historial:', error);
@@ -116,6 +137,20 @@ export class ChatService {
     });
   }
 
+  private checkOnlineUsers(): void {
+    this.http.get<{online_users: number}>(`${this.apiUrl}/api/chat/online-users`)
+      .subscribe({
+        next: (response) => {
+          this.onlineUsersSubject.next(response.online_users);
+        },
+        error: (error) => {
+          console.error('Error checking online users:', error);
+          // Valor por defecto si hay error
+          this.onlineUsersSubject.next(1);
+        }
+      });
+  }
+
   // === MÉTODOS PÚBLICOS ===
 
   sendMessage(message: string): Observable<any> {
@@ -145,18 +180,28 @@ export class ChatService {
 
   setUser(name: string): void {
     this.currentUser = name || 'Usuario';
+    localStorage.setItem('chat_user_name', this.currentUser);
   }
 
+  getUser(): string {
+    return this.currentUser;
+  }
+
+  // MÉTODO CORREGIDO: getStats ahora retorna Observable
+  getStats(): Observable<ChatStats> {
+    return this.http.get<ChatStats>(`${this.apiUrl}/api/chat/stats`);
+  }
+
+  // Método para cargar stats internamente
   loadStats(): void {
-    this.http.get<ChatStats>(`${this.apiUrl}/api/chat/stats`)
-      .subscribe({
-        next: (stats) => {
-          this.statsSubject.next(stats);
-        },
-        error: (error) => {
-          console.error('Error cargando estadísticas:', error);
-        }
-      });
+    this.getStats().subscribe({
+      next: (stats: ChatStats) => {
+        this.statsSubject.next(stats);
+      },
+      error: (error: any) => {
+        console.error('Error cargando estadísticas:', error);
+      }
+    });
   }
 
   // === HELPERS PRIVADOS ===
@@ -182,5 +227,6 @@ export class ChatService {
     if (this.statsPolling) {
       this.statsPolling.unsubscribe();
     }
+    this.connectedSubject.next(false);
   }
 }
