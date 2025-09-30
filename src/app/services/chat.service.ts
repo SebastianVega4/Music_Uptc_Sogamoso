@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, tap, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, interval, tap, throwError, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
@@ -101,18 +101,16 @@ export class ChatService {
       });
   }
 
-  private checkNewMessages(): void {
+  checkNewMessages(): Observable<any> {
     const currentMessages = this.messagesSubject.value;
-
-    // Usar timestamp del último mensaje para obtener solo los nuevos
     const lastTimestamp = currentMessages.length > 0
       ? currentMessages[currentMessages.length - 1].timestamp
       : null;
 
-    this.http.get<{ messages: ChatMessage[] }>(
+    return this.http.get<{ messages: ChatMessage[] }>(
       `${this.apiUrl}/api/chat/messages?limit=50${lastTimestamp ? `&since=${lastTimestamp}` : ''}`
-    ).subscribe({
-      next: (response) => {
+    ).pipe(
+      tap(response => {
         if (response.messages && response.messages.length > 0) {
           const newMessages = response.messages.filter(newMsg =>
             !currentMessages.find(existingMsg => existingMsg.id === newMsg.id)
@@ -123,11 +121,12 @@ export class ChatService {
             this.messagesSubject.next([...currentMessages, ...newMessages]);
           }
         }
-      },
-      error: (error) => {
+      }),
+      catchError(error => {
         console.error('Error checking new messages:', error);
-      }
-    });
+        return of(null);
+      })
+    );
   }
 
   private checkTypingUsers(): void {
