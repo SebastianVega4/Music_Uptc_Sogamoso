@@ -30,25 +30,36 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   private statsSubscription!: Subscription;
   private typingTimeout: any;
 
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectInterval: any;
+  
   constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
     this.setupSubscriptions();
     this.loadInitialMessages();
+    this.startReconnectionHandler();
   }
 
   private setupSubscriptions(): void {
-    // Suscribirse a mensajes - optimizado
     this.messagesSubscription = this.chatService.messages$.subscribe(
       (messages: ChatMessage[]) => {
+        const previousCount = this.messages.length;
         this.messages = messages;
         
-        // Contar mensajes no leídos cuando el chat está cerrado
-        if (!this.isChatOpen && messages.length > 0) {
-          this.unreadMessages = this.calculateUnreadMessages(messages);
+        // Detectar nuevos mensajes
+        if (messages.length > previousCount && !this.isChatOpen) {
+          const newMessagesCount = messages.length - previousCount;
+          this.unreadMessages += newMessagesCount;
+          
+          // Opcional: Mostrar notificación
+          if (newMessagesCount > 0) {
+            this.showNewMessageNotification(newMessagesCount);
+          }
         }
         
-        // Scroll automático solo si el usuario está cerca del final
+        // Scroll automático mejorado
         this.autoScrollToBottom();
       }
     );
@@ -97,6 +108,17 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     ).length;
   }
 
+  private startReconnectionHandler(): void {
+    // Intentar reconexión automática cada 10 segundos si está desconectado
+    this.reconnectInterval = setInterval(() => {
+      if (!this.isConnected && this.reconnectAttempts < this.maxReconnectAttempts) {
+        console.log('🔄 Intentando reconexión...');
+        this.reconnectAttempts++;
+        this.loadInitialMessages();
+      }
+    }, 10000);
+  }
+
   private loadInitialMessages(): void {
     // Este método ya está implementado en el servicio
     // Solo necesitamos asegurarnos de que las suscripciones estén activas
@@ -108,9 +130,8 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         const messagesContainer = document.querySelector('.messages-container');
         if (messagesContainer) {
-          // Scroll automático si está cerca del final (últimos 100px)
           const isNearBottom = 
-            messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= 100;
+            messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= 150;
           
           if (isNearBottom) {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -122,14 +143,24 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
 
   sendMessage(): void {
     if (this.newMessage.trim() && this.isConnected) {
-      this.chatService.sendMessage(this.newMessage).subscribe({
+      const messageText = this.newMessage.trim();
+      this.newMessage = ''; // Limpiar inmediatamente para mejor UX
+      
+      this.chatService.sendMessage(messageText).subscribe({
         next: () => {
-          this.newMessage = ''; // Esto limpia el input
+          console.log('✅ Mensaje enviado exitosamente');
           this.stopTyping();
-          // El mensaje aparecerá inmediatamente gracias al polling rápido
         },
         error: (error: any) => {
-          console.error('Error enviando mensaje:', error);
+          console.error('❌ Error enviando mensaje:', error);
+          // Revertir el mensaje si falla
+          this.newMessage = messageText;
+          
+          // Intentar reconexión
+          if (error.status === 0 || error.status >= 500) {
+            this.isConnected = false;
+            this.reconnectAttempts = 0;
+          }
         }
       });
     }
@@ -144,23 +175,39 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     }, 50);
   }
 
+  private showNewMessageNotification(count: number): void {
+    // Solo notificar si la ventana no está enfocada
+    if (!document.hasFocus()) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`Nuevo${count > 1 ? 's' : ''} mensaje${count > 1 ? 's' : ''}`, {
+          body: `Tienes ${count} mensaje${count > 1 ? 's' : ''} nuevo${count > 1 ? 's' : ''} en el chat`,
+          icon: '/assets/icons/chat-icon.png'
+        });
+      }
+    }
+  }
+
   ngOnDestroy(): void {
     this.messagesSubscription.unsubscribe();
     this.typingSubscription.unsubscribe();
     this.onlineSubscription.unsubscribe();
     this.connectedSubscription.unsubscribe();
     this.statsSubscription.unsubscribe();
-    
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
+
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
     }
   }
 
   toggleChat(): void {
     this.isChatOpen = !this.isChatOpen;
     if (this.isChatOpen) {
-      this.unreadMessages = 0; // Resetear contador al abrir
-      this.scrollToBottom(); // Scroll al fondo al abrir
+      this.unreadMessages = 0;
+      this.reconnectAttempts = 0; // Resetear intentos de reconexión
+      this.scrollToBottom();
+      
+      // Forzar actualización de mensajes al abrir
+      this.chatService.loadInitialMessages();
     }
   }
 

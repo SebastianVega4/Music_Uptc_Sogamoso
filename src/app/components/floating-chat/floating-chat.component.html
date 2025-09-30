@@ -16,7 +16,14 @@
           </h4>
           <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
             <span class="status-dot"></span>
-            {{ isConnected ? 'Conectado' : 'Desconectado' }}
+            {{ isConnected ? 'Conectado' : 'Reconectando...' }}
+            <span *ngIf="!isConnected" class="reconnect-info">({{ reconnectAttempts }}/{{ maxReconnectAttempts }})</span>
+          </div>
+          
+          <!-- En el área de mensajes, agregar indicador de carga -->
+          <div *ngIf="!isConnected" class="reconnection-message">
+            <i class="fas fa-sync-alt fa-spin"></i>
+            Reconectando...
           </div>
         </div>
         

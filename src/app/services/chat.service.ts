@@ -69,23 +69,28 @@ export class ChatService {
   }
 
   private startOptimizedPolling(): void {
-    // POLLING RÁPIDO para nuevos mensajes cada 1 segundo
-    interval(1000).pipe(
-      switchMap(() => this.checkNewMessages())
+    // POLLING MÁS RÁPIDO Y EFICIENTE para nuevos mensajes
+    interval(2000).pipe( // Reducido a 2 segundos
+      switchMap(() => this.checkNewMessages()),
+      catchError(error => {
+        console.error('Error en polling:', error);
+        this.connectedSubject.next(false);
+        return of(null);
+      })
     ).subscribe();
-
-    // Polling para usuarios escribiendo cada 2 segundos
-    interval(2000).pipe(
+  
+    // Polling para usuarios escribiendo cada 3 segundos
+    interval(3000).pipe(
       switchMap(() => this.checkTypingUsers())
     ).subscribe();
-
-    // CORRECCIÓN: loadStats() ahora retorna un Observable
+  
+    // Polling para estadísticas cada 30 segundos
     interval(30000).pipe(
       switchMap(() => this.loadStatsObservable())
     ).subscribe();
-
-    // Polling para usuarios online cada 10 segundos
-    interval(10000).pipe(
+  
+    // Polling para usuarios online cada 15 segundos
+    interval(15000).pipe(
       switchMap(() => this.checkOnlineUsers())
     ).subscribe();
   }
@@ -111,29 +116,39 @@ export class ChatService {
   private checkNewMessages(): Observable<any> {
     const currentMessages = this.messagesSubject.value;
     
-    // Usar el último ID para obtener solo mensajes nuevos
-    const url = this.lastMessageId 
-      ? `${this.apiUrl}/api/chat/messages?since=${this.lastMessageId}&limit=50`
-      : `${this.apiUrl}/api/chat/messages?limit=50`;
-
+    // Usar timestamp en lugar de ID para mejor detección
+    const lastTimestamp = currentMessages.length > 0 
+      ? new Date(currentMessages[currentMessages.length - 1].timestamp).getTime()
+      : 0;
+  
+    const url = `${this.apiUrl}/api/chat/messages?limit=50&since_timestamp=${lastTimestamp}`;
+  
     return this.http.get<{ messages: ChatMessage[] }>(url).pipe(
       tap({
         next: (response) => {
           const newMessages = response.messages || [];
           
           if (newMessages.length > 0) {
-            // Encontrar mensajes que no están en el estado actual
+            // Filtrar mensajes verdaderamente nuevos
             const existingIds = new Set(currentMessages.map(m => m.id));
-            const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+            const trulyNewMessages = newMessages.filter(msg => 
+              !existingIds.has(msg.id) && 
+              new Date(msg.timestamp).getTime() > lastTimestamp
+            );
             
             if (trulyNewMessages.length > 0) {
-              // Combinar y ordenar por timestamp
+              console.log('Nuevos mensajes detectados:', trulyNewMessages.length);
+              
+              // Combinar manteniendo el orden
               const allMessages = [...currentMessages, ...trulyNewMessages]
                 .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
               
-              this.messagesSubject.next(allMessages);
+              // Limitar a 200 mensajes máximo para performance
+              const limitedMessages = allMessages.slice(-200);
               
-              // Actualizar último ID
+              this.messagesSubject.next(limitedMessages);
+              
+              // Actualizar último timestamp
               this.lastMessageId = trulyNewMessages[trulyNewMessages.length - 1].id;
             }
           }
