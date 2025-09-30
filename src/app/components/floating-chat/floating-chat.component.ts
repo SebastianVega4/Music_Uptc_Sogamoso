@@ -23,15 +23,16 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   stats: ChatStats | null = null;
   unreadMessages = 0;
   
+  // HACER PÚBLICAS estas propiedades para el template
+  reconnectAttempts = 0;
+  maxReconnectAttempts = 5;
+  
   private messagesSubscription!: Subscription;
   private typingSubscription!: Subscription;
   private onlineSubscription!: Subscription;
   private connectedSubscription!: Subscription;
   private statsSubscription!: Subscription;
   private typingTimeout: any;
-
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
   private reconnectInterval: any;
   
   constructor(private chatService: ChatService) {}
@@ -83,6 +84,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       (connected: boolean) => {
         this.isConnected = connected;
         if (connected) {
+          this.reconnectAttempts = 0; // Resetear intentos al reconectar
           this.loadInitialMessages();
         }
       }
@@ -99,15 +101,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.currentUser = this.chatService.getUser();
   }
 
-  // MÉTODO AÑADIDO: Calcular mensajes no leídos
-  private calculateUnreadMessages(messages: ChatMessage[]): number {
-    // Solo contar mensajes que no sean del usuario actual y sean de tipo mensaje
-    return messages.filter(msg => 
-      msg.user !== this.currentUser && 
-      msg.type === 'message'
-    ).length;
-  }
-
   private startReconnectionHandler(): void {
     // Intentar reconexión automática cada 10 segundos si está desconectado
     this.reconnectInterval = setInterval(() => {
@@ -119,9 +112,8 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     }, 10000);
   }
 
-  private loadInitialMessages(): void {
-    // Este método ya está implementado en el servicio
-    // Solo necesitamos asegurarnos de que las suscripciones estén activas
+  public loadInitialMessages(): void {
+    this.chatService.loadInitialHistory();
     this.chatService.loadStats();
   }
 
@@ -194,6 +186,10 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.connectedSubscription.unsubscribe();
     this.statsSubscription.unsubscribe();
 
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+    
     if (this.reconnectInterval) {
       clearInterval(this.reconnectInterval);
     }
@@ -205,9 +201,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       this.unreadMessages = 0;
       this.reconnectAttempts = 0; // Resetear intentos de reconexión
       this.scrollToBottom();
-      
-      // Forzar actualización de mensajes al abrir
-      this.chatService.loadInitialMessages();
     }
   }
 

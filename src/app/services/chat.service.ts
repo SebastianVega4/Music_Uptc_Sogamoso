@@ -1,5 +1,3 @@
-// chat.service.ts - VERSIÓN CORREGIDA
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of } from 'rxjs';
@@ -78,24 +76,25 @@ export class ChatService {
         return of(null);
       })
     ).subscribe();
-  
+
     // Polling para usuarios escribiendo cada 3 segundos
     interval(3000).pipe(
       switchMap(() => this.checkTypingUsers())
     ).subscribe();
-  
+
     // Polling para estadísticas cada 30 segundos
     interval(30000).pipe(
       switchMap(() => this.loadStatsObservable())
     ).subscribe();
-  
+
     // Polling para usuarios online cada 15 segundos
     interval(15000).pipe(
       switchMap(() => this.checkOnlineUsers())
     ).subscribe();
   }
 
-  private loadInitialHistory(): void {
+  // MÉTODO AÑADIDO: Cargar historial inicial
+  public loadInitialHistory(): void {
     this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=100`)
       .subscribe({
         next: (response) => {
@@ -120,9 +119,9 @@ export class ChatService {
     const lastTimestamp = currentMessages.length > 0 
       ? new Date(currentMessages[currentMessages.length - 1].timestamp).getTime()
       : 0;
-  
+
     const url = `${this.apiUrl}/api/chat/messages?limit=50&since_timestamp=${lastTimestamp}`;
-  
+
     return this.http.get<{ messages: ChatMessage[] }>(url).pipe(
       tap({
         next: (response) => {

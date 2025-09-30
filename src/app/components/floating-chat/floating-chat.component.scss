@@ -586,3 +586,44 @@ button, input, .message {
   font-size: 0.7rem;
   opacity: 0.8;
 }
+
+// Agregar al final del archivo existente
+
+.reconnect-info {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin-left: 0.3rem;
+}
+
+.reconnection-message {
+  text-align: center;
+  padding: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  
+  i {
+    margin-right: 0.5rem;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Mejorar el indicador de conexión
+.connection-status {
+  &.disconnected {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  
+  &.connected {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+}
