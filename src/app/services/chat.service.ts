@@ -56,11 +56,18 @@ export class ChatService implements OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(private http: HttpClient) {
-    // Configurar Supabase Client con Realtime
+    // Configurar Supabase Client con Realtime - DESHABILITANDO LockManager
     this.supabase = createClient(
       environment.supabaseUrl,
       environment.supabaseKey,
       {
+        auth: {
+          // Esto evita el error del LockManager
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: localStorage // Usar localStorage en lugar de LockManager
+        },
         realtime: {
           params: {
             eventsPerSecond: 10
@@ -68,12 +75,11 @@ export class ChatService implements OnDestroy {
         }
       }
     );
-
     this.loadUserFromStorage();
     this.loadInitialHistory().subscribe(() => {
       this.setupRealtimeSubscription();
     });
-
+  
     this.subscriptions.push(
       this.setupPeriodicStats(),
       this.setupOnlineUsersCheck()
