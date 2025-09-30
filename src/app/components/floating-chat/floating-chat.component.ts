@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage, ChatStats } from '../../services/chat.service';
-import { Subscription, interval } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -23,8 +22,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   showUserModal = false;
   stats: ChatStats | null = null;
   unreadMessages = 0;
-  lastMessageCount = 0;
-  isNearBottom = true;
   
   private messagesSubscription!: Subscription;
   private typingSubscription!: Subscription;
@@ -32,60 +29,41 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   private connectedSubscription!: Subscription;
   private statsSubscription!: Subscription;
   private typingTimeout: any;
-  private messageCheckInterval: any;
 
-  constructor(
-    private chatService: ChatService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private chatService: ChatService) {}
 
   ngOnInit(): void {
     this.setupSubscriptions();
     this.loadInitialMessages();
-    this.startMessagePolling();
   }
 
   private setupSubscriptions(): void {
-    // Suscribirse a mensajes - optimizado para tiempo real
+    // Suscribirse a mensajes - optimizado
     this.messagesSubscription = this.chatService.messages$.subscribe(
       (messages: ChatMessage[]) => {
-        const previousCount = this.messages.length;
         this.messages = messages;
         
-        // Detectar nuevos mensajes
-        if (messages.length > previousCount && !this.isChatOpen) {
-          const newMessagesCount = messages.length - previousCount;
-          this.unreadMessages += newMessagesCount;
-          
-          // Efecto visual para nuevo mensaje
-          this.pulseNotification();
+        // Contar mensajes no leídos cuando el chat está cerrado
+        if (!this.isChatOpen && messages.length > 0) {
+          this.unreadMessages = this.calculateUnreadMessages(messages);
         }
         
-        // Scroll automático inteligente
-        setTimeout(() => {
-          this.autoScrollToBottom();
-        }, 100);
-        
-        this.cdr.detectChanges();
+        // Scroll automático solo si el usuario está cerca del final
+        this.autoScrollToBottom();
       }
     );
 
-    // Suscribirse a usuarios escribiendo con debounce
-    this.typingSubscription = this.chatService.typingUsers$
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe((users: string[]) => {
+    // Suscribirse a usuarios escribiendo
+    this.typingSubscription = this.chatService.typingUsers$.subscribe(
+      (users: string[]) => {
         this.typingUsers = users.filter(user => user !== this.currentUser);
-        this.cdr.detectChanges();
-      });
+      }
+    );
 
     // Suscribirse a usuarios online
     this.onlineSubscription = this.chatService.onlineUsers$.subscribe(
       (count: number) => {
         this.onlineUsers = count;
-        this.cdr.detectChanges();
       }
     );
 
@@ -95,11 +73,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
         this.isConnected = connected;
         if (connected) {
           this.loadInitialMessages();
-          this.startMessagePolling();
-        } else {
-          this.stopMessagePolling();
         }
-        this.cdr.detectChanges();
       }
     );
 
@@ -107,7 +81,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.statsSubscription = this.chatService.stats$.subscribe(
       (stats: ChatStats | null) => {
         this.stats = stats;
-        this.cdr.detectChanges();
       }
     );
 
@@ -115,54 +88,35 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.currentUser = this.chatService.getUser();
   }
 
-  private startMessagePolling(): void {
-    // Polling más frecuente para mensajes nuevos
-    this.messageCheckInterval = interval(2000).subscribe(() => {
-      if (this.isConnected) {
-        this.chatService.checkNewMessages().subscribe();
-      }
-    });
-  }
-
-  private stopMessagePolling(): void {
-    if (this.messageCheckInterval) {
-      this.messageCheckInterval.unsubscribe();
-    }
+  // MÉTODO AÑADIDO: Calcular mensajes no leídos
+  private calculateUnreadMessages(messages: ChatMessage[]): number {
+    // Solo contar mensajes que no sean del usuario actual y sean de tipo mensaje
+    return messages.filter(msg => 
+      msg.user !== this.currentUser && 
+      msg.type === 'message'
+    ).length;
   }
 
   private loadInitialMessages(): void {
+    // Este método ya está implementado en el servicio
+    // Solo necesitamos asegurarnos de que las suscripciones estén activas
     this.chatService.loadStats();
   }
 
-  private pulseNotification(): void {
-    // Efecto visual para notificación de nuevo mensaje
-    const button = document.querySelector('.floating-chat-button');
-    if (button) {
-      button.classList.add('pulse-effect');
-      setTimeout(() => {
-        button.classList.remove('pulse-effect');
-      }, 1000);
-    }
-  }
-
   private autoScrollToBottom(): void {
-    if (this.isChatOpen && this.isNearBottom) {
+    if (this.isChatOpen) {
       setTimeout(() => {
         const messagesContainer = document.querySelector('.messages-container');
         if (messagesContainer) {
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          // Scroll automático si está cerca del final (últimos 100px)
+          const isNearBottom = 
+            messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= 100;
+          
+          if (isNearBottom) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
         }
-      }, 50);
-    }
-  }
-
-  onMessagesScroll(event: Event): void {
-    const messagesContainer = event.target as HTMLElement;
-    if (messagesContainer) {
-      // Verificar si el usuario está cerca del final (últimos 150px)
-      const scrollThreshold = 150;
-      this.isNearBottom = 
-        messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= scrollThreshold;
+      }, 100);
     }
   }
 
@@ -173,7 +127,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
           this.newMessage = '';
           this.stopTyping();
           // Forzar scroll al fondo después de enviar
-          this.isNearBottom = true;
           this.scrollToBottom();
         },
         error: (error: any) => {
@@ -189,9 +142,8 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        this.isNearBottom = true;
       }
-    }, 100);
+    }, 50);
   }
 
   ngOnDestroy(): void {
@@ -200,7 +152,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.onlineSubscription.unsubscribe();
     this.connectedSubscription.unsubscribe();
     this.statsSubscription.unsubscribe();
-    this.stopMessagePolling();
     
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
@@ -211,7 +162,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.isChatOpen = !this.isChatOpen;
     if (this.isChatOpen) {
       this.unreadMessages = 0; // Resetear contador al abrir
-      this.scrollToBottom();
+      this.scrollToBottom(); // Scroll al fondo al abrir
     }
   }
 
@@ -259,7 +210,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   }
 
   trackByMessage(index: number, message: ChatMessage): string {
-    return message.id || `${message.timestamp}-${message.user}`;
+    return message.id;
   }
 
   // Cerrar chat al hacer clic fuera
@@ -274,21 +225,6 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
       if (!floatingButton?.contains(target)) {
         this.isChatOpen = false;
       }
-    }
-  }
-
-  // Manejar teclas rápidas
-  @HostListener('document:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent): void {
-    // Ctrl + Enter para enviar mensaje
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && this.isChatOpen) {
-      this.sendMessage();
-      event.preventDefault();
-    }
-    
-    // Escape para cerrar chat
-    if (event.key === 'Escape' && this.isChatOpen) {
-      this.isChatOpen = false;
     }
   }
 }

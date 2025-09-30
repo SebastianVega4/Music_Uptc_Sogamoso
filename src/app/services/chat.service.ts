@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, tap, throwError, catchError, of } from 'rxjs';
+import { Observable, BehaviorSubject, interval, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
@@ -52,6 +52,9 @@ export class ChatService {
   private typingPolling: any;
   private statsPolling: any;
 
+  // Para tracking de mensajes ya recibidos
+  private receivedMessageIds: Set<string> = new Set();
+
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
     this.startPolling();
@@ -66,18 +69,18 @@ export class ChatService {
   }
 
   private startPolling(): void {
-    // Polling para nuevos mensajes
-    this.messagePolling = interval(500).subscribe(() => {
+    // Polling para nuevos mensajes - MÁS RÁPIDO Y EFICIENTE
+    this.messagePolling = interval(1000).subscribe(() => { // Reducido a 1 segundo
       this.checkNewMessages();
     });
 
     // Polling para usuarios escribiendo
-    this.typingPolling = interval(500).subscribe(() => {
+    this.typingPolling = interval(1000).subscribe(() => {
       this.checkTypingUsers();
     });
 
-    // Polling para estadísticas cada
-    this.statsPolling = interval(15000).subscribe(() => {
+    // Polling para estadísticas cada 30 segundos
+    this.statsPolling = interval(30000).subscribe(() => {
       this.loadStats();
     });
 
@@ -93,7 +96,11 @@ export class ChatService {
     this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=50`)
       .subscribe({
         next: (response) => {
-          this.messagesSubject.next(response.messages.reverse());
+          const messages = response.messages.reverse();
+          this.messagesSubject.next(messages);
+          
+          // Inicializar el set de IDs recibidos
+          messages.forEach(msg => this.receivedMessageIds.add(msg.id));
         },
         error: (error) => {
           console.error('Error cargando historial:', error);
@@ -101,32 +108,49 @@ export class ChatService {
       });
   }
 
-  checkNewMessages(): Observable<any> {
+  private checkNewMessages(): void {
     const currentMessages = this.messagesSubject.value;
-    const lastTimestamp = currentMessages.length > 0
-      ? currentMessages[currentMessages.length - 1].timestamp
-      : null;
 
-    return this.http.get<{ messages: ChatMessage[] }>(
-      `${this.apiUrl}/api/chat/messages?limit=50${lastTimestamp ? `&since=${lastTimestamp}` : ''}`
-    ).pipe(
-      tap(response => {
+    this.http.get<{ messages: ChatMessage[] }>(
+      `${this.apiUrl}/api/chat/messages?limit=100` // Obtener más mensajes para asegurar que no nos perdemos ninguno
+    ).subscribe({
+      next: (response) => {
         if (response.messages && response.messages.length > 0) {
-          const newMessages = response.messages.filter(newMsg =>
-            !currentMessages.find(existingMsg => existingMsg.id === newMsg.id)
-          );
+          // Filtrar solo los mensajes nuevos que no hemos recibido
+          const newMessages = response.messages.filter(newMsg => {
+            const isNew = !this.receivedMessageIds.has(newMsg.id);
+            if (isNew) {
+              this.receivedMessageIds.add(newMsg.id);
+            }
+            return isNew;
+          });
 
           if (newMessages.length > 0) {
-            // Agregar nuevos mensajes al final
-            this.messagesSubject.next([...currentMessages, ...newMessages]);
+            console.log(`📨 Nuevos mensajes recibidos: ${newMessages.length}`);
+            
+            // Combinar mensajes existentes con nuevos, evitando duplicados
+            const allMessages = [...currentMessages];
+            
+            newMessages.forEach(newMsg => {
+              // Verificar que no existe ya en los mensajes actuales (doble verificación)
+              if (!allMessages.find(existingMsg => existingMsg.id === newMsg.id)) {
+                allMessages.push(newMsg);
+              }
+            });
+
+            // Ordenar por timestamp
+            allMessages.sort((a, b) => 
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+
+            this.messagesSubject.next(allMessages);
           }
         }
-      }),
-      catchError(error => {
+      },
+      error: (error) => {
         console.error('Error checking new messages:', error);
-        return of(null);
-      })
-    );
+      }
+    });
   }
 
   private checkTypingUsers(): void {
@@ -172,7 +196,16 @@ export class ChatService {
         // Agregar el mensaje inmediatamente al estado local
         if (response.success && response.message) {
           const currentMessages = this.messagesSubject.value;
-          this.messagesSubject.next([...currentMessages, response.message]);
+          const newMessage = response.message;
+          
+          // Agregar al set de IDs recibidos
+          this.receivedMessageIds.add(newMessage.id);
+          
+          // Verificar que no existe ya antes de agregar
+          if (!currentMessages.find(msg => msg.id === newMessage.id)) {
+            const updatedMessages = [...currentMessages, newMessage];
+            this.messagesSubject.next(updatedMessages);
+          }
         }
       })
     );
@@ -240,5 +273,10 @@ export class ChatService {
       this.statsPolling.unsubscribe();
     }
     this.connectedSubject.next(false);
+  }
+
+  forceRefreshMessages(): void {
+    this.receivedMessageIds.clear();
+    this.checkNewMessages();
   }
 }
