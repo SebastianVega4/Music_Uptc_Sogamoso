@@ -1,197 +1,131 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ElementRef,
+  ViewChild
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage, ChatStats } from '../../services/chat.service';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription, of } from 'rxjs';
+import { take, tap } from 'rxjs/operators';
 
 @Component({
   standalone: true,
   selector: 'app-floating-chat',
   templateUrl: './floating-chat.component.html',
   styleUrls: ['./floating-chat.component.scss'],
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FloatingChatComponent implements OnInit, OnDestroy {
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('chatContainer') private chatContainer!: ElementRef<HTMLElement>;
+
   isChatOpen = false;
-  messages: ChatMessage[] = [];
   newMessage = '';
-  currentUser = 'Usuario';
-  typingUsers: string[] = [];
-  onlineUsers = 0;
-  isConnected = false;
   showUserModal = false;
-  stats: ChatStats | null = null;
   unreadMessages = 0;
   
-  // HACER PÚBLICAS estas propiedades para el template
-  reconnectAttempts = 0;
-  maxReconnectAttempts = 5;
-  
-  private messagesSubscription!: Subscription;
-  private typingSubscription!: Subscription;
-  private onlineSubscription!: Subscription;
-  private connectedSubscription!: Subscription;
-  private statsSubscription!: Subscription;
+  public messages$: Observable<ChatMessage[]>;
+  public typingUsers$: Observable<string[]>;
+  public onlineUsers$: Observable<number>;
+  public connected$: Observable<boolean>;
+  public stats$: Observable<ChatStats | null>;
+  public currentUser$: Observable<string>;
+
+  private subscriptions = new Subscription();
   private typingTimeout: any;
-  private reconnectInterval: any;
-  
-  constructor(private chatService: ChatService) {}
+
+  constructor(
+    public chatService: ChatService,
+    private cdr: ChangeDetectorRef,
+    private elementRef: ElementRef
+  ) {
+    this.messages$ = this.chatService.messages$;
+    this.typingUsers$ = this.chatService.typingUsers$;
+    this.onlineUsers$ = this.chatService.onlineUsers$;
+    this.connected$ = this.chatService.connected$;
+    this.stats$ = this.chatService.stats$;
+    this.currentUser$ = of(this.chatService.getUser());
+  }
 
   ngOnInit(): void {
-    this.setupSubscriptions();
-    this.loadInitialMessages();
-    this.startReconnectionHandler();
-  }
-
-  private setupSubscriptions(): void {
-    this.messagesSubscription = this.chatService.messages$.subscribe(
-      (messages: ChatMessage[]) => {
-        const previousCount = this.messages.length;
-        this.messages = messages;
-        
-        // Detectar nuevos mensajes
-        if (messages.length > previousCount && !this.isChatOpen) {
-          const newMessagesCount = messages.length - previousCount;
-          this.unreadMessages += newMessagesCount;
-          
-          // Opcional: Mostrar notificación
-          if (newMessagesCount > 0) {
-            this.showNewMessageNotification(newMessagesCount);
-          }
-        }
-        
-        // Scroll automático mejorado
+    const messagesSub = this.messages$.subscribe(messages => {
+        this.handleNewMessages(messages);
+        this.cdr.markForCheck();
         this.autoScrollToBottom();
-      }
-    );
-
-    // Suscribirse a usuarios escribiendo
-    this.typingSubscription = this.chatService.typingUsers$.subscribe(
-      (users: string[]) => {
-        this.typingUsers = users.filter(user => user !== this.currentUser);
-      }
-    );
-
-    // Suscribirse a usuarios online
-    this.onlineSubscription = this.chatService.onlineUsers$.subscribe(
-      (count: number) => {
-        this.onlineUsers = count;
-      }
-    );
-
-    // Suscribirse a estado de conexión
-    this.connectedSubscription = this.chatService.connected$.subscribe(
-      (connected: boolean) => {
-        this.isConnected = connected;
-        if (connected) {
-          this.reconnectAttempts = 0; // Resetear intentos al reconectar
-          this.loadInitialMessages();
-        }
-      }
-    );
-
-    // Suscribirse a estadísticas
-    this.statsSubscription = this.chatService.stats$.subscribe(
-      (stats: ChatStats | null) => {
-        this.stats = stats;
-      }
-    );
-
-    // Cargar usuario actual
-    this.currentUser = this.chatService.getUser();
+    });
+    this.subscriptions.add(messagesSub);
   }
 
-  private startReconnectionHandler(): void {
-    // Intentar reconexión automática cada 10 segundos si está desconectado
-    this.reconnectInterval = setInterval(() => {
-      if (!this.isConnected && this.reconnectAttempts < this.maxReconnectAttempts) {
-        console.log('🔄 Intentando reconexión...');
-        this.reconnectAttempts++;
-        this.loadInitialMessages();
-      }
-    }, 10000);
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
   }
-
-  public loadInitialMessages(): void {
-    this.chatService.loadInitialHistory();
-    this.chatService.loadStats();
+  
+  private handleNewMessages(messages: ChatMessage[]): void {
+    const previousCount = this.messagesContainer?.nativeElement?.childElementCount ?? messages.length;
+    if (this.isChatOpen && messages.length > previousCount) {
+      // If chat is open, just scroll
+      this.autoScrollToBottom();
+    } else if (!this.isChatOpen && messages.length > previousCount) {
+      // If chat is closed, update unread count
+      const newMessagesCount = messages.length - previousCount;
+      this.unreadMessages += newMessagesCount;
+      this.showNewMessageNotification(this.unreadMessages);
+    }
   }
 
   private autoScrollToBottom(): void {
-    if (this.isChatOpen) {
+    if (this.isChatOpen && this.messagesContainer) {
       setTimeout(() => {
-        const messagesContainer = document.querySelector('.messages-container');
-        if (messagesContainer) {
-          const isNearBottom = 
-            messagesContainer.scrollHeight - messagesContainer.clientHeight - messagesContainer.scrollTop <= 150;
-          
-          if (isNearBottom) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }
+        const el = this.messagesContainer.nativeElement;
+        const isNearBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 250;
+        if (isNearBottom) {
+          el.scrollTop = el.scrollHeight;
         }
       }, 100);
     }
   }
 
   sendMessage(): void {
-    if (this.newMessage.trim() && this.isConnected) {
-      const messageText = this.newMessage.trim();
-      this.newMessage = ''; // Limpiar inmediatamente para mejor UX
-      
-      this.chatService.sendMessage(messageText).subscribe({
-        next: () => {
-          console.log('✅ Mensaje enviado exitosamente');
-          this.stopTyping();
-        },
-        error: (error: any) => {
-          console.error('❌ Error enviando mensaje:', error);
-          // Revertir el mensaje si falla
-          this.newMessage = messageText;
-          
-          // Intentar reconexión
-          if (error.status === 0 || error.status >= 500) {
-            this.isConnected = false;
-            this.reconnectAttempts = 0;
+    this.connected$.pipe(take(1)).subscribe(isConnected => {
+      if (this.newMessage.trim() && isConnected) {
+        const messageText = this.newMessage.trim();
+        this.newMessage = '';
+        this.cdr.markForCheck();
+
+        this.chatService.sendMessage(messageText).subscribe({
+          next: () => {
+            this.stopTyping();
+            this.scrollToBottom();
+          },
+          error: () => {
+            // Restore message on error
+            this.newMessage = messageText;
+            this.cdr.markForCheck();
           }
-        }
-      });
-    }
+        });
+      } 
+    });
   }
 
   scrollToBottom(): void {
-    setTimeout(() => {
-      const messagesContainer = document.querySelector('.messages-container');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }, 50);
+    if(this.messagesContainer) {
+        setTimeout(() => this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight, 50);
+    }
   }
 
   private showNewMessageNotification(count: number): void {
-    // Solo notificar si la ventana no está enfocada
-    if (!document.hasFocus()) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`Nuevo${count > 1 ? 's' : ''} mensaje${count > 1 ? 's' : ''}`, {
-          body: `Tienes ${count} mensaje${count > 1 ? 's' : ''} nuevo${count > 1 ? 's' : ''} en el chat`,
-          icon: '/assets/icons/chat-icon.png'
-        });
-      }
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.messagesSubscription.unsubscribe();
-    this.typingSubscription.unsubscribe();
-    this.onlineSubscription.unsubscribe();
-    this.connectedSubscription.unsubscribe();
-    this.statsSubscription.unsubscribe();
-
-    if (this.typingTimeout) {
-      clearTimeout(this.typingTimeout);
-    }
-    
-    if (this.reconnectInterval) {
-      clearInterval(this.reconnectInterval);
+    if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(`Tienes ${count} nuevo${count > 1 ? 's' : ''} mensaje${count > 1 ? 's' : ''}`);
     }
   }
 
@@ -199,70 +133,55 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.isChatOpen = !this.isChatOpen;
     if (this.isChatOpen) {
       this.unreadMessages = 0;
-      this.reconnectAttempts = 0; // Resetear intentos de reconexión
+      this.chatService.loadStats(); // Refresh stats on open
       this.scrollToBottom();
     }
   }
-
+  
   onInputChange(): void {
-    if (this.newMessage.trim() && this.isConnected) {
-      this.chatService.setTyping(true);
-      
-      // Limpiar timeout anterior
-      if (this.typingTimeout) {
-        clearTimeout(this.typingTimeout);
-      }
-      
-      // Detener indicador después de 2 segundos
-      this.typingTimeout = setTimeout(() => {
+    this.connected$.pipe(take(1)).subscribe(isConnected => {
+      if (this.newMessage.trim() && isConnected) {
+        this.chatService.setTyping(true);
+        if (this.typingTimeout) clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => this.stopTyping(), 2500);
+      } else {
         this.stopTyping();
-      }, 2000);
-    } else {
-      this.stopTyping();
-    }
+      }
+    });
   }
 
   stopTyping(): void {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = null;
+    }
     this.chatService.setTyping(false);
   }
 
-  updateUser(): void {
-    if (this.currentUser.trim()) {
-      this.chatService.setUser(this.currentUser.trim());
+  updateUser(currentUser: string | null): void {
+    const newName = currentUser?.trim();
+    if (newName) {
+      this.chatService.setUser(newName);
+      this.currentUser$ = of(newName);
       this.showUserModal = false;
+      this.cdr.markForCheck();
     }
   }
 
   formatTime(timestamp: string): string {
-    return new Date(timestamp).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  formatDate(timestamp: string): string {
-    return new Date(timestamp).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit'
-    });
+    return new Date(timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
 
   trackByMessage(index: number, message: ChatMessage): string {
     return message.id;
   }
-
-  // Cerrar chat al hacer clic fuera
+  
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    const chatContainer = document.querySelector('.floating-chat-container');
-    
-    if (this.isChatOpen && chatContainer && !chatContainer.contains(target)) {
-      // No cerrar si se hace clic en el botón flotante
-      const floatingButton = document.querySelector('.floating-chat-button');
-      if (!floatingButton?.contains(target)) {
+    // Use ElementRef for safer, more Angular-friendly DOM checking
+    if (this.isChatOpen && !this.elementRef.nativeElement.contains(event.target)) {
         this.isChatOpen = false;
-      }
+        this.cdr.markForCheck();
     }
   }
 }
