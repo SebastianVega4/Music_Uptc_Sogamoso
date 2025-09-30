@@ -238,24 +238,30 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.chatService.setTyping(false);
   }
 
-  updateUser(currentUser: string | null): void {
-    const newName = currentUser?.trim();
-    if (newName) {
-      // Validar el nombre antes de actualizar
-      this.chatService.validateUsername(newName).subscribe({
+  updateUser(newUsername: string): void {
+    const trimmed = newUsername.trim();
+    if (trimmed) {
+      this.chatService.validateUsername(trimmed).subscribe({
         next: (validation) => {
           if (validation.valid) {
-            this.chatService.setUser(newName);
-            this.currentUser$ = of(newName);
+            this.chatService.setUser(trimmed);
+            this.currentUser$ = of(trimmed);
             this.showUserModal = false;
+            this.usernameError = '';
             this.cdr.markForCheck();
+            
+            // Mostrar mensaje de éxito si es admin
+            if (validation.is_admin) {
+              console.log('✅ Modo administrador activado para el chat');
+            }
           } else {
-            // Mostrar error de validación
-            alert(validation.error || 'Nombre no válido');
+            this.usernameError = validation.error || 'Nombre no válido';
+            this.cdr.markForCheck();
           }
         },
         error: () => {
-          alert('Error validando el nombre de usuario');
+          this.usernameError = 'Error validando el nombre de usuario';
+          this.cdr.markForCheck();
         }
       });
     }

@@ -27,6 +27,7 @@ export class AuthService {
         if (response.token) {
           localStorage.setItem('adminToken', response.token);
           localStorage.setItem('adminUser', JSON.stringify(response.user));
+          localStorage.setItem('auth_token', response.token);
           this.currentUserSubject.next(response.user);
         }
       })

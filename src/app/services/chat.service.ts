@@ -227,6 +227,7 @@ export class ChatService implements OnDestroy {
       'Content-Type': 'application/json'
     };
     
+    // SIEMPRE enviar el token si está disponible
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -245,7 +246,6 @@ export class ChatService implements OnDestroy {
     ).pipe(
       tap(response => {
         if (response.success && response.message) {
-          // El mensaje se agregará automáticamente via realtime
           this.setTyping(false);
         }
       }),
@@ -297,12 +297,12 @@ export class ChatService implements OnDestroy {
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json'
     };
-
-    // Si hay token, agregarlo a los headers
+  
+    // SIEMPRE enviar el token si está disponible
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-
+  
     return this.http.post<{ valid: boolean, error?: string, is_admin?: boolean }>(
       `${this.apiUrl}/api/chat/validate-username`,
       { username },
