@@ -1,7 +1,9 @@
+// chat.service.ts - VERSIÓN OPTIMIZADA CON POLLING RÁPIDO
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of } from 'rxjs';
-import { map, tap, catchError, switchMap, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { map, tap, catchError, switchMap, startWith, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
@@ -48,13 +50,14 @@ export class ChatService {
   private userId: string = this.generateUserId();
   private currentRoom: string = 'general';
 
-  // Cache local
+  // Cache local para polling optimizado
   private lastMessageId: string = '';
   private isTyping: boolean = false;
+  private lastTypingCheck: number = 0;
 
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
-    this.startPolling();
+    this.startOptimizedPolling();
     this.loadInitialHistory();
   }
 
@@ -65,30 +68,30 @@ export class ChatService {
     }
   }
 
-  private startPolling(): void {
-    // Polling para nuevos mensajes cada 2 segundos
-    interval(2000).subscribe(() => {
-      this.checkNewMessages();
-    });
+  private startOptimizedPolling(): void {
+    // POLLING RÁPIDO para nuevos mensajes cada 1 segundo
+    interval(1000).pipe(
+      switchMap(() => this.checkNewMessages())
+    ).subscribe();
 
-    // Polling para usuarios escribiendo cada 3 segundos
-    interval(3000).subscribe(() => {
-      this.checkTypingUsers();
-    });
+    // Polling para usuarios escribiendo cada 2 segundos
+    interval(2000).pipe(
+      switchMap(() => this.checkTypingUsers())
+    ).subscribe();
 
     // Polling para estadísticas cada 30 segundos
-    interval(30000).subscribe(() => {
-      this.loadStats();
-    });
+    interval(30000).pipe(
+      switchMap(() => this.loadStats())
+    ).subscribe();
 
     // Polling para usuarios online cada 10 segundos
-    interval(10000).subscribe(() => {
-      this.checkOnlineUsers();
-    });
+    interval(10000).pipe(
+      switchMap(() => this.checkOnlineUsers())
+    ).subscribe();
   }
 
   private loadInitialHistory(): void {
-    this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=50`)
+    this.http.get<{ messages: ChatMessage[] }>(`${this.apiUrl}/api/chat/messages?limit=100`)
       .subscribe({
         next: (response) => {
           const messages = response.messages || [];
@@ -105,70 +108,88 @@ export class ChatService {
       });
   }
 
-  private checkNewMessages(): void {
+  private checkNewMessages(): Observable<any> {
     const currentMessages = this.messagesSubject.value;
     
-    this.http.get<{ messages: ChatMessage[] }>(
-      `${this.apiUrl}/api/chat/messages?limit=50`
-    ).subscribe({
-      next: (response) => {
-        const newMessages = response.messages || [];
-        
-        // Encontrar mensajes que no están en el estado actual
-        const existingIds = new Set(currentMessages.map(m => m.id));
-        const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-        
-        if (trulyNewMessages.length > 0) {
-          // Combinar y ordenar por timestamp
-          const allMessages = [...currentMessages, ...trulyNewMessages]
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // Usar el último ID para obtener solo mensajes nuevos
+    const url = this.lastMessageId 
+      ? `${this.apiUrl}/api/chat/messages?since=${this.lastMessageId}&limit=50`
+      : `${this.apiUrl}/api/chat/messages?limit=50`;
+
+    return this.http.get<{ messages: ChatMessage[] }>(url).pipe(
+      tap({
+        next: (response) => {
+          const newMessages = response.messages || [];
           
-          this.messagesSubject.next(allMessages);
-          
-          // Actualizar último ID si hay mensajes nuevos
-          if (trulyNewMessages.length > 0) {
-            this.lastMessageId = trulyNewMessages[trulyNewMessages.length - 1].id;
+          if (newMessages.length > 0) {
+            // Encontrar mensajes que no están en el estado actual
+            const existingIds = new Set(currentMessages.map(m => m.id));
+            const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+            
+            if (trulyNewMessages.length > 0) {
+              // Combinar y ordenar por timestamp
+              const allMessages = [...currentMessages, ...trulyNewMessages]
+                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+              
+              this.messagesSubject.next(allMessages);
+              
+              // Actualizar último ID
+              this.lastMessageId = trulyNewMessages[trulyNewMessages.length - 1].id;
+            }
           }
+        },
+        error: (error) => {
+          console.error('Error checking new messages:', error);
+          this.connectedSubject.next(false);
         }
-      },
-      error: (error) => {
-        console.error('Error checking new messages:', error);
+      }),
+      catchError(error => {
+        console.error('Error en polling de mensajes:', error);
         this.connectedSubject.next(false);
-      }
-    });
+        return of(null);
+      })
+    );
   }
 
-  private checkTypingUsers(): void {
-    this.http.get<{ typing_users: string[] }>(
+  private checkTypingUsers(): Observable<any> {
+    // Solo verificar cada 2 segundos como máximo
+    const now = Date.now();
+    if (now - this.lastTypingCheck < 2000) {
+      return of(null);
+    }
+    this.lastTypingCheck = now;
+
+    return this.http.get<{ typing_users: string[] }>(
       `${this.apiUrl}/api/chat/typing-users?room=${this.currentRoom}`
     ).pipe(
       catchError(error => {
         console.error('Error checking typing users:', error);
         return of({ typing_users: [] });
+      }),
+      tap({
+        next: (response) => {
+          // Filtrar el usuario actual y usuarios que hayan dejado de escribir
+          const otherUsers = response.typing_users.filter(user => user !== this.currentUser);
+          this.typingUsersSubject.next(otherUsers);
+        }
       })
-    ).subscribe({
-      next: (response) => {
-        // Filtrar el usuario actual
-        const otherUsers = response.typing_users.filter(user => user !== this.currentUser);
-        this.typingUsersSubject.next(otherUsers);
-      }
-    });
+    );
   }
 
-  private checkOnlineUsers(): void {
-    this.http.get<{ online_users: number }>(`${this.apiUrl}/api/chat/online-users`)
+  private checkOnlineUsers(): Observable<any> {
+    return this.http.get<{ online_users: number }>(`${this.apiUrl}/api/chat/online-users`)
       .pipe(
         catchError(error => {
           console.error('Error checking online users:', error);
           return of({ online_users: 1 });
+        }),
+        tap({
+          next: (response) => {
+            this.onlineUsersSubject.next(response.online_users);
+            this.connectedSubject.next(true);
+          }
         })
-      )
-      .subscribe({
-        next: (response) => {
-          this.onlineUsersSubject.next(response.online_users);
-          this.connectedSubject.next(true);
-        }
-      });
+      );
   }
 
   // === MÉTODOS PÚBLICOS MEJORADOS ===
@@ -178,12 +199,14 @@ export class ChatService {
       throw new Error('El mensaje no puede estar vacío');
     }
 
-    return this.http.post(`${this.apiUrl}/api/chat/send`, {
+    const messageData = {
       message: message.trim(),
       user: this.currentUser,
       user_id: this.userId,
       room: this.currentRoom
-    }).pipe(
+    };
+
+    return this.http.post(`${this.apiUrl}/api/chat/send`, messageData).pipe(
       tap((response: any) => {
         if (response.success && response.message) {
           // Agregar el mensaje inmediatamente al estado local
@@ -196,6 +219,7 @@ export class ChatService {
               .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
             
             this.messagesSubject.next(updatedMessages);
+            this.lastMessageId = newMessage.id;
           }
         }
         
@@ -268,7 +292,6 @@ export class ChatService {
 
   // Limpiar recursos si es necesario
   destroy(): void {
-    // Dejar de escribir al destruir
     this.setTyping(false);
   }
 }

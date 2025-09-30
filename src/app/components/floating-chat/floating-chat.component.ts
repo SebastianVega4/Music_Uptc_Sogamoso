@@ -124,14 +124,12 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     if (this.newMessage.trim() && this.isConnected) {
       this.chatService.sendMessage(this.newMessage).subscribe({
         next: () => {
-          this.newMessage = '';
+          this.newMessage = ''; // Esto limpia el input
           this.stopTyping();
-          // Forzar scroll al fondo después de enviar
-          this.scrollToBottom();
+          // El mensaje aparecerá inmediatamente gracias al polling rápido
         },
         error: (error: any) => {
           console.error('Error enviando mensaje:', error);
-          alert('Error al enviar el mensaje: ' + error.message);
         }
       });
     }
