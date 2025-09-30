@@ -79,7 +79,7 @@ export class ChatService implements OnDestroy {
     this.loadInitialHistory().subscribe(() => {
       this.setupRealtimeSubscription();
     });
-  
+
     this.subscriptions.push(
       this.setupPeriodicStats(),
       this.setupOnlineUsersCheck()
@@ -90,7 +90,7 @@ export class ChatService implements OnDestroy {
     // Clean up all subscriptions and realtime connection
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.setTyping(false);
-    
+
     // Desconectar canal de Supabase Realtime
     if (this.channel) {
       this.supabase.removeChannel(this.channel);
@@ -117,7 +117,7 @@ export class ChatService implements OnDestroy {
         'postgres_changes',
         {
           event: 'INSERT',
-          schema: 'public', 
+          schema: 'public',
           table: 'chat_messages',
           filter: `message_type=eq.system`
         },
@@ -147,11 +147,16 @@ export class ChatService implements OnDestroy {
     if (!currentMessages.find(msg => msg.id === newMessage.id)) {
       const updatedMessages = [...currentMessages, newMessage]
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      
+
       // Mantener solo los últimos 200 mensajes
       const limitedMessages = updatedMessages.slice(-200);
       this.messagesSubject.next(limitedMessages);
     }
+  }
+
+  private getAuthToken(): string | null {
+    // Asumiendo que guardas el token en localStorage o en un servicio de autenticación
+    return localStorage.getItem('auth_token');
   }
 
   private handleSystemMessage(payload: RealtimePostgresChangesPayload<any>): void {
@@ -165,7 +170,7 @@ export class ChatService implements OnDestroy {
       const interval = setInterval(() => {
         this.loadStatsObservable().subscribe();
       }, 30000);
-      
+
       return () => clearInterval(interval);
     });
   }
@@ -176,7 +181,7 @@ export class ChatService implements OnDestroy {
       const interval = setInterval(() => {
         this.checkOnlineUsers().subscribe();
       }, 15000);
-      
+
       return () => clearInterval(interval);
     });
   }
@@ -202,9 +207,9 @@ export class ChatService implements OnDestroy {
         }
       }),
       catchError(error => {
-          console.error('API call failed for initial history:', error);
-          this.connectedSubject.next(false);
-          return of(null);
+        console.error('API call failed for initial history:', error);
+        this.connectedSubject.next(false);
+        return of(null);
       })
     );
   }
@@ -217,16 +222,27 @@ export class ChatService implements OnDestroy {
   }
 
   sendMessage(message: string): Observable<any> {
-    if (!message.trim()) return of(null);
-
+    const token = this.getAuthToken();
+    const headers: {[key: string]: string} = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  
     const messageData = {
       message: message.trim(),
       user: this.currentUser,
       user_id: this.userId,
       room: this.currentRoom
     };
-
-    return this.http.post<{ success: boolean, message: ChatMessage }>(`${this.apiUrl}/api/chat/send`, messageData).pipe(
+  
+    return this.http.post<{ success: boolean, message: ChatMessage }>(
+      `${this.apiUrl}/api/chat/send`,
+      messageData,
+      { headers }
+    ).pipe(
       tap(response => {
         if (response.success && response.message) {
           // El mensaje se agregará automáticamente via realtime
@@ -276,15 +292,26 @@ export class ChatService implements OnDestroy {
     this.loadStatsObservable().subscribe();
   }
 
-  validateUsername(username: string): Observable<{valid: boolean, error?: string, is_admin?: boolean}> {
-    return this.http.post<{valid: boolean, error?: string, is_admin?: boolean}>(
+  validateUsername(username: string): Observable<{ valid: boolean, error?: string, is_admin?: boolean }> {
+    const token = this.getAuthToken();
+    const headers: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+
+    // Si hay token, agregarlo a los headers
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.http.post<{ valid: boolean, error?: string, is_admin?: boolean }>(
       `${this.apiUrl}/api/chat/validate-username`,
-      { username }
+      { username },
+      { headers }
     ).pipe(
       catchError(error => of({ valid: false, error: 'Error validando nombre' }))
     );
   }
-  
+
   private generateUserId(): string {
     let userId = localStorage.getItem('chat_user_id');
     if (!userId) {
