@@ -78,6 +78,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    // Load settings
+    const savedAutoAdd = localStorage.getItem('autoAddToHistory');
+    this.autoAddToHistory = savedAutoAdd === 'true';
+
     this.loadInitialData();
     this.setupAutoRefresh();
     this.calculateStats();
@@ -786,7 +790,12 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   }
 
   toggleAutoAdd() {
-    this.autoAddToHistory = !this.autoAddToHistory;
+    // No need to manually toggle as ngModel does it
+    // this.autoAddToHistory = !this.autoAddToHistory; 
+    
+    // Save to localStorage
+    localStorage.setItem('autoAddToHistory', String(this.autoAddToHistory));
+    
     if (this.autoAddToHistory) {
       this.checkAutoAdd();
     }

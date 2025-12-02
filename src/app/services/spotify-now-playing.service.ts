@@ -32,7 +32,12 @@ export class SpotifyNowPlayingService {
           }
         },
         error: (error) => {
-          console.error('Error en verificación automática:', error);
+          if (error.status === 401) {
+            console.warn('Sesión expirada en verificación automática, esperando reconexión...');
+            // Opcional: Detener verificación temporalmente o intentar reconectar
+          } else {
+            console.error('Error en verificación automática:', error);
+          }
         }
       });
     }, intervalMs);
