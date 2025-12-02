@@ -35,7 +35,10 @@ export class VotingComponent implements OnInit, OnDestroy {
     
     // Polling para actualizar estadísticas cada 3 segundos
     this.votingSubscription = interval(2000).subscribe(() => {
-      this.loadVotingStatus();
+      // Solo actualizar si hay una canción reproduciéndose
+      if (this.currentSong && this.currentSong.is_playing) {
+        this.loadVotingStatus();
+      }
     });
     
     // Suscribirse a cambios en la canción actual

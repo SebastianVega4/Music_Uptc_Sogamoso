@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterModule } from "@angular/router";
+import { CommonModule } from '@angular/common';
 import { FloatingChatComponent } from "./components/floating-chat/floating-chat.component";
 
 @Component({
@@ -7,8 +8,13 @@ import { FloatingChatComponent } from "./components/floating-chat/floating-chat.
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
-  imports: [RouterModule, FloatingChatComponent],
+  imports: [RouterModule, CommonModule, FloatingChatComponent],
 })
 export class AppComponent {
   title = 'UPTC Music';
+  isMenuOpen = false;
+
+  toggleMenu() {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
 }

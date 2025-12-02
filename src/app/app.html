@@ -2,22 +2,29 @@
   <header class="main-header">
     <div class="container d-flex justify-content-between align-items-center">
       <div class="logo-container">
-        <div class="logo-icon">
-          <i class="fab fa-spotify"></i>
-        </div>
-        <h1 class="app-title">{{ title }}</h1>
+        <a routerLink="/" class="text-decoration-none text-white d-flex align-items-center">
+          <div class="logo-icon">
+            <i class="fab fa-spotify"></i>
+          </div>
+          <h1 class="app-title mb-0 ms-2">{{ title }}</h1>
+        </a>
       </div>
-      <nav class="main-nav">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      
+      <button class="hamburger-menu d-md-none" (click)="toggleMenu()">
+        <i class="fas" [ngClass]="isMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+      </button>
+
+      <nav class="main-nav" [class.active]="isMenuOpen">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="toggleMenu()">
           <i class="fas fa-home me-1"></i>Inicio
         </a>
-        <a routerLink="/discussion" routerLinkActive="active">
+        <a routerLink="/discussion" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-comments me-1"></i>Foro
         </a>
-        <a routerLink="/ranking" routerLinkActive="active">
+        <a routerLink="/ranking" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-trophy me-1"></i>Ranking
         </a>
-        <a routerLink="/admin-login" routerLinkActive="active">
+        <a routerLink="/admin-login" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-lock me-1"></i>
         </a>
       </nav>
