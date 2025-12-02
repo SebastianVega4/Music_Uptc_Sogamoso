@@ -33,6 +33,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   schedules: any[] = [];
   spotifyStatus: any = null;
   adminCurrentlyPlaying: any = null;
+  
+  // Auto-add history
+  autoAddToHistory = false;
+  lastAddedSongId: string | null = null;
 
   // Estados de carga
   isLoading = false;
@@ -253,6 +257,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
           this.isPlaying = false;
         }
         this.isLoadingCurrent = false;
+        this.checkAutoAdd();
       },
       error: (error) => {
         console.error('Error getting currently playing:', error);
@@ -743,5 +748,47 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+  // Verificar auto-add
+  checkAutoAdd() {
+    if (this.autoAddToHistory && this.adminCurrentlyPlaying && this.adminCurrentlyPlaying.id) {
+      // Evitar intentos repetidos para la misma canción si ya fue agregada recientemente en esta sesión
+      if (this.lastAddedSongId === this.adminCurrentlyPlaying.id) {
+        return;
+      }
+
+      this.spotifyNowPlaying.addToHistory().subscribe({
+        next: (response: any) => {
+          if (response.can_add) {
+            // Agregar automáticamente sin confirmación
+            this.performAutoAdd();
+          }
+        },
+        error: (error) => {
+          console.error('Error checking auto-add:', error);
+        }
+      });
+    }
+  }
+
+  performAutoAdd() {
+    const headers = this.authService.getAuthHeaders();
+    this.http.post(`${this.apiUrl}/api/spotify/admin/add-to-history-confirmed`, {}, { headers }).subscribe({
+      next: (result: any) => {
+        this.showMessage('Auto-agregado al histórico: ' + this.adminCurrentlyPlaying.name);
+        this.lastAddedSongId = this.adminCurrentlyPlaying.id;
+        this.loadSongs(); // Recargar ranking
+      },
+      error: (error) => {
+        console.error('Error auto-adding to history:', error);
+      }
+    });
+  }
+
+  toggleAutoAdd() {
+    this.autoAddToHistory = !this.autoAddToHistory;
+    if (this.autoAddToHistory) {
+      this.checkAutoAdd();
+    }
   }
 }

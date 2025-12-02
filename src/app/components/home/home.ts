@@ -63,6 +63,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading next song:', error);
+        this.nextSong = null; // Ensure it's null on error
       }
     });
   }

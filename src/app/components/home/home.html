@@ -28,12 +28,13 @@
   </div>
 
   <!-- Sección de siguiente canción -->
-  <div class="next-song-section compact-card fade-in" *ngIf="nextSong">
+  <div class="next-song-section compact-card fade-in">
     <div class="card-header">
       <i class="fas fa-forward text-primary"></i>
       <span class="header-title">Siguiente en la cola</span>
     </div>
-    <div class="next-song-content">
+    
+    <div class="next-song-content" *ngIf="nextSong; else noNextSong">
       <div class="album-art-mini">
         <img [src]="nextSong.image || 'assets/default-song.png'" alt="Carátula" class="album-art-img">
       </div>
@@ -42,6 +43,12 @@
         <p class="song-artist-mini">{{ nextSong.artists.join(', ') }}</p>
       </div>
     </div>
+
+    <ng-template #noNextSong>
+      <div class="no-next-song-content">
+        <p class="text-muted small mb-0">No hay canciones en la cola de Spotify</p>
+      </div>
+    </ng-template>
   </div>
 
   <!-- Mensaje cuando no hay canción -->

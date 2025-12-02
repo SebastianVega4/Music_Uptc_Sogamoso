@@ -136,6 +136,14 @@
         </div>
 
         <div class="currently-playing-card" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
+          <div class="auto-add-wrapper">
+            <label class="switch-label">Auto-histórico</label>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="autoAddToHistory" (change)="toggleAutoAdd()">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
           <div class="playing-content">
             <img [src]="adminCurrentlyPlaying.image" alt="Album cover" class="album-art-large">
             <div class="track-info">
