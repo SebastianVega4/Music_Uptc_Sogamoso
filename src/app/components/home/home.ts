@@ -6,6 +6,7 @@ import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.ser
 import { Subscription } from 'rxjs';
 import { VotingService } from '../../services/voting';
 import { VotingComponent } from '../voting/voting.component';
+import { QueueService } from '../../services/queue.service';
 
 @Component({
   standalone: true,
@@ -19,6 +20,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   progress: number = 0; // Progress percentage (0-100)
   songDurationMs: number = 0; // Made public for template access
   isUpdating: boolean = false;
+  nextSong: any = null;
 
   private pollingSubscription: Subscription | null = null;
   private progressInterval: any = null;
@@ -29,11 +31,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private spotifyService: SpotifyNowPlayingService,
-    private votingService: VotingService
+    private votingService: VotingService,
+    private queueService: QueueService
   ) { }
 
   ngOnInit(): void {
     this.startAdminSpotifyPolling();
+    this.loadNextSong();
+    
+    // Actualizar próxima canción cada 30 segundos
+    setInterval(() => {
+      this.loadNextSong();
+    }, 30000);
   }
 
   ngOnDestroy(): void {
@@ -41,6 +50,21 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.pollingSubscription.unsubscribe();
     }
     this.stopProgressBar();
+  }
+
+  loadNextSong(): void {
+    this.queueService.getNextSong().subscribe({
+      next: (data) => {
+        if (data && data.next_song) {
+          this.nextSong = data.next_song;
+        } else {
+          this.nextSong = null;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading next song:', error);
+      }
+    });
   }
 
   startAdminSpotifyPolling(): void {
@@ -52,6 +76,8 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.startProgressBar(data.progress_ms, data.duration_ms);
             // Verificar inmediatamente si esta canción está en el ranking
             this.checkAndRemovePlayingSong();
+            // También actualizar la siguiente canción cuando cambia la actual
+            this.loadNextSong();
           } else {
             this.syncProgressBar(data.progress_ms, data.duration_ms);
           }

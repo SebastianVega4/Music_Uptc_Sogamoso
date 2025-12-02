@@ -21,6 +21,11 @@ export class QueueService {
     return this.http.get(`${this.apiUrl}/api/spotify/admin/queue`, { headers });
   }
 
+  // Obtener la siguiente canción (público)
+  getNextSong(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/api/spotify/queue/next`);
+  }
+
   // Agregar canción a la cola 
   addToQueue(trackUri: string): Observable<any> {
     const headers = this.authService.getAuthHeaders();

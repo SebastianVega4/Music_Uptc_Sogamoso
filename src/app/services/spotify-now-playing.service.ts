@@ -171,11 +171,11 @@ export class SpotifyNowPlayingService {
     );
   }
 
-  checkAndRemovePlayingSongFromRanking(): Observable<any> {
+  checkAndRemovePlayingSongFromRanking(forceAdd: boolean = false): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post(
       `${this.apiUrl}/api/spotify/admin/check-playing-song`, 
-      {}, 
+      { force_add: forceAdd }, 
       { headers }
     );
   }

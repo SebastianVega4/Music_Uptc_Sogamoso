@@ -33,7 +33,7 @@
               <i class="fas fa-clock me-1"></i>Publicado {{ formatTimeAgo(thread.created_at) }}
             </span>
             <span class="thread-author">
-              <i class="fas fa-user me-1"></i>Usuario {{ thread.author_fingerprint?.substring(0, 8) }}
+              <i class="fas fa-user me-1"></i>Usuario {{ thread.author_fingerprint.substring(0, 8) }}
             </span>
           </div>
         </div>
@@ -134,7 +134,7 @@
                 <div class="comment-header">
                   <span class="comment-author">
                     <i class="fas fa-user me-1"></i>
-                    Usuario {{ comment.author_fingerprint?.substring(0, 8) }}
+                    Usuario {{ comment.author_fingerprint.substring(0, 8) }}
                   </span>
                   <span class="comment-date">
                     <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(comment.created_at) }}
@@ -174,7 +174,7 @@
                   <div class="comment-header">
                     <span class="comment-author">
                       <i class="fas fa-user me-1"></i>
-                      Usuario {{ reply.author_fingerprint?.substring(0, 8) }}
+                      Usuario {{ reply.author_fingerprint.substring(0, 8) }}
                     </span>
                     <span class="comment-date">
                       <i class="fas fa-clock me-1"></i>{{ formatTimeAgo(reply.created_at) }}
@@ -196,7 +196,7 @@
                     </button>
                     
                     <button class="comment-reply-btn" 
-                            (click)="replyingTo = comment.id; replyContent = '@' + (reply.author_fingerprint?.substring(0, 8) || '') + ' '">
+                            (click)="replyingTo = comment.id; replyContent = '@' + (reply.author_fingerprint.substring(0, 8) || '') + ' '">
                       <i class="fas fa-reply"></i>
                       <span>Responder</span>
                     </button>

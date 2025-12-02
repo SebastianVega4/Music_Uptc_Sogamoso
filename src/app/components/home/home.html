@@ -27,6 +27,23 @@
     <app-voting *ngIf="adminCurrentlyPlaying"></app-voting>
   </div>
 
+  <!-- Sección de siguiente canción -->
+  <div class="next-song-section compact-card fade-in" *ngIf="nextSong">
+    <div class="card-header">
+      <i class="fas fa-forward text-primary"></i>
+      <span class="header-title">Siguiente en la cola</span>
+    </div>
+    <div class="next-song-content">
+      <div class="album-art-mini">
+        <img [src]="nextSong.image || 'assets/default-song.png'" alt="Carátula" class="album-art-img">
+      </div>
+      <div class="song-info-mini">
+        <h4 class="song-title-mini">{{ nextSong.name }}</h4>
+        <p class="song-artist-mini">{{ nextSong.artists.join(', ') }}</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Mensaje cuando no hay canción -->
   <ng-template #noSongPlaying>
     <div class="no-song-playing compact-card fade-in">
