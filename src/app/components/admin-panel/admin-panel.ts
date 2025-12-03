@@ -754,6 +754,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
   // Verificar auto-add
+  // Verificar auto-add
   checkAutoAdd() {
     if (this.autoAddToHistory && this.adminCurrentlyPlaying && this.adminCurrentlyPlaying.id) {
       // Evitar intentos repetidos para la misma canción si ya fue agregada recientemente en esta sesión
@@ -761,17 +762,8 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.spotifyNowPlaying.addToHistory().subscribe({
-        next: (response: any) => {
-          if (response.can_add) {
-            // Agregar automáticamente sin confirmación
-            this.performAutoAdd();
-          }
-        },
-        error: (error) => {
-          console.error('Error checking auto-add:', error);
-        }
-      });
+      // Bypass the strict check and try to add directly
+      this.performAutoAdd();
     }
   }
 
@@ -785,6 +777,9 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error auto-adding to history:', error);
+        // If it fails (e.g. already exists), we still mark it as "attempted" for this session 
+        // to avoid spamming the API for the same song
+        this.lastAddedSongId = this.adminCurrentlyPlaying.id;
       }
     });
   }
