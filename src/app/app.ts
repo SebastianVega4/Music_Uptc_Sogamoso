@@ -2,13 +2,14 @@ import { Component } from '@angular/core';
 import { RouterModule } from "@angular/router";
 import { CommonModule } from '@angular/common';
 import { FloatingChatComponent } from "./components/floating-chat/floating-chat.component";
+import { ModalComponent } from './components/modal/modal.component';
 
 @Component({
   standalone: true,
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
-  imports: [RouterModule, CommonModule, FloatingChatComponent],
+  imports: [RouterModule, CommonModule, FloatingChatComponent, ModalComponent],
 })
 export class AppComponent {
   title = 'UPTC Music';

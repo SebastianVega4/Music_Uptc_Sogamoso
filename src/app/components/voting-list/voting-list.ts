@@ -4,6 +4,7 @@ import { VotingService } from '../../services/voting';
 import { Subscription, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AudioService } from '../../services/audio.service';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   standalone: true,
@@ -26,7 +27,8 @@ export class VotingListComponent implements OnInit, OnDestroy {
 
   constructor(
     private votingService: VotingService,
-    public audioService: AudioService
+    public audioService: AudioService,
+    private modalService: ModalService
   ) { }
 
   ngOnInit(): void {
@@ -174,10 +176,10 @@ export class VotingListComponent implements OnInit, OnDestroy {
     this.votingService.voteForSong(song.id, trackInfo, isDislike).subscribe({
       next: (response: any) => {
         if (response.deleted) {
-          alert('La canción ha sido eliminada por recibir muchos dislikes');
+          this.modalService.alert('La canción ha sido eliminada por recibir muchos dislikes', 'Canción Eliminada', 'warning').subscribe();
         } else {
           const voteType = isDislike ? 'dislike' : 'like';
-          alert(`¡Tu ${voteType} ha sido registrado!`);
+          this.modalService.alert(`¡Tu ${voteType} ha sido registrado!`, 'Voto Registrado', 'success').subscribe();
 
           // Actualizar el estado local de votos del usuario
           this.userVotes.set(song.id, isDislike);
@@ -187,24 +189,26 @@ export class VotingListComponent implements OnInit, OnDestroy {
       error: (error) => {
         if (error.status === 409) {
           // Si ya votó, ofrecer cambiar el voto
-          if (confirm('Ya has votado por esta canción. ¿Quieres cambiar tu voto?')) {
-            this.votingService.changeVote(song.id, trackInfo, isDislike).subscribe({
-              next: (response: any) => {
-                if (response.deleted) {
-                  alert('La canción ha sido eliminada por recibir muchos dislikes');
-                } else {
-                  alert('¡Tu voto ha sido cambiado!');
-                  this.userVotes.set(song.id, isDislike);
+          this.modalService.confirm('Ya has votado por esta canción. ¿Quieres cambiar tu voto?', 'Cambiar Voto').subscribe(confirmed => {
+            if (confirmed) {
+              this.votingService.changeVote(song.id, trackInfo, isDislike).subscribe({
+                next: (response: any) => {
+                  if (response.deleted) {
+                    this.modalService.alert('La canción ha sido eliminada por recibir muchos dislikes', 'Canción Eliminada', 'warning').subscribe();
+                  } else {
+                    this.modalService.alert('¡Tu voto ha sido cambiado!', 'Voto Cambiado', 'success').subscribe();
+                    this.userVotes.set(song.id, isDislike);
+                  }
+                  this.forceRefresh();
+                },
+                error: (err) => {
+                  this.modalService.alert('Error al cambiar tu voto. Intenta nuevamente.', 'Error', 'danger').subscribe();
                 }
-                this.forceRefresh();
-              },
-              error: (err) => {
-                alert('Error al cambiar tu voto. Intenta nuevamente.');
-              }
-            });
-          }
+              });
+            }
+          });
         } else {
-          alert('Error al registrar tu voto. Intenta nuevamente.');
+          this.modalService.alert('Error al registrar tu voto. Intenta nuevamente.', 'Error', 'danger').subscribe();
         }
       },
     });
@@ -214,7 +218,7 @@ export class VotingListComponent implements OnInit, OnDestroy {
     if (url) {
       this.audioService.play(url);
     } else {
-      alert('Esta canción no tiene vista previa disponible.');
+      this.modalService.alert('Esta canción no tiene vista previa disponible.', 'Sin Vista Previa', 'info').subscribe();
     }
   }
 }

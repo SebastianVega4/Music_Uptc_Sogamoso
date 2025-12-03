@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AudioService } from '../../services/audio.service';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   selector: 'app-admin-panel',
@@ -76,7 +77,8 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private queueService: QueueService,
-    public audioService: AudioService
+    public audioService: AudioService,
+    private modalService: ModalService
   ) { }
 
   ngOnInit() {
@@ -365,11 +367,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.votingService.voteForSong(track.id, trackInfo, isDislike).subscribe({
       next: (response: any) => {
         this.loadSongs();
-        alert(isDislike ? 'Dislike registrado' : 'Like registrado');
+        this.modalService.alert(isDislike ? 'Dislike registrado' : 'Like registrado', 'Voto', 'success').subscribe();
       },
       error: (error) => {
         console.error('Error voting from search:', error);
-        alert('Error al votar. Intenta nuevamente.');
+        this.modalService.alert('Error al votar. Intenta nuevamente.', 'Error', 'danger').subscribe();
       }
     });
   }
@@ -385,7 +387,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error with admin vote:', error);
         delete this.adminVotes[song.id];
-        alert('Error al votar. Intenta nuevamente.');
+        this.modalService.alert('Error al votar. Intenta nuevamente.', 'Error', 'danger').subscribe();
       }
     });
   }
@@ -431,10 +433,12 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   }
 
   addToQueueFromRanking(songId: string) {
-    if (confirm('¿Agregar esta canción a la cola de reproducción?')) {
-      const trackUri = `spotify:track:${songId}`;
-      this.addToQueueFromSearch(trackUri);
-    }
+    this.modalService.confirm('¿Agregar esta canción a la cola de reproducción?', 'Confirmar').subscribe(confirmed => {
+      if (confirmed) {
+        const trackUri = `spotify:track:${songId}`;
+        this.addToQueueFromSearch(trackUri);
+      }
+    });
   }
 
   async confirmAddToHistory() {
@@ -444,7 +448,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
       if (response.can_add) {
         // Mostrar diálogo de confirmación
-        const confirmed = confirm(`¿Estás seguro de que quieres agregar "${response.song.name}" al histórico?`);
+        const confirmed = await this.modalService.confirm(`¿Estás seguro de que quieres agregar "${response.song.name}" al histórico?`, 'Confirmar').toPromise();
 
         if (confirmed) {
           // Usar el endpoint de confirmación
@@ -494,7 +498,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         console.error('Error playing track:', error);
-        alert('Error al reproducir la canción: ' + error.message);
+        this.modalService.alert('Error al reproducir la canción: ' + error.message, 'Error', 'danger').subscribe();
       }
     });
   }
@@ -552,34 +556,38 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
 
   // Eliminar canción
   deleteSong(songId: string) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta canción del ranking?')) {
-      this.votingService.deleteSong(songId).subscribe({
-        next: () => {
-          this.loadSongs();
-          this.showMessage('Canción eliminada correctamente');
-        },
-        error: (error) => {
-          console.error('Error deleting song:', error);
-          this.showMessage('Error al eliminar la canción', false);
-        }
-      });
-    }
+    this.modalService.confirm('¿Estás seguro de que quieres eliminar esta canción del ranking?', 'Eliminar Canción').subscribe(confirmed => {
+      if (confirmed) {
+        this.votingService.deleteSong(songId).subscribe({
+          next: () => {
+            this.loadSongs();
+            this.showMessage('Canción eliminada correctamente');
+          },
+          error: (error) => {
+            console.error('Error deleting song:', error);
+            this.showMessage('Error al eliminar la canción', false);
+          }
+        });
+      }
+    });
   }
 
   // Eliminar todos los votos
   deleteAllVotes() {
-    if (confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.')) {
-      this.votingService.deleteAllVotes().subscribe({
-        next: () => {
-          this.loadSongs();
-          this.showMessage('Todos los votos han sido eliminados');
-        },
-        error: (error) => {
-          console.error('Error deleting all votes:', error);
-          this.showMessage('Error al eliminar todos los votos', false);
-        }
-      });
-    }
+    this.modalService.confirm('¿Estás seguro de que quieres eliminar TODOS los votos? Esta acción no se puede deshacer.', 'Eliminar Votos').subscribe(confirmed => {
+      if (confirmed) {
+        this.votingService.deleteAllVotes().subscribe({
+          next: () => {
+            this.loadSongs();
+            this.showMessage('Todos los votos han sido eliminados');
+          },
+          error: (error) => {
+            console.error('Error deleting all votes:', error);
+            this.showMessage('Error al eliminar todos los votos', false);
+          }
+        });
+      }
+    });
   }
 
   // Forzar refresco
@@ -618,10 +626,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       
       if (checkResponse.can_add) {
         // Mostrar confirmación
-        const confirmed = confirm(
+        const confirmed = await this.modalService.confirm(
           `¿Estás seguro de que quieres agregar "${this.adminCurrentlyPlaying.name}" al histórico?\n\n` +
-          `Esta acción eliminará la canción del ranking si está presente.`
-        );
+          `Esta acción eliminará la canción del ranking si está presente.`,
+          'Agregar al Histórico'
+        ).toPromise();
         
         if (confirmed) {
           this.actionInProgress = 'Agregando al histórico...';
@@ -687,7 +696,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
         this.activeSection = 'ranking';
         // Podría implementarse scroll a la canción
       } else {
-        alert('Esta canción no está en el ranking.');
+        this.modalService.alert('Esta canción no está en el ranking.', 'Información', 'info').subscribe();
       }
     }
   }
