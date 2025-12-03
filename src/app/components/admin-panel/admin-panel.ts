@@ -10,6 +10,7 @@ import { QueueService } from '../../services/queue.service';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { AudioService } from '../../services/audio.service';
 
 @Component({
   selector: 'app-admin-panel',
@@ -75,6 +76,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private queueService: QueueService,
+    public audioService: AudioService
   ) { }
 
   ngOnInit() {
@@ -793,6 +795,14 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     
     if (this.autoAddToHistory) {
       this.checkAutoAdd();
+    }
+  }
+
+  playPreview(url: string): void {
+    if (url) {
+      this.audioService.play(url);
+    } else {
+      alert('Esta canción no tiene vista previa disponible.');
     }
   }
 }

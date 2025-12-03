@@ -84,7 +84,7 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
-          <p class="text-muted">Preciona la cacion para ver los detallas </p>
+          <p class="text-muted">Presiona la canción para ver los detalles</p>
         </div>
         <div class="col-md-6">
           <div class="d-flex flex-wrap gap-2 justify-content-md-end">
@@ -127,19 +127,16 @@
     <div *ngFor="let song of getTabSongs(); let i = index" class="song-card spotify-card">
       <div class="card-content">
         <!-- Imagen con número de posición superpuesto -->
-        <div class="song-image-container" (click)="onShowDetails(song)">
-          <span class="position-number">{{ i + 1 }}</span>
-          <img [src]="song.image || 'assets/default-song.png'" [alt]="song.name" class="song-image"
-            (click)="onShowDetails(song)">
+        <div class="song-image-container">
+          <img [src]="song.image || 'assets/default-song.png'" [alt]="song.name" class="song-image">
+          <div class="position-badge">#{{ i + 1 }}</div>
         </div>
 
-        <!-- Información de la canción -->
         <div class="song-info">
-          <h3 class="song-title" (click)="onShowDetails(song)">{{ song.name }}</h3>
-          <p class="song-artist" (click)="onShowDetails(song)">{{ song.artists.join(', ') }}</p>
-
-          <!-- Estadísticas compactas -->
-          <div class="song-stats" (click)="onShowDetails(song)">
+          <h5 class="song-title text-truncate">{{ song.name }}</h5>
+          <p class="song-artist text-truncate">{{ song.artists.join(', ') }}</p>
+          
+          <div class="song-stats">
             <span class="stat-item">
               <i class="fas fa-play"></i> {{ song.times_played }}
             </span>

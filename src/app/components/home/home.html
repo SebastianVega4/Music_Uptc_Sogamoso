@@ -1,32 +1,5 @@
 <div class="home-container">
-  <!-- Sección de canción en reproducción -->
-  <div class="now-playing-section compact-card fade-in" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
-    <div class="album-art-container">
-      <img [src]="adminCurrentlyPlaying.image" alt="Carátula de {{ adminCurrentlyPlaying.name }}" class="album-art">
-    </div>
-    <div class="song-info-container">
-      <div class="song-details">
-        <h3 class="song-title">{{ adminCurrentlyPlaying.name }}</h3>
-        <p class="song-artist">{{ adminCurrentlyPlaying.artists }}</p>
-      </div>
-      <div class="progress-container">
-        <span class="time-display">{{ formatTime(progress * songDurationMs / 100) }}</span>
-        <div class="progress">
-          <div class="progress-bar" [style.width.%]="progress"></div>
-        </div>
-        <span class="time-display">{{ formatTime(songDurationMs) }}</span>
-      </div>
-    </div>
-    <div class="update-button-container">
-      <button class="btn btn-icon" (click)="forceUpdate()" [disabled]="isUpdating" title="Actualizar">
-        <i class="fas fa-sync-alt" [class.fa-spin]="isUpdating"></i>
-      </button>
-    </div>
-  </div>
-  <div class="voting-section">
-    <app-voting *ngIf="adminCurrentlyPlaying"></app-voting>
-  </div>
-
+  
   <!-- Sección de siguiente canción -->
   <div class="next-song-section compact-card fade-in">
     <div class="card-header">
@@ -60,6 +33,37 @@
       </div>
     </div>
   </ng-template>
+  
+  <!-- Sección de canción en reproducción -->
+  <div class="now-playing-section compact-card fade-in" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
+    <div class="album-art-container">
+      <img [src]="adminCurrentlyPlaying.image" alt="Carátula de {{ adminCurrentlyPlaying.name }}" class="album-art">
+    </div>
+    <div class="song-info-container">
+      <div class="song-details">
+        <h3 class="song-title">{{ adminCurrentlyPlaying.name }}</h3>
+        <p class="song-artist">{{ adminCurrentlyPlaying.artists }}</p>
+        <p *ngIf="adminCurrentlyPlaying.dedication" class="text-info fst-italic mb-0 mt-1">
+          <i class="fas fa-heart me-1"></i>{{ adminCurrentlyPlaying.dedication }}
+        </p>
+      </div>
+      <div class="progress-container">
+        <span class="time-display">{{ formatTime(progress * songDurationMs / 100) }}</span>
+        <div class="progress">
+          <div class="progress-bar" [style.width.%]="progress"></div>
+        </div>
+        <span class="time-display">{{ formatTime(songDurationMs) }}</span>
+      </div>
+    </div>
+    <div class="update-button-container">
+      <button class="btn btn-icon" (click)="forceUpdate()" [disabled]="isUpdating" title="Actualizar">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isUpdating"></i>
+      </button>
+    </div>
+  </div>
+  <div class="voting-section">
+    <app-voting *ngIf="adminCurrentlyPlaying"></app-voting>
+  </div>
 
   <!-- Componente de búsqueda -->
   <app-search (voteCasted)="onVoteCasted()"></app-search>

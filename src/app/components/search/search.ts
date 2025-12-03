@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SpotifyService } from '../../services/spotify';
 import { VotingService } from '../../services/voting';
+import { AudioService } from '../../services/audio.service';
 
 @Component({
   standalone: true,
@@ -21,7 +22,8 @@ export class SearchComponent {
 
   constructor(
     private spotifyService: SpotifyService,
-    private votingService: VotingService
+    private votingService: VotingService,
+    public audioService: AudioService
   ) { }
 
   search(): void {
@@ -29,6 +31,7 @@ export class SearchComponent {
 
     this.isLoading = true;
     this.searchPerformed = true;
+    this.audioService.stop(); // Stop any playing audio when searching
 
     this.spotifyService.searchTracks(this.query).subscribe({
       next: (data) => {
@@ -52,7 +55,7 @@ export class SearchComponent {
       album: track.album?.name || 'Unknown Album'
     };
 
-    this.votingService.voteForSong(track.id, trackInfo).subscribe({
+    this.votingService.voteForSong(track.id, trackInfo, false, track.dedication).subscribe({
       next: () => {
         alert('¡Tu voto ha sido registrado!');
         this.query = '';
@@ -68,6 +71,14 @@ export class SearchComponent {
         }
       },
     });
+  }
+
+  playPreview(url: string): void {
+    if (url) {
+      this.audioService.play(url);
+    } else {
+      alert('Esta canción no tiene vista previa disponible.');
+    }
   }
 
   formatDuration(ms: number): string {

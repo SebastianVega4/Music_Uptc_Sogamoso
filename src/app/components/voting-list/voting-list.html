@@ -22,11 +22,20 @@
         <div class="recent-song-card" *ngFor="let song of recentlyAddedSongs">
           <div class="recent-song-image-container">
             <img [src]="song.image" [alt]="song.name" class="recent-song-image">
+            <button class="btn-play-overlay" 
+                    (click)="playPreview(song.preview_url)"
+                    [disabled]="!song.preview_url"
+                    [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+              <i class="fas" [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
+            </button>
           </div>
           <div class="recent-song-content">
             <div class="recent-song-info">
               <h6 class="recent-song-title">{{ song.name }}</h6>
               <p class="recent-song-artist">{{ song.artists.join(', ') }}</p>
+              <small *ngIf="song.dedication" class="text-info fst-italic d-block mt-1">
+                <i class="fas fa-heart me-1"></i>{{ song.dedication }}
+              </small>
             </div>
             <div class="recent-song-meta">
               <span class="badge bg-secondary">
@@ -65,8 +74,21 @@
             <td>{{ i + 1 }}</td>
             <td>
               <div class="song-cell">
-                <img [src]="song.image" [alt]="song.name">
-                <span>{{ song.name }}</span>
+                <div class="position-relative">
+                  <img [src]="song.image" [alt]="song.name">
+                  <button class="btn-play-mini" 
+                          (click)="playPreview(song.preview_url)"
+                          [disabled]="!song.preview_url"
+                          [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+                    <i class="fas" [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
+                  </button>
+                </div>
+                <div class="d-flex flex-column">
+                  <span>{{ song.name }}</span>
+                  <small *ngIf="song.dedication" class="text-info fst-italic">
+                    <i class="fas fa-heart me-1"></i>{{ song.dedication }}
+                  </small>
+                </div>
               </div>
             </td>
             <td>{{ song.artists.join(', ') }}</td>

@@ -881,6 +881,52 @@ $spotify-card-bg: #181818;
   }
 }
 
+// Play Button Styles
+.position-relative {
+  position: relative !important;
+}
+
+.btn-play-mini {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: $spotify-green;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  
+  i {
+    font-size: 12px;
+    margin-left: 2px; // Visual correction
+  }
+}
+
+.result-item:hover .btn-play-mini,
+.recent-card:hover .btn-play-mini,
+.ranking-item:hover .btn-play-mini {
+  opacity: 1;
+}
+
 // Recently Added
 .recently-added-section {
   .recently-added-content {
@@ -1314,9 +1360,9 @@ $spotify-card-bg: #181818;
 
 .message-container {
   position: fixed;
-  top: 20px;
+  top: 90px;
   right: 20px;
-  z-index: 1000;
+  z-index: 10000;
   max-width: 400px;
 }
 

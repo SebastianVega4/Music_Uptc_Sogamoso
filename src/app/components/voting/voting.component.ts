@@ -137,13 +137,13 @@ export class VotingComponent implements OnInit, OnDestroy {
     const toast = document.createElement('div');
     toast.style.cssText = `
       position: fixed;
-      top: 20px;
+      top: 90px;
       right: 20px;
       padding: 12px 20px;
       border-radius: 8px;
       color: white;
       font-weight: 600;
-      z-index: 1000;
+      z-index: 10000;
       animation: slideIn 0.3s ease;
     `;
     

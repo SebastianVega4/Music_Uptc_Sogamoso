@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { VotingService } from '../../services/voting';
 import { Subscription, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AudioService } from '../../services/audio.service';
 
 @Component({
   standalone: true,
@@ -23,7 +24,10 @@ export class VotingListComponent implements OnInit, OnDestroy {
   countdown = 0;
   private timerSubscription: Subscription | null = null;
 
-  constructor(private votingService: VotingService) { }
+  constructor(
+    private votingService: VotingService,
+    public audioService: AudioService
+  ) { }
 
   ngOnInit(): void {
     this.startPolling();
@@ -204,5 +208,13 @@ export class VotingListComponent implements OnInit, OnDestroy {
         }
       },
     });
+  }
+
+  playPreview(url: string): void {
+    if (url) {
+      this.audioService.play(url);
+    } else {
+      alert('Esta canción no tiene vista previa disponible.');
+    }
   }
 }

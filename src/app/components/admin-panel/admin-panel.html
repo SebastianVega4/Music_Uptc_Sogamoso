@@ -149,6 +149,9 @@
             <div class="track-info">
               <h3>{{ adminCurrentlyPlaying.name }}</h3>
               <p class="artists">{{ adminCurrentlyPlaying.artists.join(', ') }}</p>
+              <p *ngIf="adminCurrentlyPlaying.dedication" class="text-info fst-italic mb-0 mt-1">
+                <i class="fas fa-heart me-1"></i>{{ adminCurrentlyPlaying.dedication }}
+              </p>
               <div class="progress-container">
                 <div class="progress-bar">
                   <div class="progress-fill"
@@ -249,6 +252,9 @@
             <div class="rank-info">
               <h4>{{ song.name }}</h4>
               <p>{{ song.artists.join(', ') }}</p>
+              <small *ngIf="song.dedication" class="text-info fst-italic d-block mb-1">
+                <i class="fas fa-heart me-1"></i>{{ song.dedication }}
+              </small>
               <div class="rank-stats">
                 <span class="votes"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
                 <span class="dislikes"><i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}</span>
@@ -410,6 +416,9 @@
               <div class="recent-info">
                 <h5>{{ song.name }}</h5>
                 <p>{{ song.artists.join(', ') }}</p>
+                <small *ngIf="song.dedication" class="text-info fst-italic d-block mb-1">
+                  <i class="fas fa-heart me-1"></i>{{ song.dedication }}
+                </small>
                 <div class="recent-stats">
                   <span class="votes"><i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}</span>
                   <span class="dislikes"><i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}</span>

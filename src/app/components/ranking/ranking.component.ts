@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { RankingService } from '../../services/ranking.service';
 import { VotingService } from '../../services/voting';
 import { Subscription } from 'rxjs';
+import { AudioService } from '../../services/audio.service';
 
 @Component({
   standalone: true,
@@ -30,7 +31,8 @@ export class RankingComponent implements OnInit, OnDestroy {
 
   constructor(
     private rankingService: RankingService,
-    private votingService: VotingService
+    private votingService: VotingService,
+    public audioService: AudioService
   ) {}
 
   ngOnInit(): void {
@@ -72,7 +74,6 @@ export class RankingComponent implements OnInit, OnDestroy {
       });
   }
   
-  // Y agregar este método para calcular estadísticas
   calculateStats(): void {
     if (this.songs.length === 0) {
       this.stats = {};
@@ -214,6 +215,15 @@ export class RankingComponent implements OnInit, OnDestroy {
         });
       default:
         return this.filteredSongs;
+    }
+  }
+
+  playPreview(url: string, event: Event): void {
+    event.stopPropagation(); // Prevent opening details modal
+    if (url) {
+      this.audioService.play(url);
+    } else {
+      alert('Esta canción no tiene vista previa disponible.');
     }
   }
 }

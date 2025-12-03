@@ -48,11 +48,12 @@ export class VotingService {
     });
   }
 
-  voteForSong(trackid: string, trackInfo: any, isDislike: boolean = false): Observable<any> {
+  voteForSong(trackid: string, trackInfo: any, isDislike: boolean = false, dedication: string = ''): Observable<any> {
     const songData = {
       trackid,
       trackInfo,
-      is_dislike: isDislike
+      is_dislike: isDislike,
+      dedication
     };
     return this.http.post(`${this.apiUrl}/api/vote`, songData).pipe(
       tap(() => {

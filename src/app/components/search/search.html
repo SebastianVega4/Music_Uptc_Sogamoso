@@ -34,12 +34,24 @@
                 <img [src]="track.image" class="img-fluid rounded" [alt]="track.name">
               </div>
               <div class="col-5 col-sm-6">
-                <h6 class="mb-1 text-truncate">{{ track.name }}</h6>
+                <div class="d-flex align-items-center mb-1">
+                  <h6 class="mb-0 text-truncate me-2">{{ track.name }}</h6>
+                  <button class="btn btn-sm btn-outline-primary rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                          style="width: 24px; height: 24px;"
+                          (click)="playPreview(track.preview_url)"
+                          [disabled]="!track.preview_url"
+                          [title]="track.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+                    <i class="fas" [ngClass]="(audioService.isCurrentSong(track.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'" style="font-size: 10px;"></i>
+                  </button>
+                </div>
                 <p class="text-muted mb-1 small text-truncate">{{ track.artists.join(', ') }}</p>
                 <p class="text-muted mb-0 small">{{ formatDuration(track.duration_ms) }}</p>
               </div>
               <div class="col-4 col-sm-4 text-end">
-                <button class="btn btn-success btn-sm" (click)="vote(track)">
+                <div class="mb-2">
+                  <input type="text" class="form-control form-control-sm" placeholder="Dedicatoria (opcional)" [(ngModel)]="track.dedication">
+                </div>
+                <button class="btn btn-success btn-sm w-100" (click)="vote(track)">
                   <i class="fas fa-thumbs-up me-1"></i>Votar
                 </button>
               </div>
