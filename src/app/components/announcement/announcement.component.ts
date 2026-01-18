@@ -9,25 +9,6 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./announcement.component.scss']
 })
 export class AnnouncementComponent {
-  isHidden = false;
+  // Component logic simplified for permanent display
 
-  hideAnnouncement() {
-    this.isHidden = true;
-    // Opcional: guardar en localStorage para no mostrar nuevamente
-    localStorage.setItem('announcementHidden', 'true');
-  }
-
-  nohideAnnouncement() {
-    this.isHidden = false;
-    // Opcional: guardar en localStorage para no mostrar nuevamente
-    localStorage.setItem('announcementHidden', 'true');
-  }
-
-  ngOnInit() {
-    // Opcional: verificar si ya fue ocultado anteriormente
-    const hidden = localStorage.getItem('announcementHidden');
-    if (hidden === 'true') {
-      this.isHidden = true;
-    }
-  }
 }

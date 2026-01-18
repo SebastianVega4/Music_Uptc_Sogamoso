@@ -12,28 +12,10 @@ import { ScheduleService } from '../../services/schedule.service';
 export class ScheduleComponent implements OnInit {
   schedules: any[] = [];
   isLoading: boolean = true;
-  isHidden = false;
-
   constructor(private scheduleService: ScheduleService) { }
 
-  hideAnnouncement() {
-    this.isHidden = true;
-    // Opcional: guardar en localStorage para no mostrar nuevamente
-    localStorage.setItem('announcementHidden', 'true');
-  }
-
-  nohideAnnouncement() {
-    this.isHidden = false;
-    // Opcional: guardar en localStorage para no mostrar nuevamente
-    localStorage.setItem('announcementHidden', 'true');
-  }
-  
   ngOnInit(): void {
     this.loadSchedules();
-    const hidden = localStorage.getItem('announcementHidden');
-    if (hidden === 'true') {
-      this.isHidden = true;
-    }
   }
 
   loadSchedules(): void {

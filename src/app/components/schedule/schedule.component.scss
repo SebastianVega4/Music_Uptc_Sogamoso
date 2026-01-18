@@ -254,27 +254,4 @@
   }
 }
 
-.btn-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(90deg);
-  }
-  
-  i {
-    font-size: 0.9rem;
-  }
-}
+// Styles cleaned up

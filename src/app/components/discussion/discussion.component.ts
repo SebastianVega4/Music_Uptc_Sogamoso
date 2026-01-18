@@ -3,15 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DiscussionService, Thread } from '../../services/discussion.service';
-import { AnnouncementComponent } from '../announcement/announcement.component';
-import { ScheduleComponent } from "../schedule/schedule.component";
 
 @Component({
   standalone: true,
   selector: 'app-discussion',
   templateUrl: './discussion.component.html',
   styleUrls: ['./discussion.component.scss'],
-  imports: [CommonModule, FormsModule, AnnouncementComponent, ScheduleComponent, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule]
 })
 export class DiscussionComponent implements OnInit {
   threads: Thread[] = [];
