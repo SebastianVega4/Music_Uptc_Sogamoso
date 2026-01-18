@@ -35,14 +35,26 @@
 
     <!-- Mensajes -->
     <div class="messages-container" #messagesContainer>
-      <div *ngFor="let message of messages$ | async; trackBy: trackByMessage" class="message"
-        [class.system-message]="message.type === 'system'"
-        [class.own-message]="message.user === currentUser && message.type === 'message'">
-        <div class="message-header" *ngIf="message.type === 'message'">
-          <strong class="username">{{ message.user }}</strong>
-          <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+      <div *ngFor="let group of groupedMessages$ | async">
+        <!-- Separador de fecha -->
+        <div class="date-divider">
+          <span>{{ group.label }}</span>
         </div>
-        <div class="message-content">{{ message.message }}</div>
+        
+        <!-- Mensajes del grupo -->
+        <div *ngFor="let message of group.messages; trackBy: trackByMessage" class="message"
+          [class.system-message]="message.type === 'system'"
+          [class.own-message]="message.user === currentUser && message.type === 'message'">
+          
+          <div class="message-header" *ngIf="message.type === 'message'">
+            <strong class="username">{{ message.user }}</strong>
+            <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+            <button *ngIf="isAdmin$ | async" class="btn-delete-msg" (click)="deleteMessage(message.id)" title="Eliminar mensaje">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+          <div class="message-content">{{ message.message }}</div>
+        </div>
       </div>
       <!-- Indicador de escritura -->
       <div *ngIf="(typingUsers$ | async) as typingUsers" class="typing-indicator">

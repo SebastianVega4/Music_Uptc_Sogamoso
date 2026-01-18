@@ -248,13 +248,21 @@ export class ChatService implements OnDestroy {
         if (response.success && response.message) {
           this.setTyping(false);
         }
-      }),
-      catchError(error => {
-        console.error('Error sending message:', error);
-        this.connectedSubject.next(false);
-        throw error;
       })
     );
+  }
+
+  deleteMessage(messageId: string): Observable<any> {
+    const token = this.getAuthToken();
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return this.http.delete(`${this.apiUrl}/api/chat/messages/${messageId}`, { headers });
+  }
+
+  isAdmin(): boolean {
+    return !!this.getAuthToken();
   }
 
   setTyping(isTyping: boolean): void {

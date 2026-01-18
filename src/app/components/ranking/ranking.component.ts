@@ -6,6 +6,7 @@ import { RankingService } from '../../services/ranking.service';
 import { VotingService } from '../../services/voting';
 import { Subscription } from 'rxjs';
 import { AudioService } from '../../services/audio.service';
+import { MetaService } from '../../services/meta.service';
 
 @Component({
   standalone: true,
@@ -32,10 +33,12 @@ export class RankingComponent implements OnInit, OnDestroy {
   constructor(
     private rankingService: RankingService,
     private votingService: VotingService,
-    public audioService: AudioService
+    public audioService: AudioService,
+    private metaService: MetaService
   ) {}
 
   ngOnInit(): void {
+    this.metaService.updatePageData('Ranking de Canciones', 'Mira las canciones más votadas y el historial de reproducción.');
     this.loadRanking();
     this.startPolling();
   }

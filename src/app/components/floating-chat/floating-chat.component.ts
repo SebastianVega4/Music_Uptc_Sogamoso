@@ -12,7 +12,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage, ChatStats } from '../../services/chat.service';
 import { Observable, Subscription, of } from 'rxjs';
-import { take, tap } from 'rxjs/operators';
+import { take, tap, map } from 'rxjs/operators';
+
+interface MessageGroup {
+  label: string;
+  messages: ChatMessage[];
+}
 
 @Component({
   standalone: true,
@@ -35,12 +40,14 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   // AGREGAR ESTA PROPIEDAD FALTANTE
   private previousMessageCount = 0;
   
-  public messages$: Observable<ChatMessage[]>;
+  public messages$: Observable<ChatMessage[]>; // Keep original for reference if needed
+  public groupedMessages$: Observable<MessageGroup[]>;
   public typingUsers$: Observable<string[]>;
   public onlineUsers$: Observable<number>;
   public connected$: Observable<boolean>;
   public stats$: Observable<ChatStats | null>;
   public currentUser$: Observable<string>;
+  public isAdmin$: Observable<boolean>;
 
   private subscriptions = new Subscription();
   private typingTimeout: any;
@@ -56,6 +63,15 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.connected$ = this.chatService.connected$;
     this.stats$ = this.chatService.stats$;
     this.currentUser$ = of(this.chatService.getUser());
+    this.connected$ = this.chatService.connected$;
+    this.stats$ = this.chatService.stats$;
+    this.currentUser$ = of(this.chatService.getUser());
+    this.isAdmin$ = of(this.chatService.isAdmin());
+    
+    // Transformar mensajes planos a agrupados por fecha
+    this.groupedMessages$ = this.messages$.pipe(
+      map(messages => this.groupMessagesByDate(messages))
+    );
   }
 
   ngOnInit(): void {
@@ -282,5 +298,54 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
         this.isChatOpen = false;
         this.cdr.markForCheck();
     }
+  }
+
+  deleteMessage(messageId: string): void {
+    if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+      this.chatService.deleteMessage(messageId).subscribe({
+        next: () => {
+          // El mensaje se eliminará de la lista automáticamente gracias al Realtime
+        },
+        error: (error) => {
+          console.error('Error al eliminar mensaje:', error);
+          alert('No se pudo eliminar el mensaje');
+        }
+      });
+    }
+  }
+
+  private groupMessagesByDate(messages: ChatMessage[]): MessageGroup[] {
+    const groups: MessageGroup[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    messages.forEach(msg => {
+      const msgDate = new Date(msg.timestamp);
+      const msgDateOnly = new Date(msgDate);
+      msgDateOnly.setHours(0, 0, 0, 0);
+
+      let label = '';
+      if (msgDateOnly.getTime() === today.getTime()) {
+        label = 'Hoy';
+      } else if (msgDateOnly.getTime() === yesterday.getTime()) {
+        label = 'Ayer';
+      } else {
+        label = msgDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      }
+
+      // Buscar si ya existe el grupo (usando el último grupo para mantener orden cronológico)
+      let lastGroup = groups[groups.length - 1];
+      
+      if (lastGroup && lastGroup.label === label) {
+        lastGroup.messages.push(msg);
+      } else {
+        groups.push({ label, messages: [msg] });
+      }
+    });
+
+    return groups;
   }
 }

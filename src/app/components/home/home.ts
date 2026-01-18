@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { VotingService } from '../../services/voting';
 import { VotingComponent } from '../voting/voting.component';
 import { QueueService } from '../../services/queue.service';
+import { MetaService } from '../../services/meta.service';
 
 @Component({
   standalone: true,
@@ -32,10 +33,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private spotifyService: SpotifyNowPlayingService,
     private votingService: VotingService,
-    private queueService: QueueService
+    private queueService: QueueService,
+    private metaService: MetaService
   ) { }
 
   ngOnInit(): void {
+    this.metaService.updatePageData('Votación en Vivo', 'Vota por las canciones que quieres escuchar. ¡Tú eliges la música!');
     this.startAdminSpotifyPolling();
     this.loadNextSong();
     

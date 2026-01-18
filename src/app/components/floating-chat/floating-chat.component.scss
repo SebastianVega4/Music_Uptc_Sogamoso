@@ -252,6 +252,28 @@
       opacity: 0.8;
       color: var(--text-secondary);
     }
+
+    .btn-delete-msg {
+      background: transparent;
+      border: none;
+      color: rgba(239, 68, 68, 0.6);
+      margin-left: auto; /* Push to right */
+      padding: 4px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        transform: scale(1.1);
+      }
+    }
   }
   
   .message-content {
@@ -287,6 +309,23 @@
       &:nth-child(1) { animation-delay: -0.32s; }
       &:nth-child(2) { animation-delay: -0.16s; }
     }
+  }
+}
+
+
+
+.date-divider {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  
+  span {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 }
 

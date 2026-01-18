@@ -34,7 +34,7 @@
               <h6 class="recent-song-title">{{ song.name }}</h6>
               <p class="recent-song-artist">{{ song.artists.join(', ') }}</p>
               <small *ngIf="song.dedication" class="text-info fst-italic d-block mt-1">
-                <i class="fas fa-heart me-1"></i>{{ song.dedication }}
+                <i class="fas fa-heart me-1">:</i>{{ song.dedication }}
               </small>
             </div>
             <div class="recent-song-meta">

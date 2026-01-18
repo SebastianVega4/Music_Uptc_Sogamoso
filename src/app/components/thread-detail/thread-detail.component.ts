@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DiscussionService, Thread, Comment } from '../../services/discussion.service';
+import { MetaService } from '../../services/meta.service';
 import { tap } from 'rxjs/operators';
 
 @Component({
@@ -23,7 +24,8 @@ export class ThreadDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private discussionService: DiscussionService
+    private discussionService: DiscussionService,
+    private metaService: MetaService
   ) {}
 
   ngOnInit() {
@@ -43,6 +45,8 @@ export class ThreadDetailComponent implements OnInit {
           ...data.thread,
           user_has_liked: this.discussionService.hasUserLiked('thread', data.thread.id)
         };
+        
+        this.metaService.updatePageData(this.thread.title, this.thread.content.substring(0, 150) + '...');
         
         // Procesar comentarios con información de likes del usuario
         this.comments = this.buildCommentTree(data.comments).map(comment => ({
