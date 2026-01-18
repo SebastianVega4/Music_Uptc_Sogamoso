@@ -105,6 +105,14 @@
   background: #333;
 }
 
+.create-option {
+  background: rgba(29, 185, 84, 0.05);
+}
+
+.create-option:hover {
+  background: rgba(29, 185, 84, 0.15);
+}
+
 .suggestion-avatar {
   width: 35px;
   height: 35px;

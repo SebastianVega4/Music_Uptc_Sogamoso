@@ -80,6 +80,12 @@ export class BuitresComponent implements OnInit {
     this.searchSubject.next(query);
   }
 
+  openCreateFormWithSearch() {
+    this.newName = this.searchQuery;
+    this.showCreateForm = true;
+    this.suggestions = [];
+  }
+
   createPerson(event: Event) {
     event.preventDefault();
     if (!this.newName || !this.newGender) return;

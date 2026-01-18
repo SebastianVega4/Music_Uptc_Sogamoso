@@ -14,7 +14,7 @@
                 placeholder="Escribe el nombre de la persona..." class="search-input" autocomplete="off">
 
             <!-- Suggestions Dropdown -->
-            <div class="search-suggestions" *ngIf="suggestions.length > 0">
+            <div class="search-suggestions" *ngIf="searchQuery.length >= 2">
                 <div *ngFor="let suggestion of suggestions" class="suggestion-item"
                     (click)="selectSuggestion(suggestion)">
                     <div class="suggestion-avatar">
@@ -22,6 +22,18 @@
                         <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
                     </div>
                     <span class="suggestion-name">{{ suggestion.name }}</span>
+                </div>
+
+                <!-- If no suggestions found, show create option -->
+                <div *ngIf="suggestions.length === 0 && !loading" class="suggestion-item create-option"
+                    (click)="openCreateFormWithSearch()">
+                    <div class="suggestion-avatar">
+                        <i class="fas fa-plus text-success"></i>
+                    </div>
+                    <div>
+                        <span class="suggestion-name">"{{ searchQuery }}" no existe</span>
+                        <small class="d-block text-muted">Haz clic aquí para crear este perfil</small>
+                    </div>
                 </div>
             </div>
         </div>
