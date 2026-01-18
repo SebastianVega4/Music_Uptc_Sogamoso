@@ -2,17 +2,21 @@
     <div class="header-section text-center mb-5">
         <h2 class="section-title">Encuentra a un <span class="text-gradient">Buitre</span></h2>
         <p class="section-subtitle">Busca si esa persona ya está en nuestra base de datos comunitaria.</p>
+        <div class="stats-badge mt-2">
+            <i class="fas fa-users me-1"></i> {{ totalPeople }} perfiles registrados
+        </div>
     </div>
 
-    <div class="search-section mb-5">
+    <div class="search-section mb-4">
         <div class="search-box">
             <i class="fas fa-search search-icon"></i>
             <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
                 placeholder="Escribe el nombre de la persona..." class="search-input" autocomplete="off">
-            
+
             <!-- Suggestions Dropdown -->
             <div class="search-suggestions" *ngIf="suggestions.length > 0">
-                <div *ngFor="let suggestion of suggestions" class="suggestion-item" (click)="selectSuggestion(suggestion)">
+                <div *ngFor="let suggestion of suggestions" class="suggestion-item"
+                    (click)="selectSuggestion(suggestion)">
                     <div class="suggestion-avatar">
                         <i *ngIf="suggestion.gender === 'male'" class="fas fa-user-tie male"></i>
                         <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
@@ -21,6 +25,21 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="filters-section d-flex justify-content-center gap-2 mb-5">
+        <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
+            <i class="fas fa-clock me-1"></i> Recientes
+        </button>
+        <button class="filter-btn" [class.active]="currentSort === 'likes'" (click)="setSort('likes')">
+            <i class="fas fa-heart me-1"></i> Más Votados
+        </button>
+        <button class="filter-btn" [class.active]="currentSort === 'tags'" (click)="setSort('tags')">
+            <i class="fas fa-tags me-1"></i> Más Etiquetas
+        </button>
+        <button class="filter-btn" [class.active]="currentSort === 'comments'" (click)="setSort('comments')">
+            <i class="fas fa-comments me-1"></i> Más Comentados
+        </button>
     </div>
 
     <div *ngIf="loading" class="text-center py-5">

@@ -28,6 +28,45 @@
   font-size: 1.1rem;
   transition: all 0.3s ease;
 }
+
+.stats-badge {
+  display: inline-block;
+  background: rgba(29, 185, 84, 0.1);
+  color: #1DB954;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(29, 185, 84, 0.3);
+}
+
+.filters-section {
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: #282828;
+  border: 1px solid #404040;
+  color: #b3b3b3;
+  padding: 8px 18px;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+.filter-btn.active {
+  background: #1DB954;
+  color: #fff;
+  border-color: #1DB954;
+  font-weight: bold;
+}
+
 .search-input:focus {
   outline: none;
   border-color: #1DB954;

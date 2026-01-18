@@ -18,6 +18,8 @@ export class BuitresComponent implements OnInit {
   searchQuery: string = '';
   loading: boolean = false;
   showCreateForm: boolean = false;
+  totalPeople: number = 0;
+  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'recent';
   
   newName: string = '';
   newGender: 'male' | 'female' | '' = '';
@@ -32,13 +34,14 @@ export class BuitresComponent implements OnInit {
 
   ngOnInit() {
     this.loadPeople();
+    this.loadTotalCount();
 
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(query => {
       if (query.length >= 2) {
-        this.buitresService.getPeople(query).subscribe(res => {
+        this.buitresService.getPeople(query, this.currentSort).subscribe(res => {
           this.suggestions = res;
         });
       } else {
@@ -46,6 +49,17 @@ export class BuitresComponent implements OnInit {
         if (query.length === 0) this.loadPeople();
       }
     });
+  }
+
+  loadTotalCount() {
+    this.buitresService.getTotalPeopleCount().subscribe(count => {
+      this.totalPeople = count;
+    });
+  }
+
+  setSort(sort: 'recent' | 'likes' | 'comments' | 'tags') {
+    this.currentSort = sort;
+    this.loadPeople();
   }
 
   selectSuggestion(person: BuitrePerson) {
@@ -56,7 +70,7 @@ export class BuitresComponent implements OnInit {
 
   loadPeople() {
     this.loading = true;
-    this.buitresService.getPeople().subscribe(results => {
+    this.buitresService.getPeople('', this.currentSort).subscribe(results => {
       this.people = results;
       this.loading = false;
     });
@@ -84,6 +98,7 @@ export class BuitresComponent implements OnInit {
         this.newGender = '';
         this.newDescription = '';
         this.loadPeople();
+        this.loadTotalCount();
       },
       error: (err: any) => {
         if (err.code === '23505') {

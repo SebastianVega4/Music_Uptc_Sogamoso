@@ -230,3 +230,16 @@ BEGIN
     UPDATE buitres_people SET is_merged = TRUE, merged_into = p_keep_id WHERE id = p_remove_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8. Vista para estadísticas y ordenamiento mejorado
+CREATE OR REPLACE VIEW buitres_stats AS
+SELECT 
+    p.*,
+    (SELECT COUNT(*) FROM buitres_comments c WHERE c.person_id = p.id) as comments_count,
+    (SELECT COUNT(*) FROM buitres_details d WHERE d.person_id = p.id) as tags_count,
+    (SELECT COALESCE(SUM(occurrence_count), 0) FROM buitres_details d WHERE d.person_id = p.id) as total_interactions
+FROM buitres_people p
+WHERE p.is_merged = FALSE;
+
+-- Otorgar permisos a la vista para que sea legible públicamente
+GRANT SELECT ON buitres_stats TO anon, authenticated;

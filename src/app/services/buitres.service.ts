@@ -45,18 +45,41 @@ export class BuitresService {
 
   // --- People Operations ---
 
-  getPeople(search: string = ''): Observable<BuitrePerson[]> {
+  getPeople(search: string = '', sortBy: 'likes' | 'comments' | 'tags' | 'recent' = 'recent'): Observable<BuitrePerson[]> {
+    let tableName = 'buitres_people';
+    if (sortBy === 'comments' || sortBy === 'tags') {
+      tableName = 'buitres_stats';
+    }
+
     let query = this.supabase
-      .from('buitres_people')
+      .from(tableName)
       .select('*')
-      .eq('is_merged', false)
-      .order('created_at', { ascending: false });
+      .eq('is_merged', false);
+
+    if (sortBy === 'recent') {
+      query = query.order('created_at', { ascending: false });
+    } else if (sortBy === 'likes') {
+      query = query.order('likes_count', { ascending: false });
+    } else if (sortBy === 'comments') {
+      query = query.order('comments_count', { ascending: false });
+    } else if (sortBy === 'tags') {
+      query = query.order('tags_count', { ascending: false });
+    }
 
     if (search) {
       query = query.ilike('name', `%${search}%`);
     }
 
     return from(query).pipe(map(res => res.data || []));
+  }
+
+  getTotalPeopleCount(): Observable<number> {
+    return from(
+      this.supabase
+        .from('buitres_people')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_merged', false)
+    ).pipe(map(res => res.count || 0));
   }
 
   getPersonById(id: string): Observable<BuitrePerson | null> {

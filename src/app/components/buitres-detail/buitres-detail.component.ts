@@ -111,6 +111,14 @@ export class BuitresDetailComponent implements OnInit {
 
   submitComment() {
     if (!this.person || !this.newComment) return;
+
+    // Seguridad: Bloquear si tiene 10 o más números (evitar spam de teléfonos)
+    const digitCount = (this.newComment.match(/\d/g) || []).length;
+    if (digitCount >= 10) {
+      alert('Por seguridad, no se permiten comentarios con números de teléfono.');
+      return;
+    }
+
     this.buitresService.addComment(this.person.id, this.newComment, this.fingerprint).subscribe(() => {
       this.newComment = '';
       this.loadData(this.person!.id);
@@ -119,7 +127,22 @@ export class BuitresDetailComponent implements OnInit {
 
   addDetail() {
     if (!this.person || !this.newDetailContent) return;
-    this.incrementDetail(this.newDetailContent);
+
+    // Seguridad: Bloquear si tiene 10 o más números
+    const digitCount = (this.newDetailContent.match(/\d/g) || []).length;
+    if (digitCount >= 10) {
+      alert('Por seguridad, no se permiten etiquetas con números de teléfono.');
+      return;
+    }
+
+    // Normalizar a Title Case
+    const normalizedTag = this.newDetailContent
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    this.incrementDetail(normalizedTag);
     this.newDetailContent = '';
   }
 
