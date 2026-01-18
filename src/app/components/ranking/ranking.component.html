@@ -130,12 +130,17 @@
         <div class="song-image-container">
           <img [src]="song.image || 'assets/default-song.png'" [alt]="song.name" class="song-image">
           <div class="position-badge">#{{ i + 1 }}</div>
+          <button class="play-button" (click)="playPreview(song.preview_url, $event)" [disabled]="!song.preview_url"
+            [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+            <i class="fas"
+              [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
+          </button>
         </div>
 
         <div class="song-info">
           <h5 class="song-title text-truncate">{{ song.name }}</h5>
           <p class="song-artist text-truncate">{{ song.artists.join(', ') }}</p>
-          
+
           <div class="song-stats">
             <span class="stat-item">
               <i class="fas fa-play"></i> {{ song.times_played }}
