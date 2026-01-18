@@ -49,9 +49,18 @@ CREATE TABLE IF NOT EXISTS buitres_interactions (
     target_id UUID NOT NULL, -- person_id, comment_id, or detail_id
     target_type TEXT NOT NULL, -- 'person_like', 'person_dislike', 'comment_like', 'detail_increment'
     author_fingerprint TEXT NOT NULL,
+    content_snapshot TEXT, -- Requerido para detail_increment
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(target_id, target_type, author_fingerprint)
+    UNIQUE(target_id, target_type, author_fingerprint, content_snapshot)
 );
+
+-- Migración: Añadir content_snapshot si no existe
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='buitres_interactions' AND column_name='content_snapshot') THEN
+        ALTER TABLE buitres_interactions ADD COLUMN content_snapshot TEXT;
+    END IF;
+END $$;
 
 -- RLS (Row Level Security)
 ALTER TABLE buitres_people ENABLE ROW LEVEL SECURITY;

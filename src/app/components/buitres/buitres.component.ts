@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson } from '../../services/buitres.service';
-import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-buitres',
@@ -14,6 +14,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 })
 export class BuitresComponent implements OnInit {
   people: BuitrePerson[] = [];
+  suggestions: BuitrePerson[] = [];
   searchQuery: string = '';
   loading: boolean = false;
   showCreateForm: boolean = false;
@@ -24,22 +25,33 @@ export class BuitresComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
 
-  constructor(private buitresService: BuitresService) {}
+  constructor(
+    private buitresService: BuitresService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.loadPeople();
 
     this.searchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(query => {
-        this.loading = true;
-        return this.buitresService.getPeople(query);
-      })
-    ).subscribe(results => {
-      this.people = results;
-      this.loading = false;
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      if (query.length >= 2) {
+        this.buitresService.getPeople(query).subscribe(res => {
+          this.suggestions = res;
+        });
+      } else {
+        this.suggestions = [];
+        if (query.length === 0) this.loadPeople();
+      }
     });
+  }
+
+  selectSuggestion(person: BuitrePerson) {
+    this.router.navigate(['/buitres/person', person.id]);
+    this.suggestions = [];
+    this.searchQuery = '';
   }
 
   loadPeople() {

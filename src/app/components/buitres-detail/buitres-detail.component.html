@@ -30,8 +30,8 @@
                 <h3 class="mb-3"><i class="fas fa-tags me-2 text-primary"></i>Etiquetas</h3>
                 <div class="tags-container mb-3">
                     <div *ngFor="let detail of details" class="tag-item" [class.verified]="detail.is_verified">
-                        <span class="tag-content">{{ detail.content }}</span>
-                        <div class="tag-badge" (click)="incrementDetail(detail.content)">
+                        <span class="tag-content" (click)="incrementDetail(detail.content)">{{ detail.content }}</span>
+                        <div class="tag-badge">
                             {{ detail.occurrence_count }}
                             <i *ngIf="detail.is_verified" class="fas fa-check-circle ms-1"></i>
                         </div>
@@ -46,7 +46,7 @@
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <small class="text-muted mt-2 d-block">Ej: Bonito, Feo, Sistemas, Rocker...</small>
+                    <small class="text-muted mt-2 d-block">click en los tags para incrementar el numero</small>
                 </div>
             </div>
         </div>
@@ -58,7 +58,7 @@
 
                 <div class="comment-input-area mb-4">
                     <textarea [(ngModel)]="newComment" class="form-control form-dark" rows="3"
-                        placeholder="Escribe algo anónimamente..."></textarea>
+                        placeholder="Escribe algo anónimamente, una vez enviado no se podra editar."></textarea>
                     <button class="btn btn-primary mt-2" (click)="submitComment()" [disabled]="!newComment">
                         Publicar Comentario
                     </button>
