@@ -9,7 +9,7 @@
           <h1 class="app-title mb-0 ms-2">{{ title }}</h1>
         </a>
       </div>
-      
+
       <button class="hamburger-menu d-md-none" (click)="toggleMenu()">
         <i class="fas" [ngClass]="isMenuOpen ? 'fa-times' : 'fa-bars'"></i>
       </button>
@@ -23,6 +23,9 @@
         </a>
         <a routerLink="/ranking" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-trophy me-1"></i>Ranking
+        </a>
+        <a routerLink="/buitres" routerLinkActive="active" (click)="toggleMenu()">
+          <i class="fas fa-search me-1"></i>Buitres
         </a>
         <a routerLink="/about" routerLinkActive="active" (click)="toggleMenu()">
           <i class="fas fa-info-circle me-1"></i>About

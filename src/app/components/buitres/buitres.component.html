@@ -1,0 +1,87 @@
+<div class="buitres-container mt-4 animate-fade-in">
+    <div class="header-section text-center mb-5">
+        <h2 class="section-title">Encuentra a un <span class="text-gradient">Buitre</span></h2>
+        <p class="section-subtitle">Busca si esa persona ya está en nuestra base de datos comunitaria.</p>
+    </div>
+
+    <div class="search-section mb-5">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
+                placeholder="Escribe el nombre de la persona..." class="search-input">
+        </div>
+    </div>
+
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && people.length > 0" class="people-grid">
+        <div *ngFor="let person of people" class="person-card" [routerLink]="['/buitres/person', person.id]">
+            <div class="person-img d-flex align-items-center justify-content-center">
+                <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+            </div>
+            <div class="person-info">
+                <h3>{{ person.name }}</h3>
+                <p class="text-muted">{{ person.description | slice:0:60 }}...</p>
+                <div class="stats mt-3">
+                    <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
+                    <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && people.length === 0" class="empty-state text-center py-5">
+        <i class="fas fa-user-ghost fa-4x mb-3 text-muted"></i>
+        <h3>No encontramos a nadie con ese nombre</h3>
+        <p>¿Crees que debería estar aquí? ¡Puedes crearlo!</p>
+        <button class="btn btn-primary mt-3" (click)="showCreateForm = true">
+            <i class="fas fa-plus me-2"></i>Crear Persona
+        </button>
+    </div>
+
+    <!-- Modal de Creación -->
+    <div class="modal-overlay" *ngIf="showCreateForm" (click)="showCreateForm = false">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <h3>Agregar Nuevo Buitre</h3>
+            <form (submit)="createPerson($event)">
+                <div class="mb-3">
+                    <label class="form-label">Nombre Completo</label>
+                    <input type="text" [(ngModel)]="newName" name="newName" class="form-control"
+                        placeholder="Ej: Juan Perez" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Género</label>
+                    <div class="d-flex gap-3 mt-2">
+                        <div class="form-check custom-radio">
+                            <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male"
+                                [(ngModel)]="newGender">
+                            <label class="form-check-label" for="genderMale">
+                                <i class="fas fa-mars me-1"></i> Masculino
+                            </label>
+                        </div>
+                        <div class="form-check custom-radio">
+                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female"
+                                [(ngModel)]="newGender">
+                            <label class="form-check-label" for="genderFemale">
+                                <i class="fas fa-venus me-1"></i> Femenino
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted small"><i class="fas fa-info-circle me-1"></i> Una vez creada la persona, la
+                        comunidad podrá agregar etiquetas como "Sistemas", "Bonito", "Feo", etc.</p>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" (click)="showCreateForm = false">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="!newName || !newGender">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

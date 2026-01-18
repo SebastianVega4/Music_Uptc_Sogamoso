@@ -1,0 +1,82 @@
+<div class="detail-container mt-4 animate-fade-in" *ngIf="person">
+    <!-- Header / Profile Section -->
+    <div class="profile-header card-dark mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <div class="profile-img d-flex align-items-center justify-content-center">
+                    <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                    <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <h1 class="person-name">{{ person.name }}</h1>
+                <p class="person-desc">{{ person.description }}</p>
+                <div class="vote-actions mt-3">
+                    <button class="btn btn-outline-success me-2" (click)="vote('like')" [disabled]="voting">
+                        <i class="fas fa-thumbs-up me-2"></i>{{ person.likes_count }}
+                    </button>
+                    <button class="btn btn-outline-danger" (click)="vote('dislike')" [disabled]="voting">
+                        <i class="fas fa-thumbs-down me-2"></i>{{ person.dislikes_count }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Details Section (Crowdsourced Tags) -->
+        <div class="col-md-4">
+            <div class="card-dark h-100">
+                <h3 class="mb-3"><i class="fas fa-tags me-2 text-primary"></i>Etiquetas</h3>
+                <div class="tags-container mb-3">
+                    <div *ngFor="let detail of details" class="tag-item" [class.verified]="detail.is_verified">
+                        <span class="tag-content">{{ detail.content }}</span>
+                        <div class="tag-badge" (click)="incrementDetail(detail.content)">
+                            {{ detail.occurrence_count }}
+                            <i *ngIf="detail.is_verified" class="fas fa-check-circle ms-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-tag mt-auto">
+                    <div class="input-group">
+                        <input type="text" [(ngModel)]="newDetailContent" class="form-control form-dark"
+                            placeholder="Agregar etiqueta..." (keyup.enter)="addDetail()">
+                        <button class="btn btn-primary" (click)="addDetail()" [disabled]="!newDetailContent">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Ej: Bonito, Feo, Sistemas, Rocker...</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="col-md-8">
+            <div class="card-dark">
+                <h3 class="mb-3"><i class="fas fa-comments me-2 text-primary"></i>Foro Anónimo</h3>
+
+                <div class="comment-input-area mb-4">
+                    <textarea [(ngModel)]="newComment" class="form-control form-dark" rows="3"
+                        placeholder="Escribe algo anónimamente..."></textarea>
+                    <button class="btn btn-primary mt-2" (click)="submitComment()" [disabled]="!newComment">
+                        Publicar Comentario
+                    </button>
+                </div>
+
+                <div class="comments-list">
+                    <div *ngFor="let comment of comments" class="comment-card">
+                        <div class="comment-header">
+                            <span class="anon-id">Anónimo #{{ comment.author_fingerprint | slice:0:5 }}</span>
+                            <small class="text-muted">{{ comment.created_at | date:'short' }}</small>
+                        </div>
+                        <p class="comment-body">{{ comment.content }}</p>
+                        <div class="comment-footer">
+                            <span class="text-muted"><i class="fas fa-heart me-1"></i> {{ comment.likes_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
