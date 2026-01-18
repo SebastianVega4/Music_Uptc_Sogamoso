@@ -9,7 +9,17 @@
                 </div>
             </div>
             <div class="col-md-9">
-                <h1 class="person-name">{{ person.name }}</h1>
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <h1 class="person-name mb-0">{{ person.name }}</h1>
+                    <div class="d-flex gap-2" *ngIf="isAdmin">
+                        <button class="btn btn-outline-primary btn-sm" (click)="startEditing()">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" (click)="deletePerson()">
+                            <i class="fas fa-trash-alt me-1"></i> Eliminar Perfil
+                        </button>
+                    </div>
+                </div>
                 <p class="person-desc">{{ person.description }}</p>
                 <div class="vote-actions mt-3">
                     <button class="btn btn-outline-success me-2" (click)="vote('like')" [disabled]="voting">
@@ -34,6 +44,9 @@
                         <div class="tag-badge">
                             {{ detail.occurrence_count }}
                             <i *ngIf="detail.is_verified" class="fas fa-check-circle ms-1"></i>
+                            <!-- Admin Delete Tag -->
+                            <i *ngIf="isAdmin" class="fas fa-times ms-2 text-danger cursor-pointer"
+                                (click)="$event.stopPropagation(); deleteDetail(detail.id)"></i>
                         </div>
                     </div>
                 </div>
@@ -66,9 +79,16 @@
 
                 <div class="comments-list">
                     <div *ngFor="let comment of comments" class="comment-card">
-                        <div class="comment-header">
-                            <span class="anon-id">Anónimo #{{ comment.author_fingerprint | slice:0:5 }}</span>
-                            <small class="text-muted">{{ comment.created_at | date:'short' }}</small>
+                        <div class="comment-header d-flex justify-content-between">
+                            <div>
+                                <span class="anon-id">Anónimo #{{ comment.author_fingerprint | slice:0:5 }}</span>
+                                <small class="text-muted ms-2">{{ comment.created_at | date:'short' }}</small>
+                            </div>
+                            <!-- Admin Delete Comment -->
+                            <button *ngIf="isAdmin" class="btn btn-link text-danger btn-sm p-0"
+                                (click)="deleteComment(comment.id)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
                         <p class="comment-body">{{ comment.content }}</p>
                         <div class="comment-footer">
@@ -77,6 +97,28 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Edit Modal -->
+<div class="modal-overlay" *ngIf="isEditing && isAdmin" (click)="isEditing = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3 class="text-white">Editar Perfil</h3>
+        <div class="mb-3">
+            <label class="form-label text-white">Nombre</label>
+            <input type="text" [(ngModel)]="editName" class="form-control form-dark">
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Género</label>
+            <select [(ngModel)]="editGender" class="form-select form-dark">
+                <option value="male">Masculino</option>
+                <option value="female">Femenino</option>
+            </select>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-secondary" (click)="isEditing = false">Cancelar</button>
+            <button class="btn btn-primary" (click)="saveEdits()">Guardar</button>
         </div>
     </div>
 </div>

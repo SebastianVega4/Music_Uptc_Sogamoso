@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment } from '../../services/buitres.service';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-buitres-detail',
@@ -20,14 +21,24 @@ export class BuitresDetailComponent implements OnInit {
   newDetailContent: string = '';
   voting: boolean = false;
   fingerprint: string = '';
+  isAdmin: boolean = false;
+  
+  // Admin Edit State
+  isEditing: boolean = false;
+  editName: string = '';
+  editGender: 'male' | 'female' | '' = '';
+
   private subscriptions: any[] = [];
 
   constructor(
     private route: ActivatedRoute,
-    private buitresService: BuitresService
+    private router: Router,
+    private buitresService: BuitresService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.isAdmin = this.authService.isLoggedIn();
     this.fingerprint = this.getFingerprint();
     this.route.params.subscribe(params => {
       const id = params['id'];
@@ -152,5 +163,59 @@ export class BuitresDetailComponent implements OnInit {
       next: () => this.loadData(this.person!.id),
       error: (err) => console.error('Error incrementing detail:', err)
     });
+  }
+
+  // --- Admin Methods ---
+
+  startEditing() {
+    if (!this.person) return;
+    this.editName = this.person.name;
+    this.editGender = this.person.gender as any;
+    this.isEditing = true;
+  }
+
+  saveEdits() {
+    if (!this.person || !this.editName || !this.editGender) return;
+
+    // Normalizar a Title Case
+    const normalizedName = this.editName
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    this.buitresService.updatePerson(this.person.id, { name: normalizedName, gender: this.editGender }).subscribe({
+      next: () => {
+        this.isEditing = false;
+        this.loadData(this.person!.id);
+      },
+      error: (err) => alert('Error al actualizar perfil.')
+    });
+  }
+
+  deleteComment(id: string) {
+    if (!confirm('¿Estás seguro de eliminar este comentario?')) return;
+    this.buitresService.deleteComment(id).subscribe(() => {
+      if (this.person) this.loadComments(this.person.id);
+    });
+  }
+
+  deleteDetail(id: string) {
+    if (!confirm('¿Estás seguro de eliminar esta etiqueta?')) return;
+    this.buitresService.deleteDetail(id).subscribe(() => {
+      if (this.person) this.loadDetails(this.person.id);
+    });
+  }
+
+  deletePerson() {
+    if (!this.person) return;
+    if (confirm(`¿Estás seguro de eliminar permanentemente el perfil de "${this.person.name}"? Esta acción no se puede deshacer.`)) {
+      this.buitresService.deletePerson(this.person.id).subscribe({
+        next: () => {
+          this.router.navigate(['/buitres']);
+        },
+        error: (err) => alert('Error al eliminar perfil.')
+      });
+    }
   }
 }

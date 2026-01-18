@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="filters-section d-flex justify-content-center gap-2 mb-5">
+    <div class="filters-section d-flex justify-content-center gap-2 mb-5" *ngIf="!isMerging">
         <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
             <i class="fas fa-clock me-1"></i> Recientes
         </button>
@@ -54,6 +54,25 @@
         </button>
     </div>
 
+    <div class="merge-banner card-dark mb-4 text-center animate-fade-in" *ngIf="isMerging && mergeSelected">
+        <div class="d-flex flex-column p-3 gap-3">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <i class="fas fa-code-merge text-primary fa-2x"></i>
+                <div>
+                    <h4 class="mb-0">Modo Fusión Activo</h4>
+                    <p class="mb-0 text-muted">Selecciona el perfil que quieres fusionar DENTRO DE <strong>{{
+                            mergeSelected.name }}</strong></p>
+                </div>
+                <button class="btn btn-outline-light btn-sm ms-3" (click)="resetMerge()">Cancelar</button>
+            </div>
+
+            <div class="search-box mx-auto" style="max-width: 400px;">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" [(ngModel)]="mergeQuery" placeholder="Buscar duplicado..." class="search-input">
+            </div>
+        </div>
+    </div>
+
     <div *ngIf="loading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
@@ -61,17 +80,29 @@
     </div>
 
     <div *ngIf="!loading && people.length > 0" class="people-grid">
-        <div *ngFor="let person of people" class="person-card" [routerLink]="['/buitres/person', person.id]">
+        <div *ngFor="let person of filteredPeople" class="person-card"
+            [class.selecting-merge]="isMerging && mergeSelected?.id !== person.id"
+            (click)="isMerging ? selectForMerge(person) : (router.navigate(['/buitres/person', person.id]))">
             <div class="person-img d-flex align-items-center justify-content-center">
                 <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
                 <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
             </div>
             <div class="person-info">
                 <h3>{{ person.name }}</h3>
-                <p class="text-muted">{{ person.description | slice:0:60 }}...</p>
-                <div class="stats mt-3">
+                <div class="stats mt-2">
                     <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
                     <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count }}</span>
+                </div>
+
+                <!-- Admin Actions -->
+                <div class="admin-actions mt-3 d-flex gap-2" *ngIf="isAdmin && !isMerging"
+                    (click)="$event.stopPropagation()">
+                    <button class="btn btn-outline-primary btn-sm flex-grow-1" (click)="startMerge(person)">
+                        <i class="fas fa-code-merge me-1"></i> Fusionar
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" (click)="deletePerson(person)">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>

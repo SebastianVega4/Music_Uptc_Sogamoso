@@ -200,3 +200,21 @@
   color: #1DB954;
   font-weight: bold;
 }
+
+.selecting-merge {
+  border-color: #1DB954 !important;
+  box-shadow: 0 0 15px rgba(29, 185, 84, 0.3);
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(29, 185, 84, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0); }
+}
+
+.merge-banner {
+  background: rgba(29, 185, 84, 0.1);
+  border: 1px solid #1DB954;
+  border-radius: 12px;
+}

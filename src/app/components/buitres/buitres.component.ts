@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson } from '../../services/buitres.service';
+import { AuthService } from '../../services/auth';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -21,6 +22,12 @@ export class BuitresComponent implements OnInit {
   totalPeople: number = 0;
   currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'recent';
   
+  // Admin Features
+  isAdmin: boolean = false;
+  isMerging: boolean = false;
+  mergeSelected: BuitrePerson | null = null;
+  mergeQuery: string = '';
+
   newName: string = '';
   newGender: 'male' | 'female' | '' = '';
   newDescription: string = '';
@@ -29,10 +36,12 @@ export class BuitresComponent implements OnInit {
 
   constructor(
     private buitresService: BuitresService,
-    private router: Router
+    private authService: AuthService,
+    public router: Router
   ) {}
 
   ngOnInit() {
+    this.isAdmin = this.authService.isLoggedIn();
     this.loadPeople();
     this.loadTotalCount();
 
@@ -84,11 +93,18 @@ export class BuitresComponent implements OnInit {
     this.newName = this.searchQuery;
     this.showCreateForm = true;
     this.suggestions = [];
+    this.searchQuery = ''; // Clear search to hide suggestions
   }
 
   createPerson(event: Event) {
     event.preventDefault();
     if (!this.newName || !this.newGender) return;
+
+    // Validación: Al menos un espacio para Nombre + Apellido
+    if (!this.newName.trim().includes(' ')) {
+      alert('Por favor, ingresa nombre y al menos un apellido (mínimo un espacio).');
+      return;
+    }
 
     // Normalizar a Title Case
     const normalizedName = this.newName
@@ -114,5 +130,56 @@ export class BuitresComponent implements OnInit {
         }
       }
     });
+  }
+
+  get filteredPeople() {
+    if (!this.isMerging) return this.people;
+    if (!this.mergeQuery) return this.people;
+    return this.people.filter(p => 
+      p.name.toLowerCase().includes(this.mergeQuery.toLowerCase()) && 
+      p.id !== this.mergeSelected?.id
+    );
+  }
+
+  // --- Admin Merging Logic ---
+
+  startMerge(person: BuitrePerson) {
+    this.mergeSelected = person;
+    this.isMerging = true;
+  }
+
+  selectForMerge(target: BuitrePerson) {
+    if (!this.mergeSelected || this.mergeSelected.id === target.id) return;
+
+    if (confirm(`¿Estás seguro de fusionar a "${target.name}" dentro de "${this.mergeSelected.name}"? Los votos y comentarios se mantendrán, pero el perfil de "${target.name}" desaparecerá.`)) {
+      this.buitresService.mergePersons(this.mergeSelected.id, target.id).subscribe({
+        next: () => {
+          alert('Perfiles fusionados correctamente.');
+          this.resetMerge();
+          this.loadPeople();
+        },
+        error: (err) => {
+          console.error('Error merging:', err);
+          alert('Error al fusionar perfiles.');
+        }
+      });
+    }
+  }
+
+  resetMerge() {
+    this.isMerging = false;
+    this.mergeSelected = null;
+  }
+
+  deletePerson(person: BuitrePerson) {
+    if (confirm(`¿Estás seguro de eliminar el perfil de "${person.name}" permanentemente? Se borrarán todos sus votos y comentarios.`)) {
+      this.buitresService.deletePerson(person.id).subscribe({
+        next: () => {
+          this.loadPeople();
+          this.loadTotalCount();
+        },
+        error: (err) => alert('Error al eliminar perfil.')
+      });
+    }
   }
 }

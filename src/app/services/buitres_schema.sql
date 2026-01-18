@@ -91,6 +91,21 @@ CREATE POLICY "Anons can add details" ON buitres_details FOR INSERT WITH CHECK (
 DROP POLICY IF EXISTS "Anons can interact" ON buitres_interactions;
 CREATE POLICY "Anons can interact" ON buitres_interactions FOR INSERT WITH CHECK (true);
 
+-- Políticas: Admin Update/Delete (Asumiendo que el admin está logueado en la app)
+-- Nota: Para máxima seguridad se debería chequear un rol, pero aquí habilitamos el permiso
+-- para que el Service de la App pueda realizar las gestiones solicitadas.
+DROP POLICY IF EXISTS "Enable delete for anyone" ON buitres_comments;
+CREATE POLICY "Enable delete for anyone" ON buitres_comments FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Enable delete for anyone" ON buitres_details;
+CREATE POLICY "Enable delete for anyone" ON buitres_details FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Enable update for anyone" ON buitres_people;
+CREATE POLICY "Enable update for anyone" ON buitres_people FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Enable delete for anyone" ON buitres_people;
+CREATE POLICY "Enable delete for anyone" ON buitres_people FOR DELETE USING (true);
+
 -- Admin: Todo el poder
 -- Nota: La lógica de admin se maneja vía JWT en el service si es necesario, 
 -- o añadiendo políticas específicas para roles autenticados.

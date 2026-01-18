@@ -164,4 +164,51 @@ export class BuitresService {
       })
     );
   }
+
+  mergePersons(keepId: string, removeId: string): Observable<any> {
+    return from(
+      this.supabase.rpc('merge_buitres', {
+        p_keep_id: keepId,
+        p_remove_id: removeId
+      })
+    );
+  }
+
+  // --- Admin Content Management ---
+
+  updatePerson(id: string, updates: { name?: string, gender?: string }): Observable<any> {
+    return from(
+      this.supabase
+        .from('buitres_people')
+        .update(updates)
+        .eq('id', id)
+    );
+  }
+
+  deletePerson(id: string): Observable<any> {
+    return from(
+      this.supabase
+        .from('buitres_people')
+        .delete()
+        .eq('id', id)
+    );
+  }
+
+  deleteComment(id: string): Observable<any> {
+    return from(
+      this.supabase
+        .from('buitres_comments')
+        .delete()
+        .eq('id', id)
+    );
+  }
+
+  deleteDetail(id: string): Observable<any> {
+    return from(
+      this.supabase
+        .from('buitres_details')
+        .delete()
+        .eq('id', id)
+    );
+  }
 }
