@@ -9,6 +9,9 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./announcement.component.scss']
 })
 export class AnnouncementComponent {
-  // Component logic simplified for permanent display
+  isHidden = true; // Start hidden by default as per user preference for "desplegables"
 
+  toggleAnnouncement() {
+    this.isHidden = !this.isHidden;
+  }
 }

@@ -1,9 +1,15 @@
 <div class="card schedule-card">
-  <div class="card-header d-flex justify-content-between align-items-center">
+  <div class="card-header d-flex justify-content-between align-items-center" (click)="toggleAnnouncement()">
     <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Horarios de Música</h5>
+    <div class="btn-close" *ngIf="!isHidden">
+      <i class="fas fa-chevron-up"></i>
+    </div>
+    <div class="btn-close" *ngIf="isHidden">
+      <i class="fas fa-chevron-down"></i>
+    </div>
   </div>
 
-  <div class="card-body">
+  <div class="card-body" *ngIf="!isHidden">
     <div *ngIf="isLoading" class="loading-container">
       <div class="spinner"></div>
       <p>Cargando horarios...</p>

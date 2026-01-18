@@ -22,11 +22,10 @@
         <div class="recent-song-card" *ngFor="let song of recentlyAddedSongs">
           <div class="recent-song-image-container">
             <img [src]="song.image" [alt]="song.name" class="recent-song-image">
-            <button class="btn-play-overlay" 
-                    (click)="playPreview(song.preview_url)"
-                    [disabled]="!song.preview_url"
-                    [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
-              <i class="fas" [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
+            <button class="btn-play-overlay" (click)="playPreview(song.preview_url)" [disabled]="!song.preview_url"
+              [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+              <i class="fas"
+                [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
             </button>
           </div>
           <div class="recent-song-content">
@@ -66,7 +65,6 @@
             <th>Artista</th>
             <th>Votos</th>
             <th>Agregada</th>
-            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -76,11 +74,10 @@
               <div class="song-cell">
                 <div class="position-relative">
                   <img [src]="song.image" [alt]="song.name">
-                  <button class="btn-play-mini" 
-                          (click)="playPreview(song.preview_url)"
-                          [disabled]="!song.preview_url"
-                          [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
-                    <i class="fas" [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
+                  <button class="btn-play-mini" (click)="playPreview(song.preview_url)" [disabled]="!song.preview_url"
+                    [title]="song.preview_url ? 'Escuchar previa' : 'Previa no disponible'">
+                    <i class="fas"
+                      [ngClass]="(audioService.isCurrentSong(song.preview_url) && (audioService.isPlaying$ | async)) ? 'fa-pause' : 'fa-play'"></i>
                   </button>
                 </div>
                 <div class="d-flex flex-column">
@@ -93,25 +90,18 @@
             </td>
             <td>{{ song.artists.join(', ') }}</td>
             <td>
-              <span class="vote-count">
-                <i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}
-              </span>
-              <span class="dislike-count">
-                <i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}
-              </span>
+              <div class="vote-actions">
+                <button class="btn-vote like-btn" (click)="vote(song, false)" [class.active]="hasUserLiked(song.id)">
+                  <i class="fas fa-thumbs-up"></i> {{ song.votes || 0 }}
+                </button>
+                <button class="btn-vote dislike-btn" (click)="vote(song, true)"
+                  [class.active]="hasUserDisliked(song.id)">
+                  <i class="fas fa-thumbs-down"></i> {{ song.dislikes || 0 }}
+                </button>
+              </div>
             </td>
             <td>
               <span class="time-ago">{{ formatTimeAgo(song.createdat) }}</span>
-            </td>
-            <td>
-              <div class="vote-actions">
-                <button class="btn-vote like-btn" (click)="vote(song, false)" [class.active]="hasUserLiked(song.id)">
-                  <i class="fas fa-thumbs-up"></i>
-                </button>
-                <button class="btn-vote dislike-btn" (click)="vote(song, true)" [class.active]="hasUserDisliked(song.id)">
-                  <i class="fas fa-thumbs-down"></i>
-                </button>
-              </div>
             </td>
           </tr>
         </tbody>

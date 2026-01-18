@@ -1,5 +1,5 @@
 .announcement-container {
-    margin-bottom: 0.5rem;
+    margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     overflow: hidden;
@@ -9,7 +9,6 @@
     transition: all 0.3s ease;
     
     &:hover {
-      transform: translateY(-5px);
       box-shadow: 0 15px 40px rgba(29, 185, 84, 0.15);
       border-color: rgba(29, 185, 84, 0.2);
     }
@@ -24,13 +23,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      cursor: pointer;
       
       i {
         color: var(--primary-color);
+        margin-right: 0.5rem;
+      }
+
+      .btn-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+
+        i {
+          margin: 0;
+          font-size: 0.9rem;
+          color: inherit;
+        }
       }
     }
-    
-    // Styles cleaned up
     
     .card-body {
       padding: 1.5rem;

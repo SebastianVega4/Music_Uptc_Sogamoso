@@ -12,8 +12,14 @@ import { ScheduleService } from '../../services/schedule.service';
 export class ScheduleComponent implements OnInit {
   schedules: any[] = [];
   isLoading: boolean = true;
+  isHidden = true; // Start hidden by default
+
   constructor(private scheduleService: ScheduleService) { }
 
+  toggleAnnouncement() {
+    this.isHidden = !this.isHidden;
+  }
+  
   ngOnInit(): void {
     this.loadSchedules();
   }
