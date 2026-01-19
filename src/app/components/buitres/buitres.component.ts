@@ -29,6 +29,7 @@ export class BuitresComponent implements OnInit {
   mergeQuery: string = '';
 
   newName: string = '';
+  newEmail: string = '';
   newGender: 'male' | 'female' | '' = '';
   newDescription: string = '';
 
@@ -113,10 +114,11 @@ export class BuitresComponent implements OnInit {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    this.buitresService.createPerson(normalizedName, this.newDescription, this.newGender).subscribe({
+    this.buitresService.createPerson(normalizedName, this.newDescription, this.newGender, this.newEmail).subscribe({
       next: (res) => {
         this.showCreateForm = false;
         this.newName = '';
+        this.newEmail = '';
         this.newGender = '';
         this.newDescription = '';
         this.loadPeople();

@@ -6,6 +6,7 @@ import { from, Observable, map } from 'rxjs';
 export interface BuitrePerson {
   id: string;
   name: string;
+  email?: string;
   description?: string;
   image_url?: string;
   gender: 'male' | 'female';
@@ -67,7 +68,7 @@ export class BuitresService {
     }
 
     if (search) {
-      query = query.ilike('name', `%${search}%`);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     return from(query).pipe(map(res => res.data || []));
@@ -92,11 +93,11 @@ export class BuitresService {
     ).pipe(map(res => res.data));
   }
 
-  createPerson(name: string, description: string, gender: string): Observable<any> {
+  createPerson(name: string, description: string, gender: string, email: string = ''): Observable<any> {
     return from(
       this.supabase
         .from('buitres_people')
-        .insert([{ name, description, gender }])
+        .insert([{ name, description, gender, email }])
         .select()
     );
   }
@@ -176,7 +177,7 @@ export class BuitresService {
 
   // --- Admin Content Management ---
 
-  updatePerson(id: string, updates: { name?: string, gender?: string }): Observable<any> {
+  updatePerson(id: string, updates: { name?: string, gender?: string, email?: string }): Observable<any> {
     return from(
       this.supabase
         .from('buitres_people')

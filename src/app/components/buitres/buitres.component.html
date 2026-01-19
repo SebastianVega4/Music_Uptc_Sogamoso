@@ -21,7 +21,11 @@
                         <i *ngIf="suggestion.gender === 'male'" class="fas fa-user-tie male"></i>
                         <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
                     </div>
-                    <span class="suggestion-name">{{ suggestion.name }}</span>
+                    <div class="suggestion-info">
+                        <span class="suggestion-name d-block">{{ suggestion.name }}</span>
+                        <small class="suggestion-email text-muted" *ngIf="suggestion.email">{{ suggestion.email
+                            }}</small>
+                    </div>
                 </div>
 
                 <!-- If no suggestions found, show create option -->
@@ -89,6 +93,7 @@
             </div>
             <div class="person-info">
                 <h3>{{ person.name }}</h3>
+                <small class="person-email text-muted d-block mb-1" *ngIf="person.email">{{ person.email }}</small>
                 <div class="stats mt-2">
                     <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
                     <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count }}</span>
@@ -126,6 +131,11 @@
                     <label class="form-label">Nombre Completo</label>
                     <input type="text" [(ngModel)]="newName" name="newName" class="form-control"
                         placeholder="Ej: Juan Perez" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input type="email" [(ngModel)]="newEmail" name="newEmail" class="form-control"
+                        placeholder="Ej: usuario@uptc.edu.co">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Género</label>

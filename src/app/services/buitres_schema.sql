@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS buitres_people (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
+    email TEXT,
     description TEXT,
     image_url TEXT,
     likes_count INTEGER DEFAULT 0,

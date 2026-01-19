@@ -10,7 +10,12 @@
             </div>
             <div class="col-md-9">
                 <div class="d-flex align-items-center justify-content-center gap-3">
-                    <h1 class="person-name mb-0">{{ person.name }}</h1>
+                    <div class="person-title-section">
+                        <h1 class="person-name mb-0">{{ person.name }}</h1>
+                        <p class="person-email text-primary mb-0" *ngIf="person.email">
+                            <i class="fas fa-envelope me-1"></i> {{ person.email }}
+                        </p>
+                    </div>
                     <div class="d-flex gap-2" *ngIf="isAdmin">
                         <button class="btn btn-outline-primary btn-sm" (click)="startEditing()">
                             <i class="fas fa-edit me-1"></i> Editar
@@ -108,6 +113,10 @@
         <div class="mb-3">
             <label class="form-label text-white">Nombre</label>
             <input type="text" [(ngModel)]="editName" class="form-control form-dark">
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Correo Electrónico</label>
+            <input type="email" [(ngModel)]="editEmail" class="form-control form-dark">
         </div>
         <div class="mb-3">
             <label class="form-label text-white">Género</label>

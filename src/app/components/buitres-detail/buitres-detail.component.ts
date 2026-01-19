@@ -26,6 +26,7 @@ export class BuitresDetailComponent implements OnInit {
   // Admin Edit State
   isEditing: boolean = false;
   editName: string = '';
+  editEmail: string = '';
   editGender: 'male' | 'female' | '' = '';
 
   private subscriptions: any[] = [];
@@ -170,6 +171,7 @@ export class BuitresDetailComponent implements OnInit {
   startEditing() {
     if (!this.person) return;
     this.editName = this.person.name;
+    this.editEmail = this.person.email || '';
     this.editGender = this.person.gender as any;
     this.isEditing = true;
   }
@@ -184,7 +186,11 @@ export class BuitresDetailComponent implements OnInit {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    this.buitresService.updatePerson(this.person.id, { name: normalizedName, gender: this.editGender }).subscribe({
+    this.buitresService.updatePerson(this.person.id, { 
+      name: normalizedName, 
+      gender: this.editGender,
+      email: this.editEmail
+    }).subscribe({
       next: () => {
         this.isEditing = false;
         this.loadData(this.person!.id);
