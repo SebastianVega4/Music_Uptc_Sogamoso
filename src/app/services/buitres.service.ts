@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { from, Observable, map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 export interface BuitrePerson {
   id: string;
@@ -39,183 +40,96 @@ export interface BuitreComment {
 })
 export class BuitresService {
   private supabase: SupabaseClient;
+  private apiUrl = `${environment.apiUrl}/api/buitres`;
 
-  constructor() {
+  constructor(private http: HttpClient) {
+    // Keep supabase for realtime subscriptions ONLY
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+  }
+
+  private getAuthHeaders(): { [header: string]: string } {
+    const token = localStorage.getItem('auth_token');
+    const headers: { [header: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
   }
 
   // --- People Operations ---
 
   getPeople(search: string = '', sortBy: 'likes' | 'comments' | 'tags' | 'recent' = 'recent'): Observable<BuitrePerson[]> {
-    let tableName = 'buitres_people';
-    if (sortBy === 'comments' || sortBy === 'tags') {
-      tableName = 'buitres_stats';
-    }
-
-    let query = this.supabase
-      .from(tableName)
-      .select('*')
-      .eq('is_merged', false);
-
-    if (sortBy === 'recent') {
-      query = query.order('created_at', { ascending: false });
-    } else if (sortBy === 'likes') {
-      query = query.order('likes_count', { ascending: false });
-    } else if (sortBy === 'comments') {
-      query = query.order('comments_count', { ascending: false });
-    } else if (sortBy === 'tags') {
-      query = query.order('tags_count', { ascending: false });
-    }
-
-    if (search) {
-      // Searching in description as a fallback since email column might not be visible to API yet
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
-    }
-
-    return from(query).pipe(map(res => res.data || []));
+    let params = new HttpParams()
+      .set('search', search)
+      .set('sortBy', sortBy);
+    
+    return this.http.get<BuitrePerson[]>(`${this.apiUrl}/people`, { params });
   }
 
   getTotalPeopleCount(): Observable<number> {
-    return from(
-      this.supabase
-        .from('buitres_people')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_merged', false)
-    ).pipe(map(res => res.count || 0));
+    return this.http.get<{count: number}>(`${this.apiUrl}/people/count`)
+      .pipe(map(res => res.count));
   }
 
   getPersonById(id: string): Observable<BuitrePerson | null> {
-    return from(
-      this.supabase
-        .from('buitres_people')
-        .select('*')
-        .eq('id', id)
-        .single()
-    ).pipe(map(res => res.data));
+    return this.http.get<BuitrePerson>(`${this.apiUrl}/people/${id}`);
   }
 
   createPerson(name: string, description: string, gender: string, email: string = ''): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_people')
-        .insert([{ name, description, gender, email }])
-        .select()
-    );
+    return this.http.post(`${this.apiUrl}/people`, { name, description, gender, email });
+  }
+
+  updatePerson(id: string, updates: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/people/${id}`, updates, { headers: this.getAuthHeaders() });
+  }
+
+  deletePerson(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/people/${id}`, { headers: this.getAuthHeaders() });
   }
 
   // --- Details Operations ---
 
   getDetails(personId: string): Observable<BuitreDetail[]> {
-    return from(
-      this.supabase
-        .from('buitres_details')
-        .select('*')
-        .eq('person_id', personId)
-        .order('occurrence_count', { ascending: false })
-    ).pipe(map(res => res.data || []));
+    return this.http.get<BuitreDetail[]>(`${this.apiUrl}/people/${personId}/details`);
   }
 
   addOrIncrementDetail(personId: string, content: string, fingerprint: string): Observable<any> {
-    return from(
-      this.supabase.rpc('increment_detail', { 
-        p_person_id: personId, 
-        p_content: content.trim(),
-        p_fingerprint: fingerprint
-      })
-    );
+    return this.http.post(`${this.apiUrl}/people/${personId}/details`, { content, fingerprint });
   }
 
-  // --- Realtime Subscriptions ---
-
-  subscribeToChanges(table: string, callback: (payload: any) => void) {
-    return this.supabase
-      .channel(`public:${table}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
-      .subscribe();
+  deleteDetail(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/details/${id}`, { headers: this.getAuthHeaders() });
   }
 
   // --- Comments Operations ---
 
   getComments(personId: string): Observable<BuitreComment[]> {
-    return from(
-      this.supabase
-        .from('buitres_comments')
-        .select('*')
-        .eq('person_id', personId)
-        .order('created_at', { ascending: false })
-    ).pipe(map(res => res.data || []));
+    return this.http.get<BuitreComment[]>(`${this.apiUrl}/people/${personId}/comments`);
   }
 
   addComment(personId: string, content: string, fingerprint: string): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_comments')
-        .insert([{ person_id: personId, content, author_fingerprint: fingerprint }])
-        .select()
-    );
+    return this.http.post(`${this.apiUrl}/people/${personId}/comments`, { content, fingerprint });
+  }
+
+  deleteComment(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/comments/${id}`, { headers: this.getAuthHeaders() });
   }
 
   // --- Interaction Operations ---
 
   votePerson(personId: string, type: 'like' | 'dislike', fingerprint: string): Observable<any> {
-    return from(
-      this.supabase.rpc('vote_person', {
-        p_person_id: personId,
-        p_type: type,
-        p_fingerprint: fingerprint
-      })
-    );
+    return this.http.post(`${this.apiUrl}/people/${personId}/vote`, { type, fingerprint });
   }
 
   mergePersons(keepId: string, removeId: string): Observable<any> {
-    return from(
-      this.supabase.rpc('merge_buitres', {
-        p_keep_id: keepId,
-        p_remove_id: removeId
-      })
-    );
+    return this.http.post(`${this.apiUrl}/merge`, { keepId, removeId }, { headers: this.getAuthHeaders() });
   }
 
-  // --- Admin Content Management ---
-
-  updatePerson(id: string, updates: any): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_people')
-        .update(updates)
-        .eq('id', id)
-    ).pipe(
-      map(res => {
-        if (res.error) throw res.error;
-        return res.data;
-      })
-    );
-  }
-
-  deletePerson(id: string): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_people')
-        .delete()
-        .eq('id', id)
-    );
-  }
-
-  deleteComment(id: string): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_comments')
-        .delete()
-        .eq('id', id)
-    );
-  }
-
-  deleteDetail(id: string): Observable<any> {
-    return from(
-      this.supabase
-        .from('buitres_details')
-        .delete()
-        .eq('id', id)
-    );
+  // --- Realtime Subscriptions ---
+  subscribeToChanges(table: string, callback: (payload: any) => void) {
+    return this.supabase
+      .channel(`public:${table}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
+      .subscribe();
   }
 }
