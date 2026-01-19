@@ -36,6 +36,7 @@ export class BuitresDetailComponent implements OnInit {
   editName: string = '';
   editEmail: string = '';
   editGender: 'male' | 'female' | '' = '';
+  editImageUrl: string = '';
   
   sortOption: 'newest' | 'oldest' | 'likes' = 'newest';
 
@@ -144,13 +145,14 @@ export class BuitresDetailComponent implements OnInit {
     // Si ya es admin, no importa
     if (this.isAdmin) return;
 
-    this.authService.currentBuitre.subscribe(user => {
+    const sub = this.authService.currentBuitre.subscribe(user => {
         if (user && user.email && this.person?.email) {
             this.isOwner = user.email.trim().toLowerCase() === this.person.email.trim().toLowerCase();
         } else {
             this.isOwner = false;
         }
     });
+    this.subscriptions.push(sub);
   }
 
   loadDetails(id: string) {
@@ -192,6 +194,11 @@ export class BuitresDetailComponent implements OnInit {
 
   submitComment() {
     if (!this.person || !this.newComment) return;
+
+    if (this.isOwner) {
+      this.modalService.alert('No puedes publicar comentarios en tu propio perfil.', 'Acción no permitida', 'warning');
+      return;
+    }
 
     // Seguridad: Bloquear si tiene 10 o más números (evitar spam de teléfonos)
     const digitCount = (this.newComment.match(/\d/g) || []).length;
@@ -299,7 +306,13 @@ export class BuitresDetailComponent implements OnInit {
     this.editName = this.person.name;
     this.editEmail = this.person.email || '';
     this.editGender = this.person.gender as any;
+    this.editImageUrl = this.person.image_url || '';
     this.isEditing = true;
+  }
+  
+  editImage() {
+    if (!this.person || (!this.isOwner && !this.isAdmin)) return;
+    this.startEditing();
   }
 
   saveEdits() {
@@ -323,8 +336,9 @@ export class BuitresDetailComponent implements OnInit {
         // updates.description = ... 
     }
 
-    // Tanto admin como owner pueden editar género
+    // Tanto admin como owner pueden editar género y foto
     updates.gender = this.editGender;
+    updates.image_url = this.editImageUrl;
 
     this.buitresService.updatePerson(this.person.id, updates).subscribe({
       next: () => {

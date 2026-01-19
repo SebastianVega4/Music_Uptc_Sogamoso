@@ -3,9 +3,19 @@
     <div class="profile-header card-dark mb-4">
         <div class="row align-items-center">
             <div class="col-md-3">
-                <div class="profile-img d-flex align-items-center justify-content-center">
-                    <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
-                    <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                <div class="profile-img-container" [class.editable]="isOwner || isAdmin" (click)="(isOwner || isAdmin) ? editImage() : null">
+                    <div class="profile-img d-flex align-items-center justify-content-center overflow-hidden position-relative">
+                        <img *ngIf="person.image_url" [src]="person.image_url" alt="Profile" class="w-100 h-100 object-fit-cover">
+                        <ng-container *ngIf="!person.image_url">
+                            <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                            <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                        </ng-container>
+                        
+                        <div class="edit-overlay" *ngIf="isOwner || isAdmin">
+                            <i class="fas fa-camera"></i>
+                            <span>Cambiar</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-9">
@@ -67,7 +77,8 @@
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <small class="text-muted mt-2 d-block">click en los tags para incrementar el numero</small>
+                    <small class="text-muted mt-2 d-block">Click en los tags para incrementar el numero</small>
+                    <small class="text-muted mt-2 d-block">El dueño del perfil puede eliminar los tags</small>
                 </div>
             </div>
         </div>
@@ -81,8 +92,14 @@
 
                 <div class="comment-input-area mb-4">
                     <textarea [(ngModel)]="newComment" class="form-control form-dark" rows="3"
-                        placeholder="Escribe algo anónimamente, una vez enviado no se podra editar."></textarea>
-                    <button class="btn btn-primary mt-2" (click)="submitComment()" [disabled]="!newComment">
+                        placeholder="Escribe algo anónimamente, una vez enviado no se podra editar.Solo el dueño del perfil lo puede eliminar"
+                        [disabled]="isOwner"></textarea>
+                    
+                    <div *ngIf="isOwner" class="alert alert-warning mt-2 mb-0 py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i> No puedes comentarte a ti mismo.
+                    </div>
+
+                    <button class="btn btn-primary mt-2" (click)="submitComment()" [disabled]="!newComment || isOwner">
                         Publicar Comentario
                     </button>
                 </div>
@@ -132,6 +149,11 @@
         <div class="mb-3" *ngIf="isAdmin">
             <label class="form-label text-white">Correo Electrónico</label>
             <input type="email" [(ngModel)]="editEmail" class="form-control form-dark">
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">URL de Imagen (Opcional)</label>
+            <input type="text" [(ngModel)]="editImageUrl" class="form-control form-dark" placeholder="https://ejemplo.com/foto.jpg">
+            <small class="text-muted">Deja vacío para usar el avatar por defecto.</small>
         </div>
         <div class="mb-3">
             <label class="form-label text-white">Género</label>
