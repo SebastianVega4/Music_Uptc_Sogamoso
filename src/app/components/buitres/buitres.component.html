@@ -39,7 +39,7 @@
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
-                    placeholder="Escribe el nombre de la persona..." class="search-input" autocomplete="off">
+                    placeholder="Digite Nombre o nombre.apellido ..." class="search-input" autocomplete="off">
 
                 <!-- Suggestions Dropdown -->
                 <div class="search-suggestions" *ngIf="searchQuery.length >= 2">

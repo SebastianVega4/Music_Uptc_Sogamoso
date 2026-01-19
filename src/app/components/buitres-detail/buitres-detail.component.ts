@@ -35,6 +35,8 @@ export class BuitresDetailComponent implements OnInit {
   editName: string = '';
   editEmail: string = '';
   editGender: 'male' | 'female' | '' = '';
+  
+  sortOption: 'newest' | 'oldest' | 'likes' = 'newest';
 
   private subscriptions: any[] = [];
 
@@ -137,7 +139,20 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   loadComments(id: string) {
-    this.buitresService.getComments(id).subscribe(c => this.comments = c);
+    this.buitresService.getComments(id).subscribe(c => {
+      this.comments = c;
+      this.sortComments();
+    });
+  }
+  
+  sortComments() {
+    if (this.sortOption === 'newest') {
+      this.comments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (this.sortOption === 'oldest') {
+      this.comments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else if (this.sortOption === 'likes') {
+      this.comments.sort((a, b) => b.likes_count - a.likes_count);
+    }
   }
 
   vote(type: 'like' | 'dislike') {
@@ -167,10 +182,17 @@ export class BuitresDetailComponent implements OnInit {
     }
 
     this.buitresService.addComment(this.person.id, this.newComment, this.fingerprint).subscribe({
-      next: () => {
+      next: (newComment: any) => {
         this.modalService.alert('Comentario publicado correctamente.', '¡Éxito!', 'success');
         this.newComment = '';
-        this.loadData(this.person!.id);
+        
+        // Update local state immediately
+        if (newComment && newComment.id) {
+            this.comments.push(newComment);
+            this.sortComments();
+        } else {
+            this.loadComments(this.person!.id);
+        }
       },
       error: (err) => {
         const errorMsg = err.error?.error || 'No se pudo publicar el comentario. Intenta de nuevo.';
@@ -220,7 +242,24 @@ export class BuitresDetailComponent implements OnInit {
         }
         
         this.modalService.alert(message, '¡Éxito!', 'success');
-        this.loadData(this.person!.id);
+        
+        // Update local state immediately
+        if (response.data) {
+             const index = this.details.findIndex(d => d.content.toLowerCase() === content.toLowerCase());
+             if (response.action === 'removed' && response.deleted) {
+                 if (index !== -1) this.details.splice(index, 1);
+             } else if (index !== -1) {
+                 // Update existing
+                 this.details[index] = { ...this.details[index], ...response.data };
+             } else {
+                 // Add new
+                 this.details.push(response.data);
+             }
+             // Re-sort details by occurrence_count
+             this.details.sort((a, b) => b.occurrence_count - a.occurrence_count);
+        } else {
+            this.loadDetails(this.person!.id);
+        }
       },
       error: (err) => {
         const errorMsg = err.error?.error || 'No se pudo procesar la acción.';

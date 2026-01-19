@@ -23,7 +23,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   loading: boolean = false;
   showCreateForm: boolean = false;
   totalPeople: number = 0;
-  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'likes';
+  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'recent';
   
   // Real-time flash states
   flashStates: { [key: string]: boolean } = {};
