@@ -13,11 +13,11 @@
                     <div class="person-title-section">
                         <h1 class="person-name mb-0">{{ person.name }}</h1>
                     </div>
-                    <div class="d-flex gap-2" *ngIf="isAdmin">
+                    <div class="d-flex gap-2" *ngIf="isAdmin || isOwner">
                         <button class="btn btn-outline-primary btn-sm" (click)="startEditing()">
                             <i class="fas fa-edit me-1"></i> Editar
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" (click)="deletePerson()">
+                        <button class="btn btn-outline-danger btn-sm" *ngIf="isAdmin" (click)="deletePerson()">
                             <i class="fas fa-trash-alt me-1"></i> Eliminar Perfil
                         </button>
                     </div>
@@ -52,8 +52,8 @@
                         <div class="tag-badge">
                             {{ detail.occurrence_count }}
                             <i *ngIf="detail.is_verified" class="fas fa-check-circle ms-1"></i>
-                            <!-- Admin Delete Tag -->
-                            <i *ngIf="isAdmin" class="fas fa-times ms-2 text-danger cursor-pointer"
+                            <!-- Admin/Owner Delete Tag -->
+                            <i *ngIf="isAdmin || isOwner" class="fas fa-times ms-2 text-danger cursor-pointer"
                                 (click)="$event.stopPropagation(); deleteDetail(detail.id)"></i>
                         </div>
                     </div>
@@ -102,8 +102,8 @@
                                 <span class="anon-id">Anónimo #{{ comment.author_fingerprint | slice:0:5 }}</span>
                                 <small class="text-muted ms-2">{{ comment.created_at | date:'short' }}</small>
                             </div>
-                            <!-- Admin Delete Comment -->
-                            <button *ngIf="isAdmin" class="btn btn-link text-danger btn-sm p-0"
+                            <!-- Admin/Owner Delete Comment -->
+                            <button *ngIf="isAdmin || isOwner" class="btn btn-link text-danger btn-sm p-0"
                                 (click)="deleteComment(comment.id)">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -121,15 +121,15 @@
     </div>
 </div>
 
-<!-- Admin Edit Modal -->
-<div class="modal-overlay" *ngIf="isEditing && isAdmin" (click)="isEditing = false">
+<!-- Admin/Owner Edit Modal -->
+<div class="modal-overlay" *ngIf="isEditing && (isAdmin || isOwner)" (click)="isEditing = false">
     <div class="modal-content" (click)="$event.stopPropagation()">
         <h3 class="text-white">Editar Perfil</h3>
-        <div class="mb-3">
+        <div class="mb-3" *ngIf="isAdmin">
             <label class="form-label text-white">Nombre</label>
             <input type="text" [(ngModel)]="editName" class="form-control form-dark">
         </div>
-        <div class="mb-3">
+        <div class="mb-3" *ngIf="isAdmin">
             <label class="form-label text-white">Correo Electrónico</label>
             <input type="email" [(ngModel)]="editEmail" class="form-control form-dark">
         </div>

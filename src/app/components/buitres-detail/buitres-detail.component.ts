@@ -23,6 +23,7 @@ export class BuitresDetailComponent implements OnInit {
   voting: boolean = false;
   fingerprint: string = '';
   isAdmin: boolean = false;
+  isOwner: boolean = false;
   
   // Real-time flash states for visual feedback
   flashLikes: boolean = false;
@@ -129,9 +130,27 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   loadData(id: string) {
-    this.buitresService.getPersonById(id).subscribe(p => this.person = p);
+    this.buitresService.getPersonById(id).subscribe(p => {
+        this.person = p;
+        this.checkOwnership();
+    });
     this.loadDetails(id);
     this.loadComments(id);
+  }
+
+  checkOwnership() {
+    if (!this.person) return;
+    
+    // Si ya es admin, no importa
+    if (this.isAdmin) return;
+
+    this.authService.currentBuitre.subscribe(user => {
+        if (user && user.email && this.person?.email) {
+            this.isOwner = user.email.trim().toLowerCase() === this.person.email.trim().toLowerCase();
+        } else {
+            this.isOwner = false;
+        }
+    });
   }
 
   loadDetails(id: string) {
@@ -270,58 +289,42 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   getEmail(p: BuitrePerson | null): string {
-    if (!p) return '';
-    let email = p.email || '';
-    if (!email && p.description && p.description.includes('@')) {
-      email = p.description;
-    }
-    return email.replace('Email: ', '').trim();
+      return p?.email || '';
   }
-
-  shouldShowDescription(p: BuitrePerson | null): boolean {
-    if (!p || !p.description) return false;
-    const email = this.getEmail(p);
-    const cleanDesc = p.description.replace('Email: ', '').trim();
-    // Hide if description is essentially just the email or a subset of it
-    if (!cleanDesc || cleanDesc === email || email.includes(cleanDesc)) return false;
-    return true;
-  }
-
+  
   // --- Admin Methods ---
 
   startEditing() {
     if (!this.person) return;
     this.editName = this.person.name;
-    // Fallback: if email is not in the dedicated column, try to extract it from description
-    this.editEmail = this.getEmail(this.person);
+    this.editEmail = this.person.email || '';
     this.editGender = this.person.gender as any;
     this.isEditing = true;
   }
 
-  private extractEmailFromDesc(desc?: string): string {
-    if (!desc) return '';
-    return desc.replace('Email: ', '').trim();
-  }
-
   saveEdits() {
-    if (!this.person || !this.editName || !this.editGender) return;
+    if (!this.person || !this.editGender) return;
 
-    // Normalizar a Title Case
-    const normalizedName = this.editName
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    const updates: any = {};
 
-    const updates: any = { 
-      name: normalizedName, 
-      gender: this.editGender,
-      description: this.editEmail || this.person.description
-    };
+    if (this.isAdmin) {
+        if (!this.editName) return;
+        
+        // Normalizar a Title Case
+        const normalizedName = this.editName
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+        
+        updates.name = normalizedName;
+        updates.email = this.editEmail;
+        // La descripción ya no almacena el correo, así que no la tocamos o permitimos editarla por separado
+        // updates.description = ... 
+    }
 
-    // We try to update the email column, but we also keep it in description as fallback
-    // because the Supabase API cache might still be stale.
-    updates.email = this.editEmail;
+    // Tanto admin como owner pueden editar género
+    updates.gender = this.editGender;
 
     this.buitresService.updatePerson(this.person.id, updates).subscribe({
       next: () => {
@@ -330,20 +333,7 @@ export class BuitresDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Update error:', err);
-        // If the email column fails (PGRST204 stale cache, 42703 not exists, or 400 Bad Request), try updating without it
-        if (err.code === 'PGRST204' || err.code === '42703' || (err.message && err.message.includes('email" does not exist')) || err.status === 400) {
-            const fallbackUpdates = { ...updates };
-            delete fallbackUpdates.email;
-            this.buitresService.updatePerson(this.person!.id, fallbackUpdates).subscribe({
-                next: () => {
-                    this.isEditing = false;
-                    this.loadData(this.person!.id);
-                },
-                error: () => this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger')
-            });
-        } else {
-            this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger');
-        }
+        this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger');
       }
     });
   }
