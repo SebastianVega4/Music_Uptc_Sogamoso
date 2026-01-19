@@ -10,10 +10,10 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): boolean {
-    if (this.authService.isLoggedIn()) {
+    if (this.authService.isLoggedIn() && this.authService.isRoleAdmin()) {
       return true;
     } else {
-      this.router.navigate(['/admin-login']);
+      this.router.navigate(['/admin-login'], { queryParams: { error: 'No tienes permisos de administrador' } });
       return false;
     }
   }

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { BuitresGuard } from './guards/buitres.guard';
 
 export const routes: Routes = [
   { 
@@ -37,11 +38,12 @@ export const routes: Routes = [
   },
   { 
     path: 'buitres', 
-    loadComponent: () => import('./components/buitres/buitres.component').then(m => m.BuitresComponent) 
+    loadComponent: () => import('./components/buitres/buitres.component').then(m => m.BuitresComponent)
   },
   { 
     path: 'buitres/person/:id', 
-    loadComponent: () => import('./components/buitres-detail/buitres-detail.component').then(m => m.BuitresDetailComponent) 
+    loadComponent: () => import('./components/buitres-detail/buitres-detail.component').then(m => m.BuitresDetailComponent),
+    canActivate: [BuitresGuard]
   },
   { path: '**', redirectTo: '' }
 ];

@@ -48,7 +48,7 @@ export class BuitresService {
   }
 
   private getAuthHeaders(): { [header: string]: string } {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('adminToken');
     const headers: { [header: string]: string } = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -63,20 +63,20 @@ export class BuitresService {
       .set('search', search)
       .set('sortBy', sortBy);
     
-    return this.http.get<BuitrePerson[]>(`${this.apiUrl}/people`, { params });
+    return this.http.get<BuitrePerson[]>(`${this.apiUrl}/people`, { params, headers: this.getAuthHeaders() });
   }
 
   getTotalPeopleCount(): Observable<number> {
-    return this.http.get<{count: number}>(`${this.apiUrl}/people/count`)
+    return this.http.get<{count: number}>(`${this.apiUrl}/people/count`, { headers: this.getAuthHeaders() })
       .pipe(map(res => res.count));
   }
 
   getPersonById(id: string): Observable<BuitrePerson | null> {
-    return this.http.get<BuitrePerson>(`${this.apiUrl}/people/${id}`);
+    return this.http.get<BuitrePerson>(`${this.apiUrl}/people/${id}`, { headers: this.getAuthHeaders() });
   }
 
   createPerson(name: string, description: string, gender: string, email: string = ''): Observable<any> {
-    return this.http.post(`${this.apiUrl}/people`, { name, description, gender, email });
+    return this.http.post(`${this.apiUrl}/people`, { name, description, gender, email }, { headers: this.getAuthHeaders() });
   }
 
   updatePerson(id: string, updates: any): Observable<any> {
@@ -90,11 +90,11 @@ export class BuitresService {
   // --- Details Operations ---
 
   getDetails(personId: string): Observable<BuitreDetail[]> {
-    return this.http.get<BuitreDetail[]>(`${this.apiUrl}/people/${personId}/details`);
+    return this.http.get<BuitreDetail[]>(`${this.apiUrl}/people/${personId}/details`, { headers: this.getAuthHeaders() });
   }
 
   addOrIncrementDetail(personId: string, content: string, fingerprint: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/people/${personId}/details`, { content, fingerprint });
+    return this.http.post(`${this.apiUrl}/people/${personId}/details`, { content, fingerprint }, { headers: this.getAuthHeaders() });
   }
 
   deleteDetail(id: string): Observable<any> {
@@ -104,11 +104,11 @@ export class BuitresService {
   // --- Comments Operations ---
 
   getComments(personId: string): Observable<BuitreComment[]> {
-    return this.http.get<BuitreComment[]>(`${this.apiUrl}/people/${personId}/comments`);
+    return this.http.get<BuitreComment[]>(`${this.apiUrl}/people/${personId}/comments`, { headers: this.getAuthHeaders() });
   }
 
   addComment(personId: string, content: string, fingerprint: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/people/${personId}/comments`, { content, fingerprint });
+    return this.http.post(`${this.apiUrl}/people/${personId}/comments`, { content, fingerprint }, { headers: this.getAuthHeaders() });
   }
 
   deleteComment(id: string): Observable<any> {
@@ -118,7 +118,7 @@ export class BuitresService {
   // --- Interaction Operations ---
 
   votePerson(personId: string, type: 'like' | 'dislike', fingerprint: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/people/${personId}/vote`, { type, fingerprint });
+    return this.http.post(`${this.apiUrl}/people/${personId}/vote`, { type, fingerprint }, { headers: this.getAuthHeaders() });
   }
 
   mergePersons(keepId: string, removeId: string): Observable<any> {

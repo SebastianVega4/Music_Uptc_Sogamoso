@@ -1,3 +1,51 @@
+.login-prompt {
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    background: rgba(30, 30, 40, 0.6);
+    backdrop-filter: blur(10px);
+
+    .login-icon i {
+        background: linear-gradient(45deg, #4285F4, #34A853, #FBBC05, #EA4335);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .disclaimer-alert {
+        background: rgba(13, 110, 253, 0.1);
+        border: 1px solid rgba(13, 110, 253, 0.2);
+        color: #a5d8ff;
+    }
+}
+
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    background: white;
+    color: #444;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        background: #f8f8f8;
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
 .text-gradient {
   background: linear-gradient(45deg, #1DB954, #19e68c);
   -webkit-background-clip: text;

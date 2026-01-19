@@ -1,12 +1,26 @@
 <div class="home-container">
-  
+
+  <div class="alert alert-warning alert-dismissible fade show mb-4 animate-fade-in" role="alert" *ngIf="showLoginAlert">
+    <div class="d-flex align-items-center">
+      <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+      <div>
+        <strong>Acceso Restringido:</strong> Para ver el perfil detallado de los "Buitres", primero debes iniciar sesión
+        con tu cuenta UPTC en el apartado correspondiente.
+        <div class="mt-2">
+          <a href="/buitres" class="btn btn-sm btn-warning fw-bold text-dark">Ir a Buitres y Acceder</a>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn-close" (click)="showLoginAlert = false" aria-label="Close"></button>
+  </div>
+
   <!-- Sección de siguiente canción -->
   <div class="next-song-section compact-card fade-in">
     <div class="card-header">
       <i class="fas fa-forward text-primary"></i>
       <span class="header-title">Siguiente en la cola</span>
     </div>
-    
+
     <div class="next-song-content" *ngIf="nextSong; else noNextSong">
       <div class="album-art-mini">
         <img [src]="nextSong.image || 'assets/default-song.png'" alt="Carátula" class="album-art-img">
@@ -33,7 +47,7 @@
       </div>
     </div>
   </ng-template>
-  
+
   <!-- Sección de canción en reproducción -->
   <div class="now-playing-section compact-card fade-in" *ngIf="adminCurrentlyPlaying; else noSongPlaying">
     <div class="album-art-container">

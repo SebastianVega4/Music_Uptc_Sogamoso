@@ -39,7 +39,7 @@ export class BuitresDetailComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.isAdmin = this.authService.isLoggedIn();
+    this.isAdmin = this.authService.isRoleAdmin();
     this.fingerprint = this.getFingerprint();
     this.route.params.subscribe(params => {
       const id = params['id'];
@@ -269,5 +269,13 @@ export class BuitresDetailComponent implements OnInit {
         error: (err) => alert('Error al eliminar perfil.')
       });
     }
+  }
+
+  requestRemoval() {
+    if (!this.person) return;
+    const email = 'johan.vega01@uptc.edu.co';
+    const subject = encodeURIComponent(`Solicitud de eliminación de perfil: ${this.person.name}`);
+    const body = encodeURIComponent(`Hola johan,\n\nDeseo solicitar la eliminación del perfil "${this.person.name}" (ID: ${this.person.id}) del directorio comunitario de Buitres UPTC.\n\nAtentamente,\nUn integrante de la comunidad.`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   }
 }

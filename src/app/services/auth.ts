@@ -26,22 +26,51 @@ export class AuthService {
       tap((response: any) => {
         if (response.token) {
           localStorage.setItem('adminToken', response.token);
-          localStorage.setItem('adminUser', JSON.stringify(response.user));
+          if (response.user) {
+            localStorage.setItem('adminUser', JSON.stringify(response.user));
+          }
           localStorage.setItem('auth_token', response.token);
           this.currentUserSubject.next(response.user);
         }
       })
-  );
-}
+    );
+  }
+
+  googleLogin(idToken: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/google`, { idToken }).pipe(
+      tap((response: any) => {
+        if (response.token) {
+          localStorage.setItem('adminToken', response.token);
+          if (response.user) {
+             localStorage.setItem('adminUser', JSON.stringify(response.user));
+          }
+          localStorage.setItem('auth_token', response.token);
+          this.currentUserSubject.next(response.user);
+        }
+      })
+    );
+  }
 
   logout(): void {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem('auth_token');
     this.currentUserSubject.next(null);
   }
 
   isLoggedIn(): boolean {
     return !!localStorage.getItem('adminToken');
+  }
+
+  isRoleAdmin(): boolean {
+    const userData = localStorage.getItem('adminUser');
+    if (!userData) return false;
+    try {
+      const user = JSON.parse(userData);
+      return user.role === 'admin';
+    } catch (e) {
+      return false;
+    }
   }
 
   getAuthToken(): string | null {

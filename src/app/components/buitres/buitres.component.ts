@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+
+declare var google: any;
 
 @Component({
   selector: 'app-buitres',
@@ -13,7 +15,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
   templateUrl: './buitres.component.html',
   styleUrls: ['./buitres.component.scss']
 })
-export class BuitresComponent implements OnInit {
+export class BuitresComponent implements OnInit, AfterViewInit {
   people: BuitrePerson[] = [];
   suggestions: BuitrePerson[] = [];
   searchQuery: string = '';
@@ -35,6 +37,9 @@ export class BuitresComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
 
+  isLoggedIn: boolean = false;
+  loginError: string = '';
+
   constructor(
     private buitresService: BuitresService,
     private authService: AuthService,
@@ -42,9 +47,12 @@ export class BuitresComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.isAdmin = this.authService.isLoggedIn();
-    this.loadPeople();
-    this.loadTotalCount();
+    this.isLoggedIn = this.authService.isLoggedIn();
+    this.isAdmin = this.authService.isRoleAdmin(); 
+    if (this.isLoggedIn) {
+      this.loadPeople();
+      this.loadTotalCount();
+    }
 
     this.searchSubject.pipe(
       debounceTime(300),
@@ -59,6 +67,62 @@ export class BuitresComponent implements OnInit {
         if (query.length === 0) this.loadPeople();
       }
     });
+  }
+
+  ngAfterViewInit() {
+    if (!this.isLoggedIn) {
+      this.initGoogleAuth();
+    }
+  }
+
+  initGoogleAuth() {
+    // Intentar inicializar Google Button cada 1s hasta que la librería cargue
+    const interval = setInterval(() => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        this.renderGoogleButton();
+        clearInterval(interval);
+      }
+    }, 1000);
+  }
+
+  renderGoogleButton() {
+    google.accounts.id.initialize({
+      client_id: '361673258362-sf6ils8hu37d9b5ptmvds329aspgtiao.apps.googleusercontent.com',
+      callback: (response: any) => this.handleGoogleLogin(response)
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn-container'),
+      { theme: 'outline', size: 'large', width: '100%' }
+    );
+  }
+
+  handleGoogleLogin(response: any) {
+    const idToken = response.credential;
+    this.loading = true;
+    this.authService.googleLogin(idToken).subscribe({
+      next: () => {
+        this.isLoggedIn = true;
+        this.isAdmin = this.authService.isRoleAdmin();
+        this.loadPeople();
+        this.loadTotalCount();
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loginError = err.error?.error || 'Error al iniciar sesión';
+        this.loading = false;
+        alert(this.loginError);
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.isLoggedIn = false;
+    this.isAdmin = false;
+    this.people = [];
+    // Reinicializar botón si decide volver a loguear
+    setTimeout(() => this.initGoogleAuth(), 100);
   }
 
   loadTotalCount() {
@@ -183,6 +247,7 @@ export class BuitresComponent implements OnInit {
     this.isMerging = false;
     this.mergeSelected = null;
   }
+
 
   deletePerson(person: BuitrePerson) {
     if (confirm(`¿Estás seguro de eliminar el perfil de "${person.name}" permanentemente? Se borrarán todos sus votos y comentarios.`)) {

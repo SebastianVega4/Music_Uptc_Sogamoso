@@ -12,10 +12,6 @@
                 <div class="d-flex align-items-center justify-content-center gap-3">
                     <div class="person-title-section">
                         <h1 class="person-name mb-0">{{ person.name }}</h1>
-                        <p class="person-email text-primary mb-0" *ngIf="getEmail(person)">
-                            <i class="fas fa-envelope me-1"></i>
-                            {{ getEmail(person) }}
-                        </p>
                     </div>
                     <div class="d-flex gap-2" *ngIf="isAdmin">
                         <button class="btn btn-outline-primary btn-sm" (click)="startEditing()">
@@ -26,13 +22,17 @@
                         </button>
                     </div>
                 </div>
-                <p class="person-desc" *ngIf="shouldShowDescription(person)">{{ person.description }}</p>
-                <div class="vote-actions mt-3">
-                    <button class="btn btn-outline-success me-2" (click)="vote('like')" [disabled]="voting">
+                <div class="vote-actions mt-3 d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-success" (click)="vote('like')" [disabled]="voting">
                         <i class="fas fa-thumbs-up me-2"></i>{{ person.likes_count }}
                     </button>
                     <button class="btn btn-outline-danger" (click)="vote('dislike')" [disabled]="voting">
                         <i class="fas fa-thumbs-down me-2"></i>{{ person.dislikes_count }}
+                    </button>
+
+                    <button class="btn btn-link text-muted btn-sm ms-auto text-decoration-none"
+                        (click)="requestRemoval()">
+                        <i class="fas fa-user-slash me-1"></i> Quiero eliminar mi perfil
                     </button>
                 </div>
             </div>

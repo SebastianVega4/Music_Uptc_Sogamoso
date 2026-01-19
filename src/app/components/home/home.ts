@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
+import { ActivatedRoute } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { Subscription } from 'rxjs';
 import { VotingService } from '../../services/voting';
@@ -22,6 +23,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   songDurationMs: number = 0; // Made public for template access
   isUpdating: boolean = false;
   nextSong: any = null;
+  showLoginAlert: boolean = false;
 
   private pollingSubscription: Subscription | null = null;
   private progressInterval: any = null;
@@ -34,7 +36,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private spotifyService: SpotifyNowPlayingService,
     private votingService: VotingService,
     private queueService: QueueService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
@@ -42,6 +45,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.startAdminSpotifyPolling();
     this.loadNextSong();
     
+    this.route.queryParams.subscribe(params => {
+      if (params['loginRequired'] === 'buitres') {
+        this.showLoginAlert = true;
+      }
+    });
+
     // Actualizar próxima canción cada 30 segundos
     setInterval(() => {
       this.loadNextSong();
