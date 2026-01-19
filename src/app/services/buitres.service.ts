@@ -35,6 +35,8 @@ export interface BuitreComment {
   created_at: string;
 }
 
+import { AuthService } from './auth';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -42,13 +44,13 @@ export class BuitresService {
   private supabase: SupabaseClient;
   private apiUrl = `${environment.apiUrl}/api/buitres`;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private authService: AuthService) {
     // Keep supabase for realtime subscriptions ONLY
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
   private getAuthHeaders(): { [header: string]: string } {
-    const token = localStorage.getItem('adminToken');
+    const token = this.authService.getBuitresToken();
     const headers: { [header: string]: string } = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -113,6 +115,10 @@ export class BuitresService {
 
   deleteComment(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/comments/${id}`, { headers: this.getAuthHeaders() });
+  }
+
+  likeComment(commentId: string, fingerprint: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/comments/${commentId}/like`, { fingerprint }, { headers: this.getAuthHeaders() });
   }
 
   // --- Interaction Operations ---

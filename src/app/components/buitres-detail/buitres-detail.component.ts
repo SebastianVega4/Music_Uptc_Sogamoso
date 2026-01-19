@@ -204,14 +204,28 @@ export class BuitresDetailComponent implements OnInit {
   incrementDetail(content: string) {
     if (!this.person) return;
     this.buitresService.addOrIncrementDetail(this.person.id, content, this.fingerprint).subscribe({
-      next: () => {
-        this.modalService.alert(`Etiqueta "${content}" registrada.`, '¡Éxito!', 'success');
+      next: (response: any) => {
+        const action = response.action || 'added';
+        const newCount = response.new_count || 0;
+        
+        let message = '';
+        if (action === 'added') {
+          message = `✅ Apoyo agregado a "${content}" (${newCount})`;
+        } else if (action === 'removed') {
+          if (response.deleted) {
+            message = `❌ Etiqueta "${content}" eliminada (llegó a 0 apoyos)`;
+          } else {
+            message = `➖ Apoyo removido de "${content}" (${newCount})`;
+          }
+        }
+        
+        this.modalService.alert(message, '¡Éxito!', 'success');
         this.loadData(this.person!.id);
       },
       error: (err) => {
-        const errorMsg = err.error?.error || 'No se pudo agregar la etiqueta.';
+        const errorMsg = err.error?.error || 'No se pudo procesar la acción.';
         this.modalService.alert(errorMsg, 'Error', 'danger');
-        console.error('Error incrementing detail:', err);
+        console.error('Error con tag:', err);
       }
     });
   }
@@ -302,6 +316,27 @@ export class BuitresDetailComponent implements OnInit {
           this.modalService.alert('Comentario eliminado.', '¡Éxito!', 'success');
           if (this.person) this.loadComments(this.person.id);
         });
+      }
+    });
+  }
+
+  likeComment(commentId: string) {
+    if (!this.person) return;
+    this.buitresService.likeComment(commentId, this.fingerprint).subscribe({
+      next: (response: any) => {
+        // Actualizar localmente inmediatamente para feedback visual
+        const comment = this.comments.find(c => c.id === commentId);
+        if (comment && typeof response.new_likes === 'number') {
+          comment.likes_count = response.new_likes;
+        } else {
+          // Fallback por si acaso
+          this.loadComments(this.person!.id);
+        }
+      },
+      error: (err) => {
+        const errorMsg = err.error?.error || 'No se pudo procesar el like.';
+        this.modalService.alert(errorMsg, 'Error', 'danger');
+        console.error('Error con like:', err);
       }
     });
   }

@@ -53,7 +53,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.isLoggedIn = this.authService.isLoggedIn();
+    this.isLoggedIn = this.authService.isBuitresLoggedIn();
     this.isAdmin = this.authService.isRoleAdmin(); 
     if (this.isLoggedIn) {
       this.loadPeople();
@@ -124,7 +124,11 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   logout() {
-    this.authService.logout();
+    if (this.authService.isRoleAdmin()) {
+      this.authService.logoutAdmin();
+    } else {
+      this.authService.logoutBuitres();
+    }
     this.isLoggedIn = false;
     this.isAdmin = false;
     this.people = [];

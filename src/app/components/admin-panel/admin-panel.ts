@@ -762,7 +762,7 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   // Cerrar sesión
   logout() {
     this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/admin-login']);
   }
   // Verificar auto-add
   // Verificar auto-add

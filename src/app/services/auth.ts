@@ -9,17 +9,40 @@ import { tap } from 'rxjs/operators';
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
-  private currentUserSubject = new BehaviorSubject<any>(null);
-  public currentUser = this.currentUserSubject.asObservable();
+
+  // Admin State
+  private currentAdminSubject = new BehaviorSubject<any>(null);
+  public currentAdmin = this.currentAdminSubject.asObservable();
+
+  // Buitres State
+  private currentBuitreSubject = new BehaviorSubject<any>(null);
+  public currentBuitre = this.currentBuitreSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // Cargar usuario desde localStorage al iniciar
-    const token = localStorage.getItem('adminToken');
-    const userData = localStorage.getItem('adminUser');
-    if (token && userData) {
-      this.currentUserSubject.next(JSON.parse(userData));
+    this.loadInitialState();
+  }
+
+  private loadInitialState() {
+    // Cargar usuario Admin
+    const adminToken = localStorage.getItem('adminToken');
+    const adminUser = localStorage.getItem('adminUser');
+    if (adminToken && adminUser) {
+      try {
+        this.currentAdminSubject.next(JSON.parse(adminUser));
+      } catch (e) { console.error('Error parsing admin user', e); }
+    }
+
+    // Cargar usuario Buitres
+    const buitresToken = localStorage.getItem('buitresToken');
+    const buitresUser = localStorage.getItem('buitresUser');
+    if (buitresToken && buitresUser) {
+       try {
+        this.currentBuitreSubject.next(JSON.parse(buitresUser));
+      } catch (e) { console.error('Error parsing buitres user', e); }
     }
   }
+
+  // --- ADMIN AUTH ---
 
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/api/auth/login`, { email, password }).pipe(
@@ -28,36 +51,23 @@ export class AuthService {
           localStorage.setItem('adminToken', response.token);
           if (response.user) {
             localStorage.setItem('adminUser', JSON.stringify(response.user));
+            this.currentAdminSubject.next(response.user);
           }
-          localStorage.setItem('auth_token', response.token);
-          this.currentUserSubject.next(response.user);
+          // Legacy support if needed, but we are separating
+          // localStorage.setItem('auth_token', response.token); 
         }
       })
     );
   }
 
-  googleLogin(idToken: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/google`, { idToken }).pipe(
-      tap((response: any) => {
-        if (response.token) {
-          localStorage.setItem('adminToken', response.token);
-          if (response.user) {
-             localStorage.setItem('adminUser', JSON.stringify(response.user));
-          }
-          localStorage.setItem('auth_token', response.token);
-          this.currentUserSubject.next(response.user);
-        }
-      })
-    );
-  }
-
-  logout(): void {
+  logoutAdmin(): void {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-    localStorage.removeItem('auth_token');
-    this.currentUserSubject.next(null);
+    // localStorage.removeItem('auth_token');
+    this.currentAdminSubject.next(null);
   }
 
+  // Used by AuthGuard for Admin Panel
   isLoggedIn(): boolean {
     return !!localStorage.getItem('adminToken');
   }
@@ -73,8 +83,54 @@ export class AuthService {
     }
   }
 
-  getAuthToken(): string | null {
+  getAdminToken(): string | null {
     return localStorage.getItem('adminToken');
+  }
+
+  // --- BUITRES AUTH (UPTC) ---
+
+  googleLogin(idToken: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/google`, { idToken }).pipe(
+      tap((response: any) => {
+        if (response.token) {
+          // Store in separate keys
+          localStorage.setItem('buitresToken', response.token);
+          if (response.user) {
+             localStorage.setItem('buitresUser', JSON.stringify(response.user));
+             this.currentBuitreSubject.next(response.user);
+          }
+        }
+      })
+    );
+  }
+
+  logoutBuitres(): void {
+    localStorage.removeItem('buitresToken');
+    localStorage.removeItem('buitresUser');
+    this.currentBuitreSubject.next(null);
+  }
+
+  isBuitresLoggedIn(): boolean {
+     // Admin also has access to buitres
+     if (this.isRoleAdmin()) return true;
+     return !!localStorage.getItem('buitresToken');
+  }
+
+  getBuitresToken(): string | null {
+    // If admin is logged in, use admin token
+    if (this.isRoleAdmin()) return this.getAdminToken();
+    // Otherwise use buitres token
+    return localStorage.getItem('buitresToken');
+  }
+
+  // --- COMPATIBILITY ---
+
+  logout(): void {
+    this.logoutAdmin();
+  }
+
+  getToken(): string | null {
+    return this.getAdminToken();
   }
 
   getAuthHeaders(): HttpHeaders {
@@ -88,9 +144,5 @@ export class AuthService {
     return new HttpHeaders({
       'Content-Type': 'application/json'
     });
-  }
-  
-  getToken(): string | null {
-    return localStorage.getItem('adminToken');
   }
 }
