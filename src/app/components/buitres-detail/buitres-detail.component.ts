@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
+import { ModalService } from '../../services/modal.service';
 
 @Component({
   selector: 'app-buitres-detail',
@@ -23,6 +24,12 @@ export class BuitresDetailComponent implements OnInit {
   fingerprint: string = '';
   isAdmin: boolean = false;
   
+  // Real-time flash states for visual feedback
+  flashLikes: boolean = false;
+  flashDislikes: boolean = false;
+  flashTags: boolean = false;
+  flashComments: boolean = false;
+  
   // Admin Edit State
   isEditing: boolean = false;
   editName: string = '';
@@ -35,7 +42,8 @@ export class BuitresDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private buitresService: BuitresService,
-    private authService: AuthService
+    private authService: AuthService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit() {
@@ -68,7 +76,13 @@ export class BuitresDetailComponent implements OnInit {
     this.subscriptions.push(
       this.buitresService.subscribeToChanges('buitres_people', (payload) => {
         if (payload.new && payload.new.id === id) {
-          this.person = payload.new;
+          const oldLikes = this.person?.likes_count || 0;
+          const oldDislikes = this.person?.dislikes_count || 0;
+          
+          this.person = { ...this.person, ...payload.new };
+          
+          if (payload.new.likes_count !== oldLikes) this.triggerFlash('likes');
+          if (payload.new.dislikes_count !== oldDislikes) this.triggerFlash('dislikes');
         }
       })
     );
@@ -77,6 +91,9 @@ export class BuitresDetailComponent implements OnInit {
     this.subscriptions.push(
       this.buitresService.subscribeToChanges('buitres_details', (payload) => {
         if (payload.new && payload.new.person_id === id) {
+          this.loadDetails(id);
+          this.triggerFlash('tags');
+        } else if (payload.old && payload.old.person_id === id) {
           this.loadDetails(id);
         }
       })
@@ -87,9 +104,26 @@ export class BuitresDetailComponent implements OnInit {
       this.buitresService.subscribeToChanges('buitres_comments', (payload) => {
         if (payload.new && payload.new.person_id === id) {
           this.loadComments(id);
+          this.triggerFlash('comments');
+        } else if (payload.old && payload.old.person_id === id) {
+          this.loadComments(id);
         }
       })
     );
+  }
+
+  private triggerFlash(type: 'likes' | 'dislikes' | 'tags' | 'comments') {
+    if (type === 'likes') this.flashLikes = true;
+    if (type === 'dislikes') this.flashDislikes = true;
+    if (type === 'tags') this.flashTags = true;
+    if (type === 'comments') this.flashComments = true;
+
+    setTimeout(() => {
+      if (type === 'likes') this.flashLikes = false;
+      if (type === 'dislikes') this.flashDislikes = false;
+      if (type === 'tags') this.flashTags = false;
+      if (type === 'comments') this.flashComments = false;
+    }, 2000);
   }
 
   loadData(id: string) {
@@ -114,8 +148,9 @@ export class BuitresDetailComponent implements OnInit {
         this.loadData(this.person!.id);
         this.voting = false;
       },
-      error: () => {
-        alert('Ya has votado por esta persona.');
+      error: (err) => {
+        const errorMsg = err.error?.error || 'Ya has votado por esta persona.';
+        this.modalService.alert(errorMsg, 'Atención', 'warning');
         this.voting = false;
       }
     });
@@ -127,13 +162,21 @@ export class BuitresDetailComponent implements OnInit {
     // Seguridad: Bloquear si tiene 10 o más números (evitar spam de teléfonos)
     const digitCount = (this.newComment.match(/\d/g) || []).length;
     if (digitCount >= 10) {
-      alert('Por seguridad, no se permiten comentarios con números de teléfono.');
+      this.modalService.alert('Por seguridad, no se permiten comentarios con números de teléfono.', 'Aviso de Seguridad', 'warning');
       return;
     }
 
-    this.buitresService.addComment(this.person.id, this.newComment, this.fingerprint).subscribe(() => {
-      this.newComment = '';
-      this.loadData(this.person!.id);
+    this.buitresService.addComment(this.person.id, this.newComment, this.fingerprint).subscribe({
+      next: () => {
+        this.modalService.alert('Comentario publicado correctamente.', '¡Éxito!', 'success');
+        this.newComment = '';
+        this.loadData(this.person!.id);
+      },
+      error: (err) => {
+        const errorMsg = err.error?.error || 'No se pudo publicar el comentario. Intenta de nuevo.';
+        this.modalService.alert(errorMsg, 'Error', 'danger');
+        console.error('Comment error:', err);
+      }
     });
   }
 
@@ -143,7 +186,7 @@ export class BuitresDetailComponent implements OnInit {
     // Seguridad: Bloquear si tiene 10 o más números
     const digitCount = (this.newDetailContent.match(/\d/g) || []).length;
     if (digitCount >= 10) {
-      alert('Por seguridad, no se permiten etiquetas con números de teléfono.');
+      this.modalService.alert('Por seguridad, no se permiten etiquetas con números de teléfono.', 'Aviso de Seguridad', 'warning');
       return;
     }
 
@@ -161,8 +204,15 @@ export class BuitresDetailComponent implements OnInit {
   incrementDetail(content: string) {
     if (!this.person) return;
     this.buitresService.addOrIncrementDetail(this.person.id, content, this.fingerprint).subscribe({
-      next: () => this.loadData(this.person!.id),
-      error: (err) => console.error('Error incrementing detail:', err)
+      next: () => {
+        this.modalService.alert(`Etiqueta "${content}" registrada.`, '¡Éxito!', 'success');
+        this.loadData(this.person!.id);
+      },
+      error: (err) => {
+        const errorMsg = err.error?.error || 'No se pudo agregar la etiqueta.';
+        this.modalService.alert(errorMsg, 'Error', 'danger');
+        console.error('Error incrementing detail:', err);
+      }
     });
   }
 
@@ -236,39 +286,53 @@ export class BuitresDetailComponent implements OnInit {
                     this.isEditing = false;
                     this.loadData(this.person!.id);
                 },
-                error: () => alert('Error al actualizar perfil.')
+                error: () => this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger')
             });
         } else {
-            alert('Error al actualizar perfil.');
+            this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger');
         }
       }
     });
   }
 
   deleteComment(id: string) {
-    if (!confirm('¿Estás seguro de eliminar este comentario?')) return;
-    this.buitresService.deleteComment(id).subscribe(() => {
-      if (this.person) this.loadComments(this.person.id);
+    this.modalService.confirm('¿Estás seguro de eliminar este comentario?', 'Eliminar Comentario').subscribe(confirmed => {
+      if (confirmed) {
+        this.buitresService.deleteComment(id).subscribe(() => {
+          this.modalService.alert('Comentario eliminado.', '¡Éxito!', 'success');
+          if (this.person) this.loadComments(this.person.id);
+        });
+      }
     });
   }
 
   deleteDetail(id: string) {
-    if (!confirm('¿Estás seguro de eliminar esta etiqueta?')) return;
-    this.buitresService.deleteDetail(id).subscribe(() => {
-      if (this.person) this.loadDetails(this.person.id);
+    this.modalService.confirm('¿Estás seguro de eliminar esta etiqueta?', 'Eliminar Etiqueta').subscribe(confirmed => {
+      if (confirmed) {
+        this.buitresService.deleteDetail(id).subscribe(() => {
+          this.modalService.alert('Etiqueta eliminada.', '¡Éxito!', 'success');
+          if (this.person) this.loadDetails(this.person.id);
+        });
+      }
     });
   }
 
   deletePerson() {
     if (!this.person) return;
-    if (confirm(`¿Estás seguro de eliminar permanentemente el perfil de "${this.person.name}"? Esta acción no se puede deshacer.`)) {
-      this.buitresService.deletePerson(this.person.id).subscribe({
-        next: () => {
-          this.router.navigate(['/buitres']);
-        },
-        error: (err) => alert('Error al eliminar perfil.')
-      });
-    }
+    this.modalService.confirm(
+      `¿Estás seguro de eliminar permanentemente el perfil de "${this.person.name}"? Esta acción no se puede deshacer.`,
+      'Eliminar Perfil'
+    ).subscribe(confirmed => {
+      if (confirmed && this.person) {
+        this.buitresService.deletePerson(this.person.id).subscribe({
+          next: () => {
+            this.modalService.alert('Perfil eliminado.', '¡Éxito!', 'success');
+            this.router.navigate(['/buitres']);
+          },
+          error: (err) => this.modalService.alert('Error al eliminar perfil.', 'Error', 'danger')
+        });
+      }
+    });
   }
 
   requestRemoval() {

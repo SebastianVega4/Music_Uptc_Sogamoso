@@ -1,6 +1,7 @@
 <div class="buitres-container mt-4 animate-fade-in">
     <div class="header-section text-center mb-5">
-        <h2 class="section-title">Encuentra y <span class="text-gradient">Buitrea </span> a quien quieras en completo anonimato</h2>
+        <h2 class="section-title">Encuentra y <span class="text-gradient">Buitrea </span> a quien quieras en completo
+            anonimato</h2>
         <p class="section-subtitle">Busca si esa persona ya está en nuestra base de datos comunitaria, si no creala.</p>
         <div class="stats-badge mt-2 d-flex align-items-center justify-content-center gap-3">
             <span><i class="fas fa-users me-1"></i> {{ totalPeople }} perfiles registrados</span>
@@ -72,17 +73,17 @@
         </div>
 
         <div class="filters-section d-flex justify-content-center gap-2 mb-5" *ngIf="!isMerging">
-            <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
-                <i class="fas fa-clock me-1"></i> Recientes
-            </button>
-            <button class="filter-btn" [class.active]="currentSort === 'likes'" (click)="setSort('likes')">
-                <i class="fas fa-heart me-1"></i> Más Votados
-            </button>
             <button class="filter-btn" [class.active]="currentSort === 'tags'" (click)="setSort('tags')">
                 <i class="fas fa-tags me-1"></i> Más Etiquetas
             </button>
             <button class="filter-btn" [class.active]="currentSort === 'comments'" (click)="setSort('comments')">
                 <i class="fas fa-comments me-1"></i> Más Comentados
+            </button>
+            <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
+                <i class="fas fa-clock me-1"></i> Recientes
+            </button>
+            <button class="filter-btn" [class.active]="currentSort === 'likes'" (click)="setSort('likes')">
+                <i class="fas fa-heart me-1"></i> Más Votados
             </button>
         </div>
 
@@ -114,6 +115,7 @@
         <div *ngIf="!loading && people.length > 0" class="people-grid">
             <div *ngFor="let person of filteredPeople" class="person-card"
                 [class.selecting-merge]="isMerging && mergeSelected?.id !== person.id"
+                [class.animate-flash]="flashStates[person.id]"
                 (click)="isMerging ? selectForMerge(person) : (router.navigate(['/buitres/person', person.id]))">
                 <div class="person-img d-flex align-items-center justify-content-center">
                     <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>

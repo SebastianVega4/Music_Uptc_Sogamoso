@@ -23,10 +23,12 @@
                     </div>
                 </div>
                 <div class="vote-actions mt-3 d-flex align-items-center gap-2">
-                    <button class="btn btn-outline-success" (click)="vote('like')" [disabled]="voting">
+                    <button class="btn btn-outline-success" (click)="vote('like')" [disabled]="voting"
+                        [class.animate-flash]="flashLikes">
                         <i class="fas fa-thumbs-up me-2"></i>{{ person.likes_count }}
                     </button>
-                    <button class="btn btn-outline-danger" (click)="vote('dislike')" [disabled]="voting">
+                    <button class="btn btn-outline-danger" (click)="vote('dislike')" [disabled]="voting"
+                        [class.animate-flash]="flashDislikes">
                         <i class="fas fa-thumbs-down me-2"></i>{{ person.dislikes_count }}
                     </button>
 
@@ -44,7 +46,7 @@
         <div class="col-md-4">
             <div class="card-dark h-100">
                 <h3 class="mb-3"><i class="fas fa-tags me-2 text-primary"></i>Etiquetas</h3>
-                <div class="tags-container mb-3">
+                <div class="tags-container d-flex flex-wrap gap-2 mb-4" [class.animate-flash-bg]="flashTags">
                     <div *ngFor="let detail of details" class="tag-item" [class.verified]="detail.is_verified">
                         <span class="tag-content" (click)="incrementDetail(detail.content)">{{ detail.content }}</span>
                         <div class="tag-badge">
@@ -83,7 +85,7 @@
                     </button>
                 </div>
 
-                <div class="comments-list">
+                <div class="comments-list" [class.animate-flash-bg]="flashComments">
                     <div *ngFor="let comment of comments" class="comment-card">
                         <div class="comment-header d-flex justify-content-between">
                             <div>

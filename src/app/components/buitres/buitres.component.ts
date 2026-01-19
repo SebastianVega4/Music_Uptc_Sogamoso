@@ -1,9 +1,10 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
+import { ModalService } from '../../services/modal.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 declare var google: any;
@@ -15,14 +16,18 @@ declare var google: any;
   templateUrl: './buitres.component.html',
   styleUrls: ['./buitres.component.scss']
 })
-export class BuitresComponent implements OnInit, AfterViewInit {
+export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   people: BuitrePerson[] = [];
   suggestions: BuitrePerson[] = [];
   searchQuery: string = '';
   loading: boolean = false;
   showCreateForm: boolean = false;
   totalPeople: number = 0;
-  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'recent';
+  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'likes';
+  
+  // Real-time flash states
+  flashStates: { [key: string]: boolean } = {};
+  private subscriptions: any[] = [];
   
   // Admin Features
   isAdmin: boolean = false;
@@ -43,7 +48,8 @@ export class BuitresComponent implements OnInit, AfterViewInit {
   constructor(
     private buitresService: BuitresService,
     private authService: AuthService,
-    public router: Router
+    public router: Router,
+    private modalService: ModalService
   ) {}
 
   ngOnInit() {
@@ -52,6 +58,7 @@ export class BuitresComponent implements OnInit, AfterViewInit {
     if (this.isLoggedIn) {
       this.loadPeople();
       this.loadTotalCount();
+      this.setupRealtime();
     }
 
     this.searchSubject.pipe(
@@ -111,7 +118,7 @@ export class BuitresComponent implements OnInit, AfterViewInit {
       error: (err) => {
         this.loginError = err.error?.error || 'Error al iniciar sesión';
         this.loading = false;
-        alert(this.loginError);
+        this.modalService.alert(this.loginError, 'Error de Acceso', 'danger');
       }
     });
   }
@@ -150,6 +157,35 @@ export class BuitresComponent implements OnInit, AfterViewInit {
     });
   }
 
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  setupRealtime() {
+    // Escuchar cambios en la lista de personas
+    this.subscriptions.push(
+      this.buitresService.subscribeToChanges('buitres_people', (payload: any) => {
+        if (payload.eventType === 'UPDATE') {
+          const index = this.people.findIndex(p => p.id === payload.new.id);
+          if (index !== -1) {
+            this.people[index] = { ...this.people[index], ...payload.new };
+            this.triggerFlash(payload.new.id);
+          }
+        } else if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+          this.loadPeople();
+          this.loadTotalCount();
+        }
+      })
+    );
+  }
+
+  private triggerFlash(id: string) {
+    this.flashStates[id] = true;
+    setTimeout(() => {
+      this.flashStates[id] = false;
+    }, 1500);
+  }
+
   onSearchChange(query: string) {
     this.searchSubject.next(query);
   }
@@ -167,7 +203,7 @@ export class BuitresComponent implements OnInit, AfterViewInit {
 
     // Validación: Al menos un espacio para Nombre + Apellido
     if (!this.newName.trim().includes(' ')) {
-      alert('Por favor, ingresa nombre y al menos un apellido (mínimo un espacio).');
+      this.modalService.alert('Por favor, ingresa nombre y al menos un apellido (mínimo un espacio).', 'Nombre Incompleto', 'warning');
       return;
     }
 
@@ -180,6 +216,7 @@ export class BuitresComponent implements OnInit, AfterViewInit {
 
     this.buitresService.createPerson(normalizedName, this.newEmail ? `Email: ${this.newEmail}` : this.newDescription, this.newGender, this.newEmail).subscribe({
       next: (res) => {
+        this.modalService.alert(`Perfil de "${normalizedName}" creado correctamente.`, '¡Éxito!', 'success');
         this.showCreateForm = false;
         this.newName = '';
         this.newEmail = '';
@@ -201,9 +238,9 @@ export class BuitresComponent implements OnInit, AfterViewInit {
                 this.loadTotalCount();
             });
         } else if (err.code === '23505') {
-          alert('Esta persona ya existe en la base de datos.');
+          this.modalService.alert('Esta persona ya existe en la base de datos.', 'Error', 'warning');
         } else {
-          alert('Error al crear persona.');
+          this.modalService.alert('Error al crear persona.', 'Error', 'danger');
         }
       }
     });
@@ -228,19 +265,24 @@ export class BuitresComponent implements OnInit, AfterViewInit {
   selectForMerge(target: BuitrePerson) {
     if (!this.mergeSelected || this.mergeSelected.id === target.id) return;
 
-    if (confirm(`¿Estás seguro de fusionar a "${target.name}" dentro de "${this.mergeSelected.name}"? Los votos y comentarios se mantendrán, pero el perfil de "${target.name}" desaparecerá.`)) {
-      this.buitresService.mergePersons(this.mergeSelected.id, target.id).subscribe({
-        next: () => {
-          alert('Perfiles fusionados correctamente.');
-          this.resetMerge();
-          this.loadPeople();
-        },
-        error: (err) => {
-          console.error('Error merging:', err);
-          alert('Error al fusionar perfiles.');
-        }
-      });
-    }
+    this.modalService.confirm(
+      `¿Estás seguro de fusionar a "${target.name}" dentro de "${this.mergeSelected.name}"? Los votos y comentarios se mantendrán, pero el perfil de "${target.name}" desaparecerá.`,
+      'Confirmar Fusión'
+    ).subscribe(confirmed => {
+      if (confirmed && this.mergeSelected) {
+        this.buitresService.mergePersons(this.mergeSelected.id, target.id).subscribe({
+          next: () => {
+            this.modalService.alert('Perfiles fusionados correctamente.', '¡Éxito!', 'success');
+            this.resetMerge();
+            this.loadPeople();
+          },
+          error: (err) => {
+            console.error('Error merging:', err);
+            this.modalService.alert('Error al fusionar perfiles.', 'Error', 'danger');
+          }
+        });
+      }
+    });
   }
 
   resetMerge() {
@@ -250,14 +292,20 @@ export class BuitresComponent implements OnInit, AfterViewInit {
 
 
   deletePerson(person: BuitrePerson) {
-    if (confirm(`¿Estás seguro de eliminar el perfil de "${person.name}" permanentemente? Se borrarán todos sus votos y comentarios.`)) {
-      this.buitresService.deletePerson(person.id).subscribe({
-        next: () => {
-          this.loadPeople();
-          this.loadTotalCount();
-        },
-        error: (err) => alert('Error al eliminar perfil.')
-      });
-    }
+    this.modalService.confirm(
+      `¿Estás seguro de eliminar el perfil de "${person.name}" permanentemente? Se borrarán todos sus votos y comentarios.`,
+      'Eliminar Perfil'
+    ).subscribe(confirmed => {
+      if (confirmed) {
+        this.buitresService.deletePerson(person.id).subscribe({
+          next: () => {
+            this.modalService.alert('Perfil eliminado.', '¡Éxito!', 'success');
+            this.loadPeople();
+            this.loadTotalCount();
+          },
+          error: (err) => this.modalService.alert('Error al eliminar perfil.', 'Error', 'danger')
+        });
+      }
+    });
   }
 }

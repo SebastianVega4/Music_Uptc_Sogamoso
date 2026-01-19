@@ -149,6 +149,20 @@
   border-bottom: none;
 }
 
+.buitres-container {
+    padding-bottom: 5rem;
+}
+
+@keyframes flash-update {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); border-color: #1DB954; box-shadow: 0 0 15px rgba(29, 185, 84, 0.3); }
+  100% { transform: scale(1); }
+}
+
+.animate-flash {
+  animation: flash-update 0.8s ease-out;
+}
+
 .suggestion-item:hover {
   background: #333;
 }

@@ -20,6 +20,27 @@
 .person-name { font-size: 2.5rem; font-weight: 800; color: #fff; }
 .person-desc { color: #b3b3b3; font-size: 1.1rem; }
 
+@keyframes flash-update {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #1DB954; text-shadow: 0 0 10px rgba(29, 185, 84, 0.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flash-bg {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(29, 185, 84, 0.1); }
+  100% { background-color: transparent; }
+}
+
+.animate-flash {
+  display: inline-block;
+  animation: flash-update 0.8s ease-out;
+}
+
+.animate-flash-bg {
+  animation: flash-bg 1s ease-out;
+}
+
 .tags-container {
   display: flex;
   flex-wrap: wrap;
