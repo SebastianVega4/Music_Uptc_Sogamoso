@@ -179,8 +179,8 @@ export class BuitresDetailComponent implements OnInit {
     if (!p || !p.description) return false;
     const email = this.getEmail(p);
     const cleanDesc = p.description.replace('Email: ', '').trim();
-    // Hide if description is essentially just the email
-    if (cleanDesc === email) return false;
+    // Hide if description is essentially just the email or a subset of it
+    if (!cleanDesc || cleanDesc === email || email.includes(cleanDesc)) return false;
     return true;
   }
 
@@ -190,17 +190,14 @@ export class BuitresDetailComponent implements OnInit {
     if (!this.person) return;
     this.editName = this.person.name;
     // Fallback: if email is not in the dedicated column, try to extract it from description
-    this.editEmail = this.person.email || this.extractEmailFromDesc(this.person.description);
+    this.editEmail = this.getEmail(this.person);
     this.editGender = this.person.gender as any;
     this.isEditing = true;
   }
 
   private extractEmailFromDesc(desc?: string): string {
     if (!desc) return '';
-    if (desc.startsWith('Email: ')) {
-      return desc.replace('Email: ', '');
-    }
-    return '';
+    return desc.replace('Email: ', '').trim();
   }
 
   saveEdits() {
@@ -216,7 +213,7 @@ export class BuitresDetailComponent implements OnInit {
     const updates: any = { 
       name: normalizedName, 
       gender: this.editGender,
-      description: this.editEmail ? `${this.editEmail}` : this.person.description
+      description: this.editEmail || this.person.description
     };
 
     // We try to update the email column, but we also keep it in description as fallback
@@ -230,13 +227,16 @@ export class BuitresDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Update error:', err);
-        // If the email column fails, try updating without it
-        if (err.message && err.message.includes('email" does not exist')) {
+        // If the email column fails (PGRST204 stale cache, 42703 not exists, or 400 Bad Request), try updating without it
+        if (err.code === 'PGRST204' || err.code === '42703' || (err.message && err.message.includes('email" does not exist')) || err.status === 400) {
             const fallbackUpdates = { ...updates };
             delete fallbackUpdates.email;
-            this.buitresService.updatePerson(this.person!.id, fallbackUpdates).subscribe(() => {
-                this.isEditing = false;
-                this.loadData(this.person!.id);
+            this.buitresService.updatePerson(this.person!.id, fallbackUpdates).subscribe({
+                next: () => {
+                    this.isEditing = false;
+                    this.loadData(this.person!.id);
+                },
+                error: () => alert('Error al actualizar perfil.')
             });
         } else {
             alert('Error al actualizar perfil.');

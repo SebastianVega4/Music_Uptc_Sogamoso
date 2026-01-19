@@ -178,12 +178,17 @@ export class BuitresService {
 
   // --- Admin Content Management ---
 
-  updatePerson(id: string, updates: { name?: string, gender?: string, email?: string }): Observable<any> {
+  updatePerson(id: string, updates: any): Observable<any> {
     return from(
       this.supabase
         .from('buitres_people')
         .update(updates)
         .eq('id', id)
+    ).pipe(
+      map(res => {
+        if (res.error) throw res.error;
+        return res.data;
+      })
     );
   }
 
