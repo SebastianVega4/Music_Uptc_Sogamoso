@@ -93,7 +93,12 @@
             </div>
             <div class="person-info">
                 <h3>{{ person.name }}</h3>
-                <small class="person-email text-muted d-block mb-1" *ngIf="person.email">{{ person.email }}</small>
+                <small class="person-email text-muted d-block mb-1" *ngIf="person.email || person.description?.startsWith('Email: ')">
+                    {{ person.email || person.description?.replace('Email: ', '') }}
+                </small>
+                <small class="person-desc text-muted d-block mb-1" *ngIf="person.description && !person.description.startsWith('Email: ')">
+                    {{ person.description }}
+                </small>
                 <div class="stats mt-2">
                     <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
                     <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count }}</span>

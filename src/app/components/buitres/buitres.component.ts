@@ -114,7 +114,7 @@ export class BuitresComponent implements OnInit {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    this.buitresService.createPerson(normalizedName, this.newDescription, this.newGender, this.newEmail).subscribe({
+    this.buitresService.createPerson(normalizedName, this.newEmail ? `Email: ${this.newEmail}` : this.newDescription, this.newGender, this.newEmail).subscribe({
       next: (res) => {
         this.showCreateForm = false;
         this.newName = '';
@@ -125,7 +125,18 @@ export class BuitresComponent implements OnInit {
         this.loadTotalCount();
       },
       error: (err: any) => {
-        if (err.code === '23505') {
+        // Fallback if email column doesn't exist
+        if (err.message && err.message.includes('email" does not exist')) {
+            this.buitresService.createPerson(normalizedName, this.newEmail ? `Email: ${this.newEmail}` : this.newDescription, this.newGender).subscribe(() => {
+                this.showCreateForm = false;
+                this.newName = '';
+                this.newEmail = '';
+                this.newGender = '';
+                this.newDescription = '';
+                this.loadPeople();
+                this.loadTotalCount();
+            });
+        } else if (err.code === '23505') {
           alert('Esta persona ya existe en la base de datos.');
         } else {
           alert('Error al crear persona.');

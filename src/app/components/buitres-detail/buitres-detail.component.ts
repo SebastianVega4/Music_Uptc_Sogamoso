@@ -171,9 +171,18 @@ export class BuitresDetailComponent implements OnInit {
   startEditing() {
     if (!this.person) return;
     this.editName = this.person.name;
-    this.editEmail = this.person.email || '';
+    // Fallback: if email is not in the dedicated column, try to extract it from description
+    this.editEmail = this.person.email || this.extractEmailFromDesc(this.person.description);
     this.editGender = this.person.gender as any;
     this.isEditing = true;
+  }
+
+  private extractEmailFromDesc(desc?: string): string {
+    if (!desc) return '';
+    if (desc.startsWith('Email: ')) {
+      return desc.replace('Email: ', '');
+    }
+    return '';
   }
 
   saveEdits() {
@@ -186,16 +195,35 @@ export class BuitresDetailComponent implements OnInit {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-    this.buitresService.updatePerson(this.person.id, { 
+    const updates: any = { 
       name: normalizedName, 
       gender: this.editGender,
-      email: this.editEmail
-    }).subscribe({
+      description: this.editEmail ? `${this.editEmail}` : this.person.description
+    };
+
+    // We try to update the email column, but we also keep it in description as fallback
+    // because the Supabase API cache might still be stale.
+    updates.email = this.editEmail;
+
+    this.buitresService.updatePerson(this.person.id, updates).subscribe({
       next: () => {
         this.isEditing = false;
         this.loadData(this.person!.id);
       },
-      error: (err) => alert('Error al actualizar perfil.')
+      error: (err) => {
+        console.error('Update error:', err);
+        // If the email column fails, try updating without it
+        if (err.message && err.message.includes('email" does not exist')) {
+            const fallbackUpdates = { ...updates };
+            delete fallbackUpdates.email;
+            this.buitresService.updatePerson(this.person!.id, fallbackUpdates).subscribe(() => {
+                this.isEditing = false;
+                this.loadData(this.person!.id);
+            });
+        } else {
+            alert('Error al actualizar perfil.');
+        }
+      }
     });
   }
 

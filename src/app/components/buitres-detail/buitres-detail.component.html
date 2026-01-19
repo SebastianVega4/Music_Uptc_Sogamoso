@@ -12,8 +12,10 @@
                 <div class="d-flex align-items-center justify-content-center gap-3">
                     <div class="person-title-section">
                         <h1 class="person-name mb-0">{{ person.name }}</h1>
-                        <p class="person-email text-primary mb-0" *ngIf="person.email">
-                            <i class="fas fa-envelope me-1"></i> {{ person.email }}
+                        <p class="person-email text-primary mb-0"
+                            *ngIf="person.email || person.description ">
+                            <i class="fas fa-envelope me-1"></i>
+                            {{ person.email || person.description }}
                         </p>
                     </div>
                     <div class="d-flex gap-2" *ngIf="isAdmin">
