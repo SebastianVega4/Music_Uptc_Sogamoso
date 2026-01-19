@@ -68,7 +68,8 @@ export class BuitresService {
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      // Searching in description as a fallback since email column might not be visible to API yet
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     return from(query).pipe(map(res => res.data || []));

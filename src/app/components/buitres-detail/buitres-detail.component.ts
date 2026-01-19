@@ -166,6 +166,24 @@ export class BuitresDetailComponent implements OnInit {
     });
   }
 
+  getEmail(p: BuitrePerson | null): string {
+    if (!p) return '';
+    let email = p.email || '';
+    if (!email && p.description && p.description.includes('@')) {
+      email = p.description;
+    }
+    return email.replace('Email: ', '').trim();
+  }
+
+  shouldShowDescription(p: BuitrePerson | null): boolean {
+    if (!p || !p.description) return false;
+    const email = this.getEmail(p);
+    const cleanDesc = p.description.replace('Email: ', '').trim();
+    // Hide if description is essentially just the email
+    if (cleanDesc === email) return false;
+    return true;
+  }
+
   // --- Admin Methods ---
 
   startEditing() {
