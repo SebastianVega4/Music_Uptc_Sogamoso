@@ -115,6 +115,27 @@
 .tag-badge:hover { background: #505050; }
 .tag-badge i { color: #1DB954; }
 
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); color: #e91e63; }
+  100% { transform: scale(1); color: #e91e63; }
+}
+
+.liked-flash {
+  i {
+    animation: heart-pop 0.6s ease-out;
+    color: #e91e63 !important;
+  }
+  color: #e91e63 !important;
+}
+
+.comment-footer {
+  .cursor-pointer:hover {
+    color: #e91e63 !important;
+    i { color: #e91e63 !important; }
+  }
+}
+
 .comment-card {
   background: #282828;
   border-radius: 10px;

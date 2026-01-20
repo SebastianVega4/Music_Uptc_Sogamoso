@@ -127,7 +127,9 @@
                         </div>
                         <p class="comment-body">{{ comment.content }}</p>
                         <div class="comment-footer">
-                            <span class="text-muted cursor-pointer" (click)="likeComment(comment.id)" title="Dar like">
+                            <span class="text-muted cursor-pointer d-inline-flex align-items-center" 
+                                  [class.liked-flash]="flashCommentLikes[comment.id]"
+                                  (click)="likeComment(comment.id)" title="Dar like">
                                 <i class="fas fa-heart me-1"></i> {{ comment.likes_count }}
                             </span>
                         </div>

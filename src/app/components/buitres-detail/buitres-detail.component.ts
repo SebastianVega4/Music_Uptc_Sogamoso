@@ -30,6 +30,7 @@ export class BuitresDetailComponent implements OnInit {
   flashDislikes: boolean = false;
   flashTags: boolean = false;
   flashComments: boolean = false;
+  flashCommentLikes: { [key: string]: boolean } = {};
   
   // Admin Edit State
   isEditing: boolean = false;
@@ -258,12 +259,12 @@ export class BuitresDetailComponent implements OnInit {
         
         let message = '';
         if (action === 'added') {
-          message = `✅ Apoyo agregado a "${content}" (${newCount})`;
+          message = `Apoyo agregado a "${content} " ${newCount}`;
         } else if (action === 'removed') {
           if (response.deleted) {
-            message = `❌ Etiqueta "${content}" eliminada (llegó a 0 apoyos)`;
+            message = `Etiqueta "${content}" eliminada (llegó a 0 apoyos)`;
           } else {
-            message = `➖ Apoyo removido de "${content}" (${newCount})`;
+            message = `Apoyo removido de "${content}" (${newCount})`;
           }
         }
         
@@ -367,6 +368,10 @@ export class BuitresDetailComponent implements OnInit {
     if (!this.person) return;
     this.buitresService.likeComment(commentId, this.fingerprint).subscribe({
       next: (response: any) => {
+        // Feedback visual
+        this.flashCommentLikes[commentId] = true;
+        setTimeout(() => this.flashCommentLikes[commentId] = false, 1000);
+
         // Actualizar localmente inmediatamente para feedback visual
         const comment = this.comments.find(c => c.id === commentId);
         if (comment && typeof response.new_likes === 'number') {

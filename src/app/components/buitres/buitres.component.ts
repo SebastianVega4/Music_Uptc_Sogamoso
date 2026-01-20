@@ -253,10 +253,14 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   get filteredPeople() {
     if (!this.isMerging) return this.people;
     if (!this.mergeQuery) return this.people;
-    return this.people.filter(p => 
-      p.name.toLowerCase().includes(this.mergeQuery.toLowerCase()) && 
-      p.id !== this.mergeSelected?.id
-    );
+    
+    const queryWords = this.mergeQuery.toLowerCase().split(' ').filter(w => w.length > 0);
+    
+    return this.people.filter(p => {
+      const nameLower = p.name.toLowerCase();
+      const matchesAll = queryWords.every(word => nameLower.includes(word));
+      return matchesAll && p.id !== this.mergeSelected?.id;
+    });
   }
 
   // --- Admin Merging Logic ---
@@ -311,5 +315,22 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  formatTimeAgo(dateString?: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return 'hace un momento';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `hace ${hours} h`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `hace ${days} d`;
+    
+    return date.toLocaleDateString();
   }
 }

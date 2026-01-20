@@ -45,9 +45,12 @@
                 <div class="search-suggestions" *ngIf="searchQuery.length >= 2">
                     <div *ngFor="let suggestion of suggestions" class="suggestion-item"
                         (click)="selectSuggestion(suggestion)">
-                        <div class="suggestion-avatar">
-                            <i *ngIf="suggestion.gender === 'male'" class="fas fa-user-tie male"></i>
-                            <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
+                        <div class="suggestion-avatar overflow-hidden d-flex align-items-center justify-content-center">
+                            <img *ngIf="suggestion.image_url" [src]="suggestion.image_url" alt="Profile" class="w-100 h-100 object-fit-cover">
+                            <ng-container *ngIf="!suggestion.image_url">
+                                <i *ngIf="suggestion.gender === 'male'" class="fas fa-user-tie male"></i>
+                                <i *ngIf="suggestion.gender === 'female'" class="fas fa-user-graduate female"></i>
+                            </ng-container>
                         </div>
                         <div class="suggestion-info">
                             <span class="suggestion-name d-block">{{ suggestion.name }}</span>
@@ -117,12 +120,19 @@
                 [class.selecting-merge]="isMerging && mergeSelected?.id !== person.id"
                 [class.animate-flash]="flashStates[person.id]"
                 (click)="isMerging ? selectForMerge(person) : (router.navigate(['/buitres/person', person.id]))">
-                <div class="person-img d-flex align-items-center justify-content-center">
-                    <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
-                    <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                <div class="person-img d-flex align-items-center justify-content-center overflow-hidden">
+                    <img *ngIf="person.image_url" [src]="person.image_url" alt="Profile" class="w-100 h-100 object-fit-cover">
+                    <ng-container *ngIf="!person.image_url">
+                        <i *ngIf="person.gender === 'male'" class="fas fa-user-tie gender-avatar male"></i>
+                        <i *ngIf="person.gender === 'female'" class="fas fa-user-graduate gender-avatar female"></i>
+                    </ng-container>
                 </div>
                 <div class="person-info">
                     <h3>{{ person.name }}</h3>
+                    <div class="activity-date small text-muted mb-2" *ngIf="person.updated_at || person.created_at">
+                        <i class="fas fa-history me-1"></i>
+                        Actividad {{ formatTimeAgo(person.updated_at || person.created_at) }}
+                    </div>
                     <div class="stats mt-2">
                         <span><i class="fas fa-thumbs-up me-1"></i> {{ person.likes_count }}</span>
                         <span class="ms-3"><i class="fas fa-thumbs-down me-1"></i> {{ person.dislikes_count }}</span>

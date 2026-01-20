@@ -16,6 +16,7 @@ export interface BuitrePerson {
   is_merged: boolean;
   merged_into?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface BuitreDetail {
