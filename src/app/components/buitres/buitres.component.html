@@ -27,7 +27,22 @@
                 discriminación, fines comerciales o cualquier actividad que vulnere la privacidad de los integrantes de
                 la universidad.</p>
         </div>
-        <div id="google-btn-container" class="mb-3" style="min-height: 40px;"></div>
+
+        <div class="data-acceptance-container mb-4 text-start p-3">
+            <div class="form-check d-flex align-items-center gap-3">
+                <input class="form-check-input flex-shrink-0" type="checkbox" id="dataTreatment"
+                    [(ngModel)]="dataAccepted" style="width: 20px; height: 20px; cursor: pointer;">
+                <label class="form-check-label small mb-0 cursor-pointer" for="dataTreatment">
+                    Acepto el tratamiento de mis datos personales según la <b>Ley 1581 de 2012 de Colombia</b> y la
+                    política de privacidad institucional.
+                </label>
+            </div>
+        </div>
+
+        <div class="google-btn-wrapper" [style.pointer-events]="dataAccepted ? 'auto' : 'none'"
+            [style.opacity]="dataAccepted ? '1' : '0.5'" [title]="!dataAccepted ? 'Debes aceptar el tratamiento de datos para continuar' : ''">
+            <div id="google-btn-container" class="mb-3" style="min-height: 40px;"></div>
+        </div>
         <p class="mt-3 small text-warning">
             <i class="fas fa-shield-alt me-1"></i> Solo se permiten correos @uptc.edu.co
         </p>
@@ -39,10 +54,14 @@
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
-                    placeholder="Digite Nombre o nombre.apellido ..." class="search-input" autocomplete="off">
+                    (keyup.enter)="search()"
+                    placeholder="Digite Nombre o etiquetas ..." class="search-input" autocomplete="off">
+                <button class="search-btn-icon" (click)="search()" title="Buscar">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
 
                 <!-- Suggestions Dropdown -->
-                <div class="search-suggestions" *ngIf="searchQuery.length >= 2">
+                <div class="search-suggestions" *ngIf="searchQuery.length >= 2 && suggestions.length >= 0">
                     <div *ngFor="let suggestion of suggestions" class="suggestion-item"
                         (click)="selectSuggestion(suggestion)">
                         <div class="suggestion-avatar overflow-hidden d-flex align-items-center justify-content-center">

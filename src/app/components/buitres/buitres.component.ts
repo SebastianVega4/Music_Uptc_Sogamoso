@@ -44,6 +44,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isLoggedIn: boolean = false;
   loginError: string = '';
+  dataAccepted: boolean = false;
 
   constructor(
     private buitresService: BuitresService,
@@ -131,6 +132,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.isLoggedIn = false;
     this.isAdmin = false;
+    this.dataAccepted = false;
     this.people = [];
     // Reinicializar botón si decide volver a loguear
     setTimeout(() => this.initGoogleAuth(), 100);
@@ -153,9 +155,28 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchQuery = '';
   }
 
-  loadPeople() {
+  search() {
+    if (this.searchQuery.trim().length === 0) {
+      this.loadPeople();
+      return;
+    }
+    
     this.loading = true;
-    this.buitresService.getPeople('', this.currentSort).subscribe(results => {
+    this.suggestions = []; // Hide suggestions when searching
+    this.buitresService.getPeople(this.searchQuery, this.currentSort).subscribe({
+      next: (results) => {
+        this.people = results;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  loadPeople(search: string = '') {
+    this.loading = true;
+    this.buitresService.getPeople(search, this.currentSort).subscribe(results => {
       this.people = results;
       this.loading = false;
     });

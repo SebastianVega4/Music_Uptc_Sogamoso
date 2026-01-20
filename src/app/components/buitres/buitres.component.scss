@@ -68,7 +68,7 @@
 }
 .search-input {
   width: 100%;
-  padding: 15px 15px 15px 50px;
+  padding: 15px 50px 15px 50px;
   border-radius: 30px;
   background: #282828;
   border: 1px solid #404040;
@@ -76,6 +76,35 @@
   font-size: 1.1rem;
   transition: all 0.3s ease;
 }
+
+.search-btn-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1DB954;
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+
+  &:hover {
+    background: #1ed760;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+}
+
 
 .stats-badge {
   display: inline-block;
@@ -279,4 +308,59 @@
   background: rgba(29, 185, 84, 0.1);
   border: 1px solid #1DB954;
   border-radius: 12px;
+}
+
+.data-acceptance-container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+    border-radius: 12px;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .form-check-input {
+        background-color: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        
+        &:checked {
+            background-color: #1DB954;
+            border-color: #1DB954;
+            box-shadow: 0 0 10px rgba(29, 185, 84, 0.4);
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 0.25rem rgba(29, 185, 84, 0.25);
+            border-color: #1DB954;
+        }
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+}
+
+.google-btn-wrapper {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    
+    &::after {
+        content: attr(title);
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.75rem;
+        color: #ff4d4d;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    &[style*="pointer-events: none"]:hover::after {
+        opacity: 1;
+    }
 }
