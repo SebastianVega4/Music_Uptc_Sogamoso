@@ -122,6 +122,12 @@ export class BuitresDetailComponent implements OnInit {
       this.modalService.alert('Debes iniciar sesión para dejar notas.', 'Acceso Restringido', 'warning');
       return;
     }
+    
+    if (this.isOwner) {
+      this.modalService.alert('No puedes dejarte notas a ti mismo.', 'Acción no permitida', 'warning');
+      return;
+    }
+
     this.showSongModal = true;
     this.activeNoteTab = 'song';
     this.songSearchQuery = '';

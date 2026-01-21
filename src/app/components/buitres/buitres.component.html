@@ -54,7 +54,7 @@
 
     <ng-container *ngIf="isLoggedIn">
 
-        <div class="search-section mb-4">
+        <div class="search-section mb-2">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)"
@@ -98,12 +98,20 @@
             </div>
         </div>
 
-        <div class="filters-section d-flex justify-content-center gap-2 mb-5" *ngIf="!isMerging">
+        <!-- Pequeño aviso difuminado -->
+        <div class="text-center mb-4 opacity-50">
+            <small class="text-white-50"><i class="fas fa-info-circle me-1"></i> Todo usuario en su perfil puede eliminar las notas, tags y comentarios.</small>
+        </div>
+
+        <div class="filters-section d-flex justify-content-center flex-wrap gap-2 mb-5" *ngIf="!isMerging">
             <button class="filter-btn" [class.active]="currentSort === 'tags'" (click)="setSort('tags')">
                 <i class="fas fa-tags me-1"></i> Más Etiquetas
             </button>
             <button class="filter-btn" [class.active]="currentSort === 'comments'" (click)="setSort('comments')">
                 <i class="fas fa-comments me-1"></i> Más Comentados
+            </button>
+            <button class="filter-btn" [class.active]="currentSort === 'notes'" (click)="setSort('notes')">
+                <i class="fas fa-music me-1"></i> Más Notas
             </button>
             <button class="filter-btn" [class.active]="currentSort === 'recent'" (click)="setSort('recent')">
                 <i class="fas fa-clock me-1"></i> Recientes

@@ -13,6 +13,7 @@ export interface BuitrePerson {
   gender: 'male' | 'female';
   likes_count: number;
   dislikes_count: number;
+  deletions_count?: number; // Added field
   is_merged: boolean;
   merged_into?: string;
   created_at: string;
@@ -105,7 +106,7 @@ export class BuitresService {
 
   // --- People Operations ---
 
-  getPeople(search: string = '', sortBy: 'likes' | 'comments' | 'tags' | 'recent' = 'recent'): Observable<BuitrePerson[]> {
+  getPeople(search: string = '', sortBy: 'likes' | 'comments' | 'tags' | 'recent' | 'notes' = 'recent'): Observable<BuitrePerson[]> {
     let params = new HttpParams()
       .set('search', search)
       .set('sortBy', sortBy);

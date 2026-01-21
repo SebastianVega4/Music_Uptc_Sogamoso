@@ -23,7 +23,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
   loading: boolean = false;
   showCreateForm: boolean = false;
   totalPeople: number = 0;
-  currentSort: 'recent' | 'likes' | 'comments' | 'tags' = 'recent';
+  currentSort: 'recent' | 'likes' | 'comments' | 'tags' | 'notes' = 'recent';
   
   // Real-time flash states
   flashStates: { [key: string]: boolean } = {};
@@ -144,7 +144,7 @@ export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  setSort(sort: 'recent' | 'likes' | 'comments' | 'tags') {
+  setSort(sort: 'recent' | 'likes' | 'comments' | 'tags' | 'notes') {
     this.currentSort = sort;
     this.loadPeople();
   }

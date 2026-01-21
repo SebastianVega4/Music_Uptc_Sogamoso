@@ -53,9 +53,14 @@
 
     <!-- Song Notes Section (Instagram Style) -->
     <div class="song-notes-container mb-4" *ngIf="songNotes">
+        
+        <div *ngIf="isOwner" class="alert alert-warning mb-3 py-2">
+            <i class="fas fa-exclamation-circle me-2"></i> No puedes dejarte notas a ti mismo.
+        </div>
+
         <div class="notes-scroll">
             <!-- Add Note Button -->
-            <div class="note-item add-note" (click)="openSongModal()">
+            <div class="note-item add-note" [class.opacity-50]="isOwner" [style.cursor]="isOwner ? 'not-allowed' : 'pointer'" (click)="openSongModal()">
                 <div class="note-circle">
                     <i class="fas fa-plus"></i>
                 </div>
@@ -64,20 +69,20 @@
     
             <!-- Notes List -->
             <div *ngFor="let note of songNotes" class="note-item"
-                (click)="note.track_data?.type === 'text' ? null : playPreview(note.track_data?.preview_url)">
+                (click)="note.track_data.type === 'text' ? null : playPreview(note.track_data.preview_url)">
     
                 <!-- Song Note -->
-                <div *ngIf="!note.track_data?.type || note.track_data?.type === 'song'" class="note-circle"
-                    [class.playing]="isPlaying(note.track_data?.preview_url)">
-                    <img [src]="note.track_data?.image" [alt]="note.track_data?.name">
+                <div *ngIf="!note.track_data.type || note.track_data.type === 'song'" class="note-circle"
+                    [class.playing]="isPlaying(note.track_data.preview_url)">
+                    <img [src]="note.track_data.image" [alt]="note.track_data.name">
                     <div class="note-overlay">
-                        <i class="fas" [class.fa-pause]="isPlaying(note.track_data?.preview_url)"
-                            [class.fa-music]="!isPlaying(note.track_data?.preview_url)"></i>
+                        <i class="fas" [class.fa-pause]="isPlaying(note.track_data.preview_url)"
+                            [class.fa-music]="!isPlaying(note.track_data.preview_url)"></i>
                     </div>
                 </div>
     
                 <!-- Text Note -->
-                <div *ngIf="note.track_data?.type === 'text'" class="note-circle text-note"
+                <div *ngIf="note.track_data.type === 'text'" class="note-circle text-note"
                     [style.background]="note.track_data.bg_color || '#333'">
                     <i class="fas fa-sticky-note"></i>
                 </div>
@@ -94,7 +99,7 @@
                 </div>
     
                 <span class="note-label text-truncate" style="max-width: 80px;">
-                    {{ note.track_data?.type === 'text' ? 'Nota' : note.track_data.name }}
+                    {{ note.track_data.type === 'text' ? 'Nota' : note.track_data.name }}
                 </span>
             </div>
         </div>
@@ -126,8 +131,14 @@
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <small class="text-muted mt-2 d-block">Click en los tags para incrementar el numero</small>
-                    <small class="text-muted mt-2 d-block">El dueño del perfil puede eliminar los tags</small>
+                    <small class="text-muted mt-2 d-block">Haz click en los tags para incrementar el numero</small>
+                </div>
+                
+                <div class="deletion-stats mt-3 pt-3 border-top border-secondary text-center" *ngIf="(person.deletions_count ?? 0) > 0">
+                    <small class="fw-bold">
+                        <i class="fas fa-trash-alt me-1"></i> 
+                        Este usuario ha eliminado {{ person.deletions_count }} {{ person.deletions_count === 1 ? 'elemento' : 'elementos' }}
+                    </small>
                 </div>
             </div>
         </div>
