@@ -191,6 +191,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     if (this.isChatOpen) {
       this.unreadMessages = 0;
       this.chatService.loadStats(); // Refresh stats on open
+      this.chatService.refreshOnlineUsers().subscribe(); // Refresh online users on open
       
       // Forzar actualización de mensajes al abrir el chat
       setTimeout(() => {

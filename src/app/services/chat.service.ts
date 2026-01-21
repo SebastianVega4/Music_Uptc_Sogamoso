@@ -82,7 +82,8 @@ export class ChatService implements OnDestroy {
 
     this.subscriptions.push(
       this.setupPeriodicStats(),
-      this.setupOnlineUsersCheck()
+      this.setupOnlineUsersCheck(),
+      this.setupHeartbeat()
     );
   }
 
@@ -165,25 +166,57 @@ export class ChatService implements OnDestroy {
   }
 
   private setupPeriodicStats(): Subscription {
-    // Actualizar stats cada 30 segundos
+    // Actualizar stats cada 60 segundos
     return new Subscription(() => {
       const interval = setInterval(() => {
         this.loadStatsObservable().subscribe();
-      }, 30000);
+      }, 60000);
 
       return () => clearInterval(interval);
     });
   }
 
   private setupOnlineUsersCheck(): Subscription {
-    // Verificar usuarios online cada 15 segundos
+    // Verificar usuarios online cada 60 segundos
     return new Subscription(() => {
+      // Check inicial
+      this.refreshOnlineUsers().subscribe();
+      
       const interval = setInterval(() => {
-        this.checkOnlineUsers().subscribe();
-      }, 15000);
+        this.refreshOnlineUsers().subscribe();
+      }, 60000);
 
       return () => clearInterval(interval);
     });
+  }
+
+  private setupHeartbeat(): Subscription {
+    // Enviar latido cada 60 segundos
+    return new Subscription(() => {
+        // Enviar inicial
+        this.sendHeartbeat().subscribe();
+        
+        const interval = setInterval(() => {
+            this.sendHeartbeat().subscribe();
+        }, 60000);
+
+        return () => clearInterval(interval);
+    });
+  }
+
+  private sendHeartbeat(): Observable<any> {
+    const token = this.getAuthToken();
+    const headers: {[key: string]: string} = {
+      'Content-Type': 'application/json'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    return this.http.post(`${this.apiUrl}/api/chat/heartbeat`, {
+      user_id: this.userId,
+      room: this.currentRoom
+    }, { headers }).pipe(
+      catchError(() => of(null))
+    );
   }
 
   private loadUserFromStorage(): void {
@@ -214,7 +247,7 @@ export class ChatService implements OnDestroy {
     );
   }
 
-  private checkOnlineUsers(): Observable<any> {
+  public refreshOnlineUsers(): Observable<any> {
     return this.http.get<{ online_users: number }>(`${this.apiUrl}/api/chat/online-users`).pipe(
       catchError(error => of({ online_users: 1 })),
       tap(response => this.onlineUsersSubject.next(response.online_users))
