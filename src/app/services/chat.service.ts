@@ -155,8 +155,8 @@ export class ChatService implements OnDestroy {
   }
 
   private getAuthToken(): string | null {
-    // Asumiendo que guardas el token en localStorage o en un servicio de autenticación
-    return localStorage.getItem('auth_token');
+    // Buscar primero el token de admin, luego el genérico
+    return localStorage.getItem('adminToken') || localStorage.getItem('auth_token');
   }
 
   private handleSystemMessage(payload: RealtimePostgresChangesPayload<any>): void {
@@ -262,7 +262,18 @@ export class ChatService implements OnDestroy {
   }
 
   isAdmin(): boolean {
-    return !!this.getAuthToken();
+    const token = this.getAuthToken();
+    if (!token) return false;
+
+    const userData = localStorage.getItem('adminUser');
+    if (!userData) return !!token; 
+
+    try {
+      const user = JSON.parse(userData);
+      return user.role === 'admin';
+    } catch (e) {
+      return !!token;
+    }
   }
 
   setTyping(isTyping: boolean): void {
@@ -302,6 +313,8 @@ export class ChatService implements OnDestroy {
 
   validateUsername(username: string): Observable<{ valid: boolean, error?: string, is_admin?: boolean }> {
     const token = this.getAuthToken();
+    console.log('[ChatService] Validating username. Token exists:', !!token);
+    
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json'
     };

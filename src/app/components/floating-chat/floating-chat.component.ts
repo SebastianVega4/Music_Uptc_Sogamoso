@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService, ChatMessage, ChatStats } from '../../services/chat.service';
-import { Observable, Subscription, of } from 'rxjs';
+import { Observable, Subscription, of, BehaviorSubject } from 'rxjs';
 import { take, tap, map } from 'rxjs/operators';
 
 interface MessageGroup {
@@ -47,7 +47,8 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
   public connected$: Observable<boolean>;
   public stats$: Observable<ChatStats | null>;
   public currentUser$: Observable<string>;
-  public isAdmin$: Observable<boolean>;
+  private isAdminSubject = new BehaviorSubject<boolean>(false);
+  public isAdmin$ = this.isAdminSubject.asObservable();
 
   private subscriptions = new Subscription();
   private typingTimeout: any;
@@ -66,7 +67,7 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
     this.connected$ = this.chatService.connected$;
     this.stats$ = this.chatService.stats$;
     this.currentUser$ = of(this.chatService.getUser());
-    this.isAdmin$ = of(this.chatService.isAdmin());
+    this.isAdminSubject.next(this.chatService.isAdmin());
     
     // Transformar mensajes planos a agrupados por fecha
     this.groupedMessages$ = this.messages$.pipe(
@@ -269,6 +270,9 @@ export class FloatingChatComponent implements OnInit, OnDestroy {
             // Mostrar mensaje de éxito si es admin
             if (validation.is_admin) {
               console.log('✅ Modo administrador activado para el chat');
+              this.isAdminSubject.next(true);
+            } else {
+              this.isAdminSubject.next(this.chatService.isAdmin());
             }
           } else {
             this.usernameError = validation.error || 'Nombre no válido';
