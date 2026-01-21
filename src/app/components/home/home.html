@@ -1,5 +1,20 @@
 <div class="home-container">
 
+  <!-- Banner de Redirección a Reglas -->
+  <div class="rules-banner mb-4 fade-in">
+    <a routerLink="/about" class="rules-card">
+      <div class="rules-content">
+        <div class="rules-icon">
+          <i class="fas fa-book-open"></i>
+        </div>
+        <div class="rules-text">
+          <span class="rules-title">Reglas y funcionamiento de la seccion de Buitres:</span>
+          <span class="rules-action">Ver Reglamento <i class="fas fa-arrow-right ms-1"></i></span>
+        </div>
+      </div>
+    </a>
+  </div>
+
   <div class="alert alert-warning alert-dismissible fade show mb-4 animate-fade-in" role="alert" *ngIf="showLoginAlert">
     <div class="d-flex align-items-center">
       <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>

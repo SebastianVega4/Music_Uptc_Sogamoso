@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SearchComponent } from "../search/search";
 import { VotingListComponent } from "../voting-list/voting-list";
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { SpotifyNowPlayingService } from '../../services/spotify-now-playing.service';
 import { Subscription } from 'rxjs';
 import { VotingService } from '../../services/voting';
@@ -15,7 +15,7 @@ import { MetaService } from '../../services/meta.service';
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.scss'],
-  imports: [CommonModule, SearchComponent, VotingListComponent, VotingComponent]
+  imports: [CommonModule, SearchComponent, VotingListComponent, VotingComponent, RouterModule]
 })
 export class HomeComponent implements OnInit, OnDestroy {
   adminCurrentlyPlaying: any = null;
