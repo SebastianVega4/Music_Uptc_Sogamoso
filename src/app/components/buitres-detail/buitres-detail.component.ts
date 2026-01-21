@@ -2,9 +2,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment } from '../../services/buitres.service';
+import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment, BuitreSongNote } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
 import { ModalService } from '../../services/modal.service';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-buitres-detail',
@@ -17,6 +19,7 @@ export class BuitresDetailComponent implements OnInit {
   person: BuitrePerson | null = null;
   details: BuitreDetail[] = [];
   comments: BuitreComment[] = [];
+  songNotes: BuitreSongNote[] = [];
   
   newComment: string = '';
   newDetailContent: string = '';
@@ -24,6 +27,19 @@ export class BuitresDetailComponent implements OnInit {
   fingerprint: string = '';
   isAdmin: boolean = false;
   isOwner: boolean = false;
+
+  // Song Notes State
+  showSongModal: boolean = false;
+  activeNoteTab: 'song' | 'text' = 'song';
+  songSearchQuery: string = '';
+  songSearchResults: any[] = [];
+  isSearchingSongs: boolean = false;
+  selectedSong: any = null;
+  newSongDedication: string = '';
+  newTextNoteContent: string = '';
+  currentPreviewAudio: HTMLAudioElement | null = null;
+  currentPreviewUrl: string | null = null;
+  private searchSubject = new Subject<string>();
   
   // Real-time flash states for visual feedback
   flashLikes: boolean = false;
@@ -49,7 +65,32 @@ export class BuitresDetailComponent implements OnInit {
     private buitresService: BuitresService,
     private authService: AuthService,
     private modalService: ModalService
-  ) {}
+  ) {
+    // Setup debounced search
+    this.subscriptions.push(
+      this.searchSubject.pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(query => {
+          this.isSearchingSongs = true;
+          if (!query.trim()) {
+            this.isSearchingSongs = false;
+            return [];
+          }
+          return this.buitresService.searchSongs(query);
+        })
+      ).subscribe({
+        next: (results) => {
+          this.songSearchResults = results;
+          this.isSearchingSongs = false;
+        },
+        error: () => {
+          this.isSearchingSongs = false;
+          this.songSearchResults = [];
+        }
+      })
+    );
+  }
 
   ngOnInit() {
     this.isAdmin = this.authService.isRoleAdmin();
@@ -64,7 +105,134 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   ngOnDestroy() {
+    this.stopPreview();
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+  
+  // --- Song Notes Methods ---
+
+  loadSongNotes(id: string) {
+    this.buitresService.getSongNotes(id).subscribe(notes => {
+      this.songNotes = notes;
+    });
+  }
+
+  openSongModal() {
+    if (!this.authService.isBuitresLoggedIn()) {
+      this.modalService.alert('Debes iniciar sesión para dejar notas.', 'Acceso Restringido', 'warning');
+      return;
+    }
+    this.showSongModal = true;
+    this.activeNoteTab = 'song';
+    this.songSearchQuery = '';
+    this.songSearchResults = [];
+    this.selectedSong = null;
+    this.newSongDedication = '';
+    this.newTextNoteContent = '';
+  }
+
+  closeSongModal() {
+    this.showSongModal = false;
+    this.stopPreview();
+  }
+  
+  switchNoteTab(tab: 'song' | 'text') {
+      this.activeNoteTab = tab;
+  }
+
+  onSongSearchInput(query: string) {
+    this.searchSubject.next(query);
+  }
+
+  selectSong(song: any) {
+    this.selectedSong = song;
+  }
+
+  postNote() {
+    if (!this.person) return;
+    
+    if (this.activeNoteTab === 'song') {
+        if (!this.selectedSong) return;
+        
+        this.buitresService.addSongNote(this.person.id, this.selectedSong, this.newSongDedication, 'song').subscribe({
+          next: (note) => {
+            this.songNotes.unshift(note);
+            this.closeSongModal();
+            this.modalService.alert('Canción dedicada correctamente.', '¡Éxito!', 'success');
+          },
+          error: (err) => {
+            console.error('Error posting song note:', err);
+            this.modalService.alert('No se pudo dedicar la canción.', 'Error', 'danger');
+          }
+        });
+    } else {
+        // Text Note
+        if (!this.newTextNoteContent.trim()) return;
+        
+        this.buitresService.addSongNote(this.person.id, null, this.newTextNoteContent, 'text').subscribe({
+          next: (note) => {
+            this.songNotes.unshift(note);
+            this.closeSongModal();
+            this.modalService.alert('Nota publicada correctamente.', '¡Éxito!', 'success');
+          },
+          error: (err) => {
+            console.error('Error posting text note:', err);
+            this.modalService.alert('No se pudo publicar la nota.', 'Error', 'danger');
+          }
+        });
+    }
+  }
+  
+  deleteNote(noteId: string) {
+      if (!confirm('¿Estás seguro de eliminar esta nota?')) return;
+      
+      this.buitresService.deleteSongNote(noteId).subscribe({
+          next: () => {
+              this.songNotes = this.songNotes.filter(n => n.id !== noteId);
+              this.modalService.alert('Nota eliminada.', 'Éxito', 'success');
+          },
+          error: (err) => {
+              this.modalService.alert('No tienes permiso para eliminar esta nota.', 'Error', 'danger');
+          }
+      });
+  }
+
+  playPreview(url: string | null | undefined) {
+    if (!url) return;
+    
+    if (this.currentPreviewUrl === url && this.currentPreviewAudio) {
+      if (this.currentPreviewAudio.paused) {
+        this.currentPreviewAudio.play();
+      } else {
+        this.currentPreviewAudio.pause();
+      }
+      return;
+    }
+
+    this.stopPreview();
+    
+    this.currentPreviewUrl = url;
+    this.currentPreviewAudio = new Audio(url);
+    this.currentPreviewAudio.volume = 0.5;
+    this.currentPreviewAudio.play().catch(e => console.error('Error playing audio:', e));
+    
+    this.currentPreviewAudio.onended = () => {
+      this.currentPreviewUrl = null;
+      this.currentPreviewAudio = null;
+    };
+  }
+  
+  stopPreview() {
+    if (this.currentPreviewAudio) {
+      this.currentPreviewAudio.pause();
+      this.currentPreviewAudio = null;
+    }
+    this.currentPreviewUrl = null;
+  }
+  
+  isPlaying(url: string | null | undefined): boolean {
+    if (!url) return false;
+    return this.currentPreviewUrl === url && !!this.currentPreviewAudio && !this.currentPreviewAudio.paused;
   }
 
   private getFingerprint(): string {
@@ -138,6 +306,7 @@ export class BuitresDetailComponent implements OnInit {
     });
     this.loadDetails(id);
     this.loadComments(id);
+    this.loadSongNotes(id);
   }
 
   checkOwnership() {

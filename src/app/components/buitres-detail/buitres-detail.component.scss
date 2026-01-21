@@ -177,3 +177,254 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+// --- Song Notes Styles ---
+
+.song-notes-container {
+  overflow-x: auto;
+  padding: 10px 0;
+  // Hide scrollbar but keep functionality
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.notes-scroll {
+  display: flex;
+  gap: 20px;
+  padding: 0 10px;
+  min-width: min-content;
+}
+
+.note-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  width: 80px;
+  
+  // Dedication Cloud
+  .note-cloud {
+    position: absolute;
+    top: -5px;
+    left: 70%;
+    background: white;
+    color: black;
+    padding: 6px 12px;
+    border-radius: 15px;
+    border-bottom-left-radius: 2px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 10;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    // Triangle
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 8px solid white;
+      border-top: 8px solid transparent;
+      transform: rotate(90deg);
+    }
+  }
+
+  &.add-note {
+    .note-circle {
+      border: 2px dashed #666;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i { font-size: 1.5rem; color: #888; }
+    }
+    &:hover .note-circle {
+      border-color: #1DB954;
+      i { color: #1DB954; }
+    }
+  }
+}
+
+.note-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  padding: 3px; // Space for border
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  position: relative;
+  transition: transform 0.2s;
+  
+  &.playing {
+    animation: pulse-border 1.5s infinite;
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #181818; // Inner border matching bg
+  }
+  
+  .note-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    
+    i { color: white; font-size: 1.2rem; }
+  }
+  
+  &:hover {
+    transform: scale(1.05);
+    .note-overlay { opacity: 1; }
+  }
+}
+
+.note-label {
+  font-size: 0.75rem;
+  color: #ccc;
+  text-align: center;
+  max-width: 100%;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(220, 39, 67, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(220, 39, 67, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 39, 67, 0); }
+}
+
+// --- Song Search Modal ---
+.song-modal {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-box {
+  position: relative;
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+  }
+}
+
+.search-results {
+  flex-grow: 1;
+  overflow-y: auto;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #333;
+  }
+  
+  .song-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  .song-info {
+    flex-grow: 1;
+    min-width: 0; // For text-truncate
+    
+    .song-name {
+      color: white;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .song-artist {
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// --- New Styles for Text Notes & Deletion ---
+
+.note-item {
+  // Existing styles...
+  
+  // Hover effect to show delete button
+  &:hover .delete-note-btn {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.text-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #333; // Dark icon on light bg
+  
+  i { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
+}
+
+.delete-note-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 20;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.modal-tabs {
+  button {
+    transition: all 0.2s;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+}

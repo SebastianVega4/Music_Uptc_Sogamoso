@@ -51,6 +51,55 @@
         </div>
     </div>
 
+    <!-- Song Notes Section (Instagram Style) -->
+    <div class="song-notes-container mb-4" *ngIf="songNotes">
+        <div class="notes-scroll">
+            <!-- Add Note Button -->
+            <div class="note-item add-note" (click)="openSongModal()">
+                <div class="note-circle">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <span class="note-label">Tu nota</span>
+            </div>
+    
+            <!-- Notes List -->
+            <div *ngFor="let note of songNotes" class="note-item"
+                (click)="note.track_data?.type === 'text' ? null : playPreview(note.track_data?.preview_url)">
+    
+                <!-- Song Note -->
+                <div *ngIf="!note.track_data?.type || note.track_data?.type === 'song'" class="note-circle"
+                    [class.playing]="isPlaying(note.track_data?.preview_url)">
+                    <img [src]="note.track_data?.image" [alt]="note.track_data?.name">
+                    <div class="note-overlay">
+                        <i class="fas" [class.fa-pause]="isPlaying(note.track_data?.preview_url)"
+                            [class.fa-music]="!isPlaying(note.track_data?.preview_url)"></i>
+                    </div>
+                </div>
+    
+                <!-- Text Note -->
+                <div *ngIf="note.track_data?.type === 'text'" class="note-circle text-note"
+                    [style.background]="note.track_data.bg_color || '#333'">
+                    <i class="fas fa-sticky-note"></i>
+                </div>
+    
+                <!-- Delete Button (Admin/Owner) -->
+                <div class="delete-note-btn" *ngIf="isAdmin || isOwner"
+                    (click)="$event.stopPropagation(); deleteNote(note.id)">
+                    <i class="fas fa-times"></i>
+                </div>
+    
+                <!-- Dedication/Text Cloud -->
+                <div class="note-cloud" *ngIf="note.dedication">
+                    <span class="note-text">{{ note.dedication }}</span>
+                </div>
+    
+                <span class="note-label text-truncate" style="max-width: 80px;">
+                    {{ note.track_data?.type === 'text' ? 'Nota' : note.track_data.name }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
     <div class="row">
         <!-- Details Section (Crowdsourced Tags) -->
         <div class="col-md-4">
@@ -136,6 +185,89 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Song/Note Modal -->
+<div class="modal-overlay" *ngIf="showSongModal" (click)="closeSongModal()">
+    <div class="modal-content song-modal" (click)="$event.stopPropagation()">
+        <h3 class="text-white mb-3">Dejar una Nota (7 días)</h3>
+        
+        <!-- Tabs -->
+        <div class="modal-tabs d-flex gap-2 mb-3">
+            <button class="btn btn-sm flex-grow-1" [class.btn-primary]="activeNoteTab === 'song'" [class.btn-outline-secondary]="activeNoteTab !== 'song'" (click)="switchNoteTab('song')">
+                <i class="fas fa-music me-1"></i> Canción
+            </button>
+            <button class="btn btn-sm flex-grow-1" [class.btn-primary]="activeNoteTab === 'text'" [class.btn-outline-secondary]="activeNoteTab !== 'text'" (click)="switchNoteTab('text')">
+                <i class="fas fa-comment-alt me-1"></i> Texto
+            </button>
+        </div>
+
+        <!-- SONG TAB CONTENT -->
+        <ng-container *ngIf="activeNoteTab === 'song'">
+            <div class="search-box mb-3">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" [(ngModel)]="songSearchQuery" (input)="onSongSearchInput(songSearchQuery)"
+                    class="form-control form-dark ps-5" placeholder="Buscar en Spotify...">
+            </div>
+
+            <div class="search-results custom-scroll" *ngIf="!selectedSong">
+                <div *ngIf="isSearchingSongs" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Buscando...</span>
+                    </div>
+                </div>
+                
+                <div *ngFor="let song of songSearchResults" class="song-item" (click)="selectSong(song)">
+                    <img [src]="song.image" alt="Album" class="song-thumb">
+                    <div class="song-info">
+                        <div class="song-name">{{ song.name }}</div>
+                        <div class="song-artist">{{ song.artists.join(', ') }}</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary"><i class="fas fa-check"></i></button>
+                </div>
+                
+                <div *ngIf="!isSearchingSongs && songSearchResults.length === 0 && songSearchQuery" class="text-center py-3 text-muted">
+                    No se encontraron canciones
+                </div>
+            </div>
+
+            <div class="selected-song-form" *ngIf="selectedSong">
+                <div class="selected-song-preview mb-3 p-2 border rounded border-secondary d-flex align-items-center gap-3">
+                    <img [src]="selectedSong.image" alt="Album" width="50" height="50" class="rounded">
+                    <div>
+                        <div class="fw-bold">{{ selectedSong.name }}</div>
+                        <small class="text-muted">{{ selectedSong.artists.join(', ') }}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger ms-auto" (click)="selectedSong = null">Cambiar</button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Dedicatoria (Opcional)</label>
+                    <textarea [(ngModel)]="newSongDedication" class="form-control form-dark" rows="2" maxlength="50" placeholder="Escribe un mensaje corto..."></textarea>
+                    <small class="text-muted text-end d-block">{{ newSongDedication.length }}/50</small>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- TEXT TAB CONTENT -->
+        <ng-container *ngIf="activeNoteTab === 'text'">
+            <div class="mb-3">
+                <label class="form-label text-white">Tu Nota</label>
+                <textarea [(ngModel)]="newTextNoteContent" class="form-control form-dark" rows="3" maxlength="60" placeholder="Escribe algo corto..."></textarea>
+                <small class="text-muted text-end d-block">{{ newTextNoteContent.length }}/60</small>
+            </div>
+            <div class="alert alert-info py-2 small">
+                <i class="fas fa-info-circle me-1"></i> Esta nota será visible por 7 días.
+            </div>
+        </ng-container>
+
+        <div class="d-flex justify-content-end gap-2 mt-auto">
+            <button class="btn btn-secondary" (click)="closeSongModal()">Cancelar</button>
+            <button class="btn btn-primary" (click)="postNote()" [disabled]="(activeNoteTab === 'song' && !selectedSong) || (activeNoteTab === 'text' && !newTextNoteContent)">
+                Publicar
+            </button>
         </div>
     </div>
 </div>

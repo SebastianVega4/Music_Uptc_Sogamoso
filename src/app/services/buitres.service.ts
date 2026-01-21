@@ -36,6 +36,24 @@ export interface BuitreComment {
   created_at: string;
 }
 
+export interface BuitreSongNote {
+  id: string;
+  person_id: string;
+  track_data: {
+    id?: string; // Optional for text notes
+    name?: string;
+    artists?: string[];
+    image?: string;
+    preview_url?: string;
+    album?: string;
+    type?: 'text' | 'song';
+    bg_color?: string; // For text notes
+  };
+  dedication?: string;
+  created_at: string;
+  expires_at: string;
+}
+
 import { AuthService } from './auth';
 
 @Injectable({
@@ -48,6 +66,32 @@ export class BuitresService {
   constructor(private http: HttpClient, private authService: AuthService) {
     // Keep supabase for realtime subscriptions ONLY
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+  }
+  
+  // --- Song Notes Operations ---
+
+  getSongNotes(personId: string): Observable<BuitreSongNote[]> {
+    return this.http.get<BuitreSongNote[]>(`${this.apiUrl}/people/${personId}/songs`, { headers: this.getAuthHeaders() });
+  }
+
+  addSongNote(personId: string, trackData: any, dedication: string, type: 'song' | 'text' = 'song', bgColor: string = ''): Observable<BuitreSongNote> {
+    return this.http.post<BuitreSongNote>(`${this.apiUrl}/people/${personId}/songs`, { 
+      track_data: trackData, 
+      dedication,
+      type,
+      bg_color: bgColor
+    }, { headers: this.getAuthHeaders() });
+  }
+  
+  deleteSongNote(noteId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/songs/${noteId}`, { headers: this.getAuthHeaders() });
+  }
+
+  searchSongs(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/api/search`, { 
+      params: { q: query },
+      headers: this.getAuthHeaders()
+    });
   }
 
   private getAuthHeaders(): { [header: string]: string } {
