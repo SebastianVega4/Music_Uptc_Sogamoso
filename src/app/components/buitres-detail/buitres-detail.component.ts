@@ -158,8 +158,11 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     if (this.activeNoteTab === 'song') {
         if (!this.selectedSong) return;
         
+        console.log('Posting song note with data:', this.selectedSong);
+        
         this.buitresService.addSongNote(this.person.id, this.selectedSong, this.newSongDedication, 'song').subscribe({
           next: (note) => {
+            console.log('Song note posted successfully:', note);
             this.songNotes.unshift(note);
             this.closeSongModal();
             this.modalService.alert('Canción dedicada correctamente.', '¡Éxito!', 'success');
@@ -201,9 +204,17 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
       });
   }
 
-  playPreview(url: string | null | undefined) {
+  playPreview(url: string | null | undefined, event?: Event) {
+    console.log('BuitresDetail: playPreview called with URL:', url);
+    if (event) {
+      event.stopPropagation();
+    }
+    
     if (url) {
       this.audioService.play(url);
+    } else {
+      console.warn('BuitresDetail: No preview URL available for this note');
+      this.modalService.alert('Esta canción no tiene vista previa disponible.', 'Aviso', 'info');
     }
   }
 

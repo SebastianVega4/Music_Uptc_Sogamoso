@@ -69,7 +69,7 @@
     
             <!-- Notes List -->
             <div *ngFor="let note of songNotes" class="note-item"
-                (click)="note.track_data.type === 'text' ? null : playPreview(note.track_data.preview_url)">
+                (click)="note.track_data.type === 'text' ? null : playPreview(note.track_data.preview_url, $event)">
     
                 <!-- Song Note -->
                 <div *ngIf="!note.track_data.type || note.track_data.type === 'song'" class="note-circle"
