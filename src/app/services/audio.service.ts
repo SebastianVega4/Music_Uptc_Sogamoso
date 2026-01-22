@@ -65,7 +65,8 @@ export class AudioService {
     this.isPlayingSubject.next(false);
   }
 
-  isCurrentSong(url: string): boolean {
+  isCurrentSong(url: string | null | undefined): boolean {
+    if (!url) return false;
     return this.currentUrlSubject.value === url;
   }
 }

@@ -73,11 +73,11 @@
     
                 <!-- Song Note -->
                 <div *ngIf="!note.track_data.type || note.track_data.type === 'song'" class="note-circle"
-                    [class.playing]="isPlaying(note.track_data.preview_url)">
+                    [class.playing]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)">
                     <img [src]="note.track_data.image" [alt]="note.track_data.name">
                     <div class="note-overlay">
-                        <i class="fas" [class.fa-pause]="isPlaying(note.track_data.preview_url)"
-                            [class.fa-music]="!isPlaying(note.track_data.preview_url)"></i>
+                        <i class="fas" [class.fa-pause]="audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async)"
+                            [class.fa-music]="!(audioService.isCurrentSong(note.track_data.preview_url) && (audioService.isPlaying$ | async))"></i>
                     </div>
                 </div>
     
@@ -135,7 +135,7 @@
                 </div>
                 
                 <div class="deletion-stats mt-3 pt-3 border-top border-secondary text-center" *ngIf="(person.deletions_count ?? 0) > 0">
-                    <small class="fw-bold">
+                    <small>
                         <i class="fas fa-trash-alt me-1"></i> 
                         Este usuario ha eliminado {{ person.deletions_count }} {{ person.deletions_count === 1 ? 'elemento' : 'elementos' }}
                     </small>
@@ -256,8 +256,8 @@
 
                 <div class="mb-3">
                     <label class="form-label text-white">Dedicatoria (Opcional)</label>
-                    <textarea [(ngModel)]="newSongDedication" class="form-control form-dark" rows="2" maxlength="50" placeholder="Escribe un mensaje corto..."></textarea>
-                    <small class="text-muted text-end d-block">{{ newSongDedication.length }}/50</small>
+                    <textarea [(ngModel)]="newSongDedication" class="form-control form-dark" rows="2" maxlength="30" placeholder="Escribe un mensaje corto..."></textarea>
+                    <small class="text-muted text-end d-block">{{ newSongDedication.length }}/30</small>
                 </div>
             </div>
         </ng-container>
@@ -266,8 +266,8 @@
         <ng-container *ngIf="activeNoteTab === 'text'">
             <div class="mb-3">
                 <label class="form-label text-white">Tu Nota</label>
-                <textarea [(ngModel)]="newTextNoteContent" class="form-control form-dark" rows="3" maxlength="60" placeholder="Escribe algo corto..."></textarea>
-                <small class="text-muted text-end d-block">{{ newTextNoteContent.length }}/60</small>
+                <textarea [(ngModel)]="newTextNoteContent" class="form-control form-dark" rows="3" maxlength="30" placeholder="Escribe algo corto..."></textarea>
+                <small class="text-muted text-end d-block">{{ newTextNoteContent.length }}/30</small>
             </div>
             <div class="alert alert-info py-2 small">
                 <i class="fas fa-info-circle me-1"></i> Esta nota será visible por 7 días.

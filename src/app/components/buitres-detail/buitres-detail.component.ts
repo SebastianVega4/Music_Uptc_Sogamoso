@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { BuitresService, BuitrePerson, BuitreDetail, BuitreComment, BuitreSongNote } from '../../services/buitres.service';
 import { AuthService } from '../../services/auth';
 import { ModalService } from '../../services/modal.service';
+import { AudioService } from '../../services/audio.service';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
@@ -15,7 +16,7 @@ import { Subject } from 'rxjs';
   templateUrl: './buitres-detail.component.html',
   styleUrls: ['./buitres-detail.component.scss']
 })
-export class BuitresDetailComponent implements OnInit {
+export class BuitresDetailComponent implements OnInit, OnDestroy {
   person: BuitrePerson | null = null;
   details: BuitreDetail[] = [];
   comments: BuitreComment[] = [];
@@ -37,8 +38,6 @@ export class BuitresDetailComponent implements OnInit {
   selectedSong: any = null;
   newSongDedication: string = '';
   newTextNoteContent: string = '';
-  currentPreviewAudio: HTMLAudioElement | null = null;
-  currentPreviewUrl: string | null = null;
   private searchSubject = new Subject<string>();
   
   // Real-time flash states for visual feedback
@@ -64,7 +63,8 @@ export class BuitresDetailComponent implements OnInit {
     private router: Router,
     private buitresService: BuitresService,
     private authService: AuthService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    public audioService: AudioService
   ) {
     // Setup debounced search
     this.subscriptions.push(
@@ -105,7 +105,6 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    this.stopPreview();
     this.subscriptions.forEach(s => s.unsubscribe());
   }
   
@@ -139,7 +138,6 @@ export class BuitresDetailComponent implements OnInit {
 
   closeSongModal() {
     this.showSongModal = false;
-    this.stopPreview();
   }
   
   switchNoteTab(tab: 'song' | 'text') {
@@ -204,41 +202,9 @@ export class BuitresDetailComponent implements OnInit {
   }
 
   playPreview(url: string | null | undefined) {
-    if (!url) return;
-    
-    if (this.currentPreviewUrl === url && this.currentPreviewAudio) {
-      if (this.currentPreviewAudio.paused) {
-        this.currentPreviewAudio.play();
-      } else {
-        this.currentPreviewAudio.pause();
-      }
-      return;
+    if (url) {
+      this.audioService.play(url);
     }
-
-    this.stopPreview();
-    
-    this.currentPreviewUrl = url;
-    this.currentPreviewAudio = new Audio(url);
-    this.currentPreviewAudio.volume = 0.5;
-    this.currentPreviewAudio.play().catch(e => console.error('Error playing audio:', e));
-    
-    this.currentPreviewAudio.onended = () => {
-      this.currentPreviewUrl = null;
-      this.currentPreviewAudio = null;
-    };
-  }
-  
-  stopPreview() {
-    if (this.currentPreviewAudio) {
-      this.currentPreviewAudio.pause();
-      this.currentPreviewAudio = null;
-    }
-    this.currentPreviewUrl = null;
-  }
-  
-  isPlaying(url: string | null | undefined): boolean {
-    if (!url) return false;
-    return this.currentPreviewUrl === url && !!this.currentPreviewAudio && !this.currentPreviewAudio.paused;
   }
 
   private getFingerprint(): string {

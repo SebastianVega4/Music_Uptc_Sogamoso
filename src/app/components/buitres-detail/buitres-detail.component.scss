@@ -207,32 +207,34 @@
   // Dedication Cloud
   .note-cloud {
     position: absolute;
-    top: -5px;
-    left: 70%;
+    top: -35px; // Position above the note
+    left: 50%;
+    transform: translateX(-50%);
     background: white;
     color: black;
-    padding: 6px 12px;
-    border-radius: 15px;
-    border-bottom-left-radius: 2px;
-    font-size: 0.75rem;
-    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    white-space: normal; // Allow text wrapping
+    text-align: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    z-index: 10;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    z-index: 100;
+    width: max-content;
+    max-width: 110px; // Limit width to force wrap
+    line-height: 1.1;
     
-    // Triangle
+    // Triangle pointing down
     &::after {
       content: '';
       position: absolute;
-      bottom: -4px;
-      left: 0;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 0;
       height: 0;
-      border-left: 8px solid white;
-      border-top: 8px solid transparent;
-      transform: rotate(90deg);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid white;
     }
   }
 
