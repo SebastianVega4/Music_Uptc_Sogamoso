@@ -54,6 +54,10 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
   editGender: 'male' | 'female' | '' = '';
   editImageUrl: string = '';
   
+  // Dedication Modal State
+  showFullDedicationModal: boolean = false;
+  selectedDedicationText: string = '';
+  
   sortOption: 'newest' | 'oldest' | 'likes' = 'newest';
 
   private subscriptions: any[] = [];
@@ -191,17 +195,19 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
   }
   
   deleteNote(noteId: string) {
-      if (!confirm('¿Estás seguro de eliminar esta nota?')) return;
-      
-      this.buitresService.deleteSongNote(noteId).subscribe({
+    this.modalService.confirm('¿Estás seguro de eliminar esta nota?', 'Eliminar Nota').subscribe(confirmed => {
+      if (confirmed) {
+        this.buitresService.deleteSongNote(noteId).subscribe({
           next: () => {
-              this.songNotes = this.songNotes.filter(n => n.id !== noteId);
-              this.modalService.alert('Nota eliminada.', 'Éxito', 'success');
+            this.songNotes = this.songNotes.filter(n => n.id !== noteId);
+            this.modalService.alert('Nota eliminada.', '¡Éxito!', 'success');
           },
           error: (err) => {
-              this.modalService.alert('No tienes permiso para eliminar esta nota.', 'Error', 'danger');
+            this.modalService.alert('No tienes permiso para eliminar esta nota.', 'Error', 'danger');
           }
-      });
+        });
+      }
+    });
   }
 
   playPreview(url: string | null | undefined, event?: Event) {
@@ -216,6 +222,12 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
       console.warn('BuitresDetail: No preview URL available for this note');
       this.modalService.alert('Esta canción no tiene vista previa disponible.', 'Aviso', 'info');
     }
+  }
+
+  openDedicationModal(text: string, event: Event) {
+    event.stopPropagation();
+    this.selectedDedicationText = text;
+    this.showFullDedicationModal = true;
   }
 
   private getFingerprint(): string {
