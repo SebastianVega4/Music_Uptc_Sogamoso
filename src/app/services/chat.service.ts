@@ -67,9 +67,6 @@ export class ChatService implements OnDestroy {
           autoRefreshToken: true,
           detectSessionInUrl: true,
           storage: localStorage, // Usar localStorage en lugar de LockManager
-          lock: {
-            processLock: false,
-          } as any,
         },
         realtime: {
           params: {
