@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { DiscussionService, Thread, Comment } from '../../services/discussion.service';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { DiscussionService, Thread, ThreadComment } from '../../services/discussion.service';
 import { MetaService } from '../../services/meta.service';
+import { AuthService } from '../../services/auth';
 import { tap } from 'rxjs/operators';
 
 @Component({
@@ -15,25 +16,143 @@ import { tap } from 'rxjs/operators';
 })
 export class ThreadDetailComponent implements OnInit {
   thread!: Thread;
-  comments: Comment[] = [];
+  comments: ThreadComment[] = [];
   newComment = '';
   replyingTo: string | null = null;
   replyContent = '';
   error: string | null = null;
   isLoading = true;
+  
+  // Admin & Editing State
+  isAdmin = false;
+  isEditingThread = false;
+  editedThreadTitle = '';
+  editedThreadContent = '';
+  editingCommentId: string | null = null;
+  editedCommentContent = '';
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private discussionService: DiscussionService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.checkAdminStatus();
     const threadId = this.route.snapshot.paramMap.get('id');
     if (threadId) {
       this.loadThread(threadId);
     }
   }
+
+  checkAdminStatus() {
+    this.isAdmin = this.authService.isRoleAdmin();
+  }
+
+  // ... existing loadThread ...
+
+  // Admin Actions - Thread
+  deleteThread() {
+    if (!confirm('¿Estás seguro de que quieres eliminar este hilo y todos sus comentarios? Esta acción no se puede deshacer.')) return;
+    
+    this.discussionService.deleteThread(this.thread.id).subscribe({
+      next: () => {
+        this.router.navigate(['/discussion']);
+      },
+      error: (error) => {
+        console.error('Error deleting thread:', error);
+        alert('Error al eliminar el hilo');
+      }
+    });
+  }
+
+  startEditThread() {
+    this.isEditingThread = true;
+    this.editedThreadTitle = this.thread.title;
+    this.editedThreadContent = this.thread.content;
+  }
+
+  cancelEditThread() {
+    this.isEditingThread = false;
+    this.editedThreadTitle = '';
+    this.editedThreadContent = '';
+  }
+
+  saveThread() {
+    if (!this.editedThreadContent.trim()) return;
+    
+    this.discussionService.updateThread(this.thread.id, {
+      title: this.editedThreadTitle,
+      content: this.editedThreadContent
+    }).subscribe({
+      next: () => {
+        this.thread.title = this.editedThreadTitle;
+        this.thread.content = this.editedThreadContent;
+        this.isEditingThread = false;
+      },
+      error: (error) => {
+        console.error('Error updating thread:', error);
+        alert('Error al actualizar el hilo');
+      }
+    });
+  }
+
+  // Admin Actions - Comments
+  deleteComment(comment: ThreadComment) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este comentario?')) return;
+    
+    this.discussionService.deleteComment(comment.id).subscribe({
+      next: () => {
+        this.removeCommentFromList(comment.id);
+        this.thread.comments_count--;
+      },
+      error: (error) => {
+        console.error('Error deleting comment:', error);
+        alert('Error al eliminar el comentario');
+      }
+    });
+  }
+
+  removeCommentFromList(commentId: string) {
+    // Remove from main list
+    this.comments = this.comments.filter(c => c.id !== commentId);
+    
+    // Remove from replies
+    this.comments.forEach(c => {
+      if (c.replies) {
+        c.replies = c.replies.filter(r => r.id !== commentId);
+      }
+    });
+  }
+
+  startEditComment(comment: ThreadComment) {
+    this.editingCommentId = comment.id;
+    this.editedCommentContent = comment.content;
+  }
+
+  cancelEditComment() {
+    this.editingCommentId = null;
+    this.editedCommentContent = '';
+  }
+
+  saveComment(comment: ThreadComment) {
+    if (!this.editedCommentContent.trim()) return;
+    
+    this.discussionService.updateComment(comment.id, this.editedCommentContent).subscribe({
+      next: () => {
+        comment.content = this.editedCommentContent;
+        this.editingCommentId = null;
+      },
+      error: (error) => {
+        console.error('Error updating comment:', error);
+        alert('Error al actualizar el comentario');
+      }
+    });
+  }
+
+  // ... rest of existing methods ...
 
   loadThread(threadId: string) {
     this.isLoading = true;
@@ -69,9 +188,9 @@ export class ThreadDetailComponent implements OnInit {
     });
   }
 
-  buildCommentTree(comments: Comment[]): Comment[] {
+  buildCommentTree(comments: ThreadComment[]): ThreadComment[] {
     const commentMap = new Map();
-    const roots: Comment[] = [];
+    const roots: ThreadComment[] = [];
 
     comments.forEach(comment => {
       comment.replies = [];
@@ -142,7 +261,7 @@ export class ThreadDetailComponent implements OnInit {
     });
   }
 
-  private findCommentById(commentId: string): Comment | null {
+  private findCommentById(commentId: string): ThreadComment | null {
     for (const comment of this.comments) {
       if (comment.id === commentId) {
         return comment;
@@ -171,7 +290,7 @@ export class ThreadDetailComponent implements OnInit {
     });
   }
 
-  likeComment(comment: Comment) {
+  likeComment(comment: ThreadComment) {
     this.discussionService.likeComment(comment.id).subscribe({
       next: (response: any) => {
         comment.likes_count = response.new_count;

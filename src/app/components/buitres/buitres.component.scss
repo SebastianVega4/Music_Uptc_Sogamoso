@@ -9,6 +9,7 @@
     .login-icon i {
         background: linear-gradient(45deg, #4285F4, #34A853, #FBBC05, #EA4335);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
@@ -115,6 +116,35 @@
   font-size: 0.9rem;
   font-weight: 500;
   border: 1px solid rgba(29, 185, 84, 0.3);
+}
+
+.nav-tabs-custom {
+    .tab-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #b3b3b3;
+        padding: 12px 25px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        &.active {
+            background: #1DB954;
+            color: white;
+            border-color: #1DB954;
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+        }
+    }
 }
 
 .filters-section {

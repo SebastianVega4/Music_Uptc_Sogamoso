@@ -9,14 +9,17 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 declare var google: any;
 
+import { DiscussionComponent } from '../discussion/discussion.component';
+
 @Component({
   selector: 'app-buitres',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, DiscussionComponent],
   templateUrl: './buitres.component.html',
   styleUrls: ['./buitres.component.scss']
 })
 export class BuitresComponent implements OnInit, AfterViewInit, OnDestroy {
+  activeTab: 'people' | 'discussion' = 'discussion'; // Control de pestañas
   people: BuitrePerson[] = [];
   suggestions: BuitrePerson[] = [];
   searchQuery: string = '';

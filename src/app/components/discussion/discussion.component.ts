@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DiscussionService, Thread } from '../../services/discussion.service';
+import { AuthService } from '../../services/auth';
 
 @Component({
   standalone: true,
@@ -18,11 +19,22 @@ export class DiscussionComponent implements OnInit {
   isLoading = false;
   sortBy = 'updated_at';
   error: string | null = null;
+  isAdmin: boolean = false; // Added
+  authorFingerprint: string = ''; // Added
 
-  constructor(private discussionService: DiscussionService) {}
+  constructor(
+    private discussionService: DiscussionService,
+    private authService: AuthService // Added
+  ) {}
 
   ngOnInit() {
+    this.authorFingerprint = localStorage.getItem('userFingerprint') || 'unknown'; // Added
+    this.checkAdminStatus(); // Added
     this.loadThreads();
+  }
+
+  checkAdminStatus() { // Added
+    this.isAdmin = this.authService.isRoleAdmin();
   }
 
   loadThreads() {
@@ -45,10 +57,38 @@ export class DiscussionComponent implements OnInit {
     });
   }
 
-  createThread() {
-    if (!this.newThread.title.trim() || !this.newThread.content.trim()) return;
+  selectedFile: File | null = null;
 
-    this.discussionService.createThread(this.newThread.title, this.newThread.content).subscribe({
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
+
+  createThread() {
+    // Solo requerimos contenido. El backend maneja el título si está vacío.
+    if (!this.newThread.content.trim()) return;
+
+    if (this.selectedFile) {
+      this.isLoading = true; // Show loading while uploading
+      this.discussionService.uploadImage(this.selectedFile).subscribe({
+        next: (response) => {
+          this.createThreadWithImage(response.url);
+        },
+        error: (error) => {
+          console.error('Error uploading image:', error);
+          this.error = 'Error al subir la imagen. Intenta nuevamente.';
+          this.isLoading = false;
+        }
+      });
+    } else {
+      this.createThreadWithImage();
+    }
+  }
+
+  createThreadWithImage(imageUrl?: string) {
+    this.discussionService.createThread(this.newThread.title, this.newThread.content, imageUrl).subscribe({
       next: (thread) => {
         this.threads.unshift({
           ...thread,
@@ -56,11 +96,29 @@ export class DiscussionComponent implements OnInit {
         });
         this.showCreateForm = false;
         this.newThread = { title: '', content: '' };
+        this.selectedFile = null; // Reset file
         this.error = null;
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error creating thread:', error);
         this.error = 'Error al crear el hilo. Por favor, intenta nuevamente.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  deleteThread(thread: Thread, event: Event) {
+    event.stopPropagation();
+    if (!confirm('¿Estás seguro de que quieres eliminar este hilo? Esta acción no se puede deshacer.')) return;
+
+    this.discussionService.deleteThread(thread.id).subscribe({
+      next: () => {
+        this.threads = this.threads.filter(t => t.id !== thread.id);
+      },
+      error: (error) => {
+        console.error('Error deleting thread:', error);
+        alert('Error al eliminar el hilo');
       }
     });
   }

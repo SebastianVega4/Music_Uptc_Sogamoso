@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth';
 
 export interface Thread {
   id: string;
@@ -13,9 +14,10 @@ export interface Thread {
   created_at: string;
   updated_at: string;
   user_has_liked?: boolean;
+  image_url?: string;
 }
 
-export interface Comment {
+export interface ThreadComment {
   id: string;
   thread_id: string;
   parent_comment_id?: string;
@@ -23,7 +25,7 @@ export interface Comment {
   content: string;
   likes_count: number;
   created_at: string;
-  replies?: Comment[];
+  replies?: ThreadComment[];
   user_has_liked?: boolean;
 }
 
@@ -39,7 +41,7 @@ export class DiscussionService {
   private apiUrl = environment.apiUrl;
   private likedItems = new Set<string>(); // Cache local de likes
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private authService: AuthService) {
     this.loadLikedItemsFromStorage();
   }
 
@@ -76,19 +78,24 @@ export class DiscussionService {
     return this.http.get<Thread[]>(`${this.apiUrl}/api/discussion/threads?sort=${sortBy}&order=${order}`);
   }
 
-  getThread(threadId: string): Observable<{thread: Thread, comments: Comment[]}> {
-    return this.http.get<{thread: Thread, comments: Comment[]}>(`${this.apiUrl}/api/discussion/threads/${threadId}`);
+  getThread(threadId: string): Observable<{thread: Thread, comments: ThreadComment[]}> {
+    return this.http.get<{thread: Thread, comments: ThreadComment[]}>(`${this.apiUrl}/api/discussion/threads/${threadId}`);
   }
 
-  createThread(title: string, content: string): Observable<Thread> {
-    return this.http.post<Thread>(`${this.apiUrl}/api/discussion/threads`, {
-      title,
-      content
-    });
+  createThread(title: string, content: string, imageUrl?: string): Observable<Thread> {
+    const threadData = { title, content, image_url: imageUrl };
+    return this.http.post<Thread>(`${this.apiUrl}/api/discussion/threads`, threadData, { headers: this.authService.getAuthHeaders() });
   }
 
-  addComment(threadId: string, content: string, parentCommentId?: string): Observable<Comment> {
-    return this.http.post<Comment>(`${this.apiUrl}/api/discussion/threads/${threadId}/comments`, {
+  uploadImage(file: File): Observable<{ url: string, filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string, filename: string }>(`${environment.apiUrl}/api/upload`, formData);
+  }
+
+
+  addComment(threadId: string, content: string, parentCommentId?: string): Observable<ThreadComment> {
+    return this.http.post<ThreadComment>(`${this.apiUrl}/api/discussion/threads/${threadId}/comments`, {
       content,
       parent_comment_id: parentCommentId
     });
@@ -108,5 +115,31 @@ export class DiscussionService {
     }).pipe(tap(response => {
       this.updateLikeStatus('comment', commentId, response.action === 'liked');
     }));
+  }
+
+  // Admin Methods
+
+  deleteThread(threadId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/api/discussion/threads/${threadId}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  updateThread(threadId: string, data: { title?: string, content?: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/api/discussion/threads/${threadId}`, data, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  deleteComment(commentId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/api/discussion/comments/${commentId}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  updateComment(commentId: string, content: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/api/discussion/comments/${commentId}`, { content }, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 }

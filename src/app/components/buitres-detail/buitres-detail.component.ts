@@ -480,8 +480,40 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     this.startEditing();
   }
 
+  selectedFile: File | null = null;
+  isUploading: boolean = false;
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
+
   saveEdits() {
     if (!this.person || !this.editGender) return;
+
+    if (this.selectedFile) {
+        this.isUploading = true;
+        this.buitresService.uploadImage(this.selectedFile).subscribe({
+            next: (response) => {
+                this.editImageUrl = response.url;
+                this.selectedFile = null; // Clear file after upload
+                this.savePersonData();
+            },
+            error: (err) => {
+                console.error('Error uploading image:', err);
+                this.modalService.alert('Error al subir la imagen.', 'Error', 'danger');
+                this.isUploading = false;
+            }
+        });
+    } else {
+        this.savePersonData();
+    }
+  }
+
+  savePersonData() {
+    if (!this.person) return;
 
     const updates: any = {};
 
@@ -497,8 +529,6 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
         
         updates.name = normalizedName;
         updates.email = this.editEmail;
-        // La descripción ya no almacena el correo, así que no la tocamos o permitimos editarla por separado
-        // updates.description = ... 
     }
 
     // Tanto admin como owner pueden editar género y foto
@@ -508,11 +538,13 @@ export class BuitresDetailComponent implements OnInit, OnDestroy {
     this.buitresService.updatePerson(this.person.id, updates).subscribe({
       next: () => {
         this.isEditing = false;
+        this.isUploading = false;
         this.loadData(this.person!.id);
       },
       error: (err) => {
         console.error('Update error:', err);
         this.modalService.alert('Error al actualizar perfil.', 'Error', 'danger');
+        this.isUploading = false;
       }
     });
   }

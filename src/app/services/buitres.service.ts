@@ -184,4 +184,11 @@ export class BuitresService {
       .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
       .subscribe();
   }
+
+  // --- File Upload ---
+  uploadImage(file: File): Observable<{ url: string, filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string, filename: string }>(`${environment.apiUrl}/api/upload`, formData);
+  }
 }

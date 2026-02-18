@@ -114,6 +114,22 @@
         }
       }
   
+      .thread-image-container {
+        margin-bottom: 2rem;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        .thread-image-full {
+          width: 100%;
+          height: auto;
+          max-height: 600px;
+          object-fit: contain;
+          background: rgba(0, 0, 0, 0.2);
+          display: block;
+        }
+      }
+
       .thread-content.detailed {
         font-size: 1.1rem;
         line-height: 1.7;
